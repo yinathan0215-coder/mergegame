@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+
+# Node
+node_modules/
+.pnpm-store/
+
+# Temp
+*.tmp
+*.log
+*.out
+*.err
+*.pid
+.tmp/
+.tmp-*/
+
+# Claude — keep shared .claude/ tracked, drop per-machine local settings
+.claude/settings.local.json
+
+# HTML5 prototype build artifacts (once game/ is scaffolded)
+game/node_modules/
+game/dist/
+game/build/
+game/.vite/
+game/.parcel-cache/
+*.tsbuildinfo
