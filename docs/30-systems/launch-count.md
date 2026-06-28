@@ -40,14 +40,14 @@ sources:
 - **해금 보너스:** 새 단계 해금 팝업(넵튠 6단계부터)이 뜰 때마다 **카운트 +5**([[30-systems/tier-unlock]]).
 
 ### 종료 판정
-- **Infinite:** 카운트가 0이 되면 **2초 뒤** 세션이 끝나고 결과창이 뜬다([[50-art-ux/result-window]]) —
-  지연 동안 마지막 발사·합성 연쇄가 마무리된다.
+- **Infinite:** 카운트 0 **그리고** 보드의 모든 행성이 정지하면 세션이 끝나고 결과창이 뜬다
+  ([[50-art-ux/result-window]]) — Stage와 달리 고정 지연 없이 정지 직후.
 - **Stage:** 목표 행성을 만들면(카운트가 남아도) 달성 2초 뒤 클리어, 카운트 0인데 목표 미달이면
   2초 뒤 실패([[30-systems/stage-mode]]). 클리어가 실패보다 우선한다.
 
 ### 표시
-- 남은 카운트는 **좌하단 HUD**에 큐의 Next 미리보기와 함께 표시한다([[50-art-ux/layout]] ·
-  [[30-systems/launch-queue]]).
+- 남은 카운트는 **좌하단 HUD**에 **`PLANET`** 라벨 + 숫자로, 큐의 Next 미리보기와 **가로로 나란히**
+  표시한다([[50-art-ux/layout]] · [[30-systems/launch-queue]]).
 
 ## Relates to
 - [[20-core-loop/game-modes]] — 모드별 시작값·종료 의미

@@ -23,6 +23,7 @@ import { Combo } from './Combo';
 import { sound } from './SoundManager';
 import { makePlanetSprite } from './PlanetFactory';
 import { LoadingScreen } from './LoadingScreen';
+import { CoinPill } from './ui/CoinPill';
 import { ASSETS } from './assets';
 import type { Planet } from './Planet';
 
@@ -66,6 +67,8 @@ export class GameScene {
   private title: TitleScreen;
   private meta: MetaStore; // coin wallet + daily mission/attendance state (docs/30-systems/meta-economy)
   private metaUI: MetaUI; // Title-lobby popups (missions/attendance/wheel/shop)
+  private coinPill!: CoinPill; // 코인 잔액 표시(공통) — Title·인게임 동일 위치, 돌림판이 딤 위로 올림
+  private coinHomeIndex = 0; // fgRoot에서의 평상시 z(돌림판 닫힐 때 복귀)
   private scene: SceneState = 'Loading';
   private loadingScreen = new LoadingScreen(LOAD_MIN_MS); // 부팅 스플래시(GALAXY PINBALL 스트림)
   private loadT0 = 0; // 부팅 시각 — 최소 로딩 floor 계산용
@@ -196,6 +199,12 @@ export class GameScene {
 
     this.meta = new MetaStore();
     this.metaUI = new MetaUI(this.meta);
+    this.coinPill = new CoinPill(this.meta); // 공통 코인 표시 (docs/30-systems/meta-economy · docs/50-art-ux/layout)
+    this.metaUI.wheel.coinHooks = {
+      raise: () => this.raiseCoin(),
+      restore: () => this.restoreCoin(),
+      pour: (count, fx, fy) => this.coinPill.pour(count, fx, fy),
+    };
     this.charge = new ChargePopup(() => this.meta.coins, (n) => this.buyCharge(n)); // Infinite 충전 팝업
     this.result = new ResultPopup(() => this.setScene('Title')); // Infinite 결과창 → 탭 → Title
     this.stageClear = new StageClearPopup(
@@ -211,6 +220,8 @@ export class GameScene {
     );
     this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
     this.fgRoot.addChild(this.title.container); // 태양계 공전 + 로비 UI는 contain
+    this.fgRoot.addChild(this.coinPill);        // 코인 표시 — title 위, 평상시엔 팝업 딤 아래(돌림판 때만 위로)
+    this.coinHomeIndex = this.fgRoot.getChildIndex(this.coinPill);
     this.fgRoot.addChild(this.metaUI.layer);    // 메타 팝업(딤은 oversized로 뷰포트 전체를 덮음) — title 위
     this.fgRoot.addChild(this.loadingScreen.container); // 부팅 스플래시 — 전경(contain) 최상위, 로딩 한정 표시
     this.fade.alpha = 0;
@@ -247,8 +258,18 @@ export class GameScene {
     this.gameLayer.visible = scene === 'PoolInGame';
     this.title.container.visible = scene === 'Title';
     this.title.galaxy.visible = scene === 'Title'; // 은하수 배경은 Title 한정
+    this.coinPill.visible = scene === 'Title' || scene === 'PoolInGame'; // 코인 표시는 로비·인게임 공통(Loading 제외)
     if (scene === 'Title') this.title.refresh(); // 최대 머지 아이콘 + 현재 점수 갱신
     if (scene === 'PoolInGame') this.startSession(); // fresh session: count, board, queue (docs/20-core-loop/game-modes)
+  }
+
+  // Lucky wheel: lift the coin pill above the popup dim while the wheel is open so the spend/payout is
+  // visible (docs/30-systems/lucky-wheel 딤 위 코인 표시); restore its normal z when the wheel closes.
+  private raiseCoin() {
+    this.fgRoot.setChildIndex(this.coinPill, this.fgRoot.children.length - 1);
+  }
+  private restoreCoin() {
+    this.fgRoot.setChildIndex(this.coinPill, this.coinHomeIndex);
   }
 
   // OK on the unlock modal: raise the unlock cap to the new tier and resume.
@@ -373,6 +394,7 @@ export class GameScene {
     this.maxCombo = 0;
     this.modeC.startSession();
     this.sessionPrevBest = this.meta.bestScore; // snapshot before this run → NEW RECORD compare at end
+    this.hud.setBest(this.meta.bestScore); // 인게임 👑 = 영속 최고 점수(localStorage) 로드
     this.queue.reset(this.modeC.isStage ? this.modeC.stageDef.queue : null);
     if (this.modeC.isStage) this.buildStageRack(this.modeC.stageDef.rack);
     else this.buildInitialRack();
@@ -390,6 +412,7 @@ export class GameScene {
 
   // Spend coins to add launch count (docs/30-systems/planet-charge). Returns false if unaffordable.
   private buyCharge(n: number): boolean {
+    if (this.modeC.isStage) return false; // 카운트 증가는 Infinite 한정 (docs/30-systems/launch-count)
     const c = MODES.infinite.charge;
     const cost = (n / c.stepPlanets) * c.coinPer10;
     if (!this.meta.spendCoins(cost)) return false;
@@ -414,12 +437,17 @@ export class GameScene {
     return true;
   }
 
-  // End-of-session check (docs/30-systems/launch-count): once the count is gone, arm the end window
-  // after a short delay so the last shot/merge plays out.
+  // End-of-session check (docs/30-systems/launch-count). Stage: arm the end window after a delay.
+  // Infinite: end only once the count is gone AND every planet has settled (no fixed delay).
   private checkSessionEnd() {
     if (this.ended || this.endKind || this.paused) return;
     if (this.modeC.count > 0) return;
-    this.scheduleEnd(this.modeC.isStage ? 'fail' : 'result');
+    if (this.modeC.isStage) {
+      this.scheduleEnd('fail');
+      return;
+    }
+    if (this.planets.some((p) => Math.hypot(p.body.velocity.x, p.body.velocity.y) > 0.6)) return;
+    this.showEnd('result');
   }
 
   // Arm the end window after RESULT.endDelayMs (docs/50-art-ux/result-window). 'clear' overrides a
@@ -431,10 +459,10 @@ export class GameScene {
     this.endAt = performance.now() + RESULT.endDelayMs;
   }
 
-  // Show the armed end window once the delay elapses (called from tick).
-  private showEnd() {
+  // Show an end window — Stage after the armed delay (tick), Infinite immediately on settle.
+  private showEnd(kind: 'result' | 'clear' | 'fail') {
+    if (this.ended) return;
     this.ended = true;
-    const kind = this.endKind;
     this.endKind = null;
     if (kind === 'result') {
       const finalScore = this.score.score;
@@ -488,6 +516,7 @@ export class GameScene {
     const nowMs = performance.now();
     this.title.update(nowMs);
     this.metaUI.update(nowMs); // meta popups (transition + wheel spin + attendance countdown) run on Title too
+    this.coinPill.update(nowMs); // 코인 잔액 롤링(odometer) + 쏟아진 코인 비행 — Title·인게임 공통
     this.charge.update(nowMs); // 모드 팝업 전환·행성 회전(항상 — 종료 상태에서도)
     this.result.update(nowMs);
     this.stageClear.update(nowMs);
@@ -512,8 +541,8 @@ export class GameScene {
       steps++;
     }
     if (this.acc > STEP_MS * 5) this.acc = 0;
-    this.checkSessionEnd(); // 카운트 소진 → 종료 예약 (docs/30-systems/launch-count)
-    if (this.endKind && nowMs >= this.endAt) this.showEnd(); // 2초 지연 후 종료창 등장
+    this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
+    if (this.endKind && nowMs >= this.endAt) this.showEnd(this.endKind); // Stage 종료창 지연 등장
 
     for (const p of this.planets) {
       p.sprite.x = p.body.position.x;

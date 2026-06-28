@@ -55,7 +55,7 @@ sources:
 | 키 | 값 | 의미 |
 |---|---|---|
 | `countUpMs` | **1500** | Infinite 결과창 스코어 1→최종 카운트업 지속(ms) |
-| `endDelayMs` | **2000** | 종료 조건 충족 후 결과/클리어/실패 창 등장까지 지연(ms) |
+| `endDelayMs` | **2000** | Stage 클리어/실패 창 등장 지연(ms); Infinite 결과는 정지 후 즉시 |
 
 ## Relates to
 - [[../20-core-loop/game-modes]] · [[../30-systems/launch-count]] · [[../30-systems/planet-charge]] · [[../30-systems/stage-mode]] — 규칙

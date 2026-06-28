@@ -46,7 +46,7 @@ export class GameInfoPanel {
     this.nextWrap.x = NEXT_X;
     this.nextWrap.y = STRIP_C + 11;
     this.container.addChild(
-      cap('COUNT', COUNT_X, STRIP_C - 15), this.countText,
+      cap('PLANET', COUNT_X, STRIP_C - 15), this.countText,
       cap('NEXT', NEXT_X, STRIP_C - 15), this.nextWrap,
     );
 

@@ -12,6 +12,16 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 게임 모드 다듬기 4건 — PLANET 라벨·최고점수 로드·Infinite 정지종료·카운트증가 Infinite한정
+why: 사용자 지시 4건. (1) 남은 발사 수 HUD 라벨 `COUNT`→**`PLANET`**(사용자 확정, GameInfoPanel·
+[[50-art-ux/layout]]·[[20-core-loop/game-modes]]·[[30-systems/launch-count]]). (2) **버그픽스**: 인게임
+최상단 👑 최고 점수가 영속값을 안 불러오던 문제 — `Hud.setBest`로 세션 시작 시 `meta.bestScore`(localStorage
+records.best) 시드(GameScene.startSession). (3) **Infinite 종료를 2초 딜레이→정지 기반으로 되돌림**: 카운트
+0 + 모든 행성 정지 후 즉시 결과(GameScene.checkSessionEnd; Stage 클리어/실패는 2초 지연 유지). docs:
+[[20-core-loop/game-modes]]·[[30-systems/launch-count]]·[[50-art-ux/result-window]]·[[40-balancing/game-modes]]
+(endDelayMs=Stage 전용). (4) **카운트 증가는 Infinite 한정** 명확화: `buyCharge`에 Stage 가드(충전·블랙홀
++20·해금 +5 모두 이미 Infinite 게이트). 검증: tsc·vite build OK · Playwright 56/56.
+
 ## [2026-06-28] auto | docs↔code 정합 재감사 (32건) — docs-code-sync 스킬
 why: 사용자 지시("MVP·pool 관련 내용이 현재 정본하고 안 맞는 것 같으니 스킬 돌려 체크"). [[docs-code-sync]]
 스킬로 9도메인 2-pass(분류→반증검증, 43에이전트) 재감사 → 확정 32건 보고서

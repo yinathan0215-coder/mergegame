@@ -14,8 +14,9 @@ export interface HudMenuItem {
   onTap: () => void;
 }
 
-// Top HUD (docs/50-art-ux/layout): left = back button (→ Title), center = Score + 👑best,
-// right = menu button. No money/ranking displays. Queue row sits below the bar.
+// Top HUD (docs/50-art-ux/layout): left = back button (→ Title) sitting BELOW the coin pill (the coin
+// balance is a GameScene-owned pill shown top-left in both Title and game); center = Score + 👑best;
+// right = menu button. No ranking display. Queue row sits below the bar.
 export class Hud {
   private scoreText: Text;
   private bestText: Text;
@@ -47,8 +48,8 @@ export class Hud {
     this.scoreText.y = 50;
     layer.addChild(this.scoreText);
 
-    // ── corners: back button (left, → Title) + ≡ menu button (right) ──
-    this.button(layer, 12, 12, 'exit', onBack);
+    // ── corners: back button (left, BELOW the coin pill at y18–50) + ≡ menu button (right) ──
+    this.button(layer, 12, 54, 'exit', onBack);
     this.buildMenu(layer); // dropdown scrim + icon list (above the board, below the items + ≡ button)
     this.button(layer, HUD.w - 44, 12, 'menu', () => this.toggleMenu()); // ≡ toggles the dropdown (added last → on top)
   }
@@ -151,6 +152,14 @@ export class Hud {
     this.crown.y = 24;
     this.bestText.x = left + crownW + gap;
     this.bestText.y = 24;
+  }
+
+  // Seed the 👑 best from the persisted record (docs/50-art-ux/title-screen §2-2) at session start;
+  // setScore then raises it live as the current score climbs past it.
+  setBest(best: number) {
+    this.best = best;
+    this.bestText.text = this.best.toLocaleString();
+    this.centerBest();
   }
 
   setScore(score: number) {
