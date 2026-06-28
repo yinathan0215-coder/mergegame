@@ -32,6 +32,7 @@ sources:
 | `Containment` | 절대 플레이 영역 경계 — 매 substep clamp+반사로 터널링 방지 + 발사대 원 재진입 차단(물리 규칙, 오케스트레이터에서 분리) | [[../90-methodology/game-loop]] · [[../90-methodology/ecs-lite]] |
 | `StageClearFx` | Stage 클리어 비행 연출(목표 행성 제거→우하단 목표 UI로 포물선 비행→버스트→완료 콜백). 일시 애니메이션을 오케스트레이터에서 분리 | [[../90-methodology/layered-rendering]] · [[../90-methodology/ecs-lite]] |
 | `MergeOutcome` | 머지 보상 fan-out(점수·콤보·이펙트·사운드·미션) + 충돌 점수(벽/행성) 조율 — 합성/충돌의 "보상 규칙"을 오케스트레이터에서 분리. 흐름(해금·클리어 트리거)은 host 콜백으로 GameScene이 보유 | [[../90-methodology/ecs-lite]] · [[../90-methodology/event-driven]] |
+| `Economy` | 경제/진행 규칙 — Stage 클리어 보상(코인 +300·클리어 기록·다음 스테이지 전진·진행도 영속), 카운트 충전 구매(코인↔카운트), 블랙홀 보너스 카운트. 화폐/진행 규칙을 오케스트레이터에서 분리 | [[../90-methodology/ecs-lite]] · [[../90-methodology/data-driven]] |
 | `LoadingScreen` | 부팅 로딩 씬 — `GALAXY PINBALL` 타이틀 글자 스트림 + 최소 2초 floor | [[../90-methodology/state-machine]] · [[../90-methodology/layered-rendering]] |
 | `modes/ModeController` | 게임 모드 권위(Infinite/Stage): 남은 카운트·차지·스테이지 레벨 로드·클리어/실패 판정 | [[../90-methodology/state-machine]] · [[../90-methodology/data-driven]] |
 | `PhysicsWorld` | Matter 엔진, 충돌 벽, 물리 step, 바디 생성/삭제 | [[../90-methodology/game-loop]] (Fixed Step) |

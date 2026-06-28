@@ -9,6 +9,7 @@ import { ChargePopup } from './popups/ChargePopup';
 import { ResultPopup } from './popups/ResultPopup';
 import { StageClearPopup, StageFailPopup } from './popups/StageEndPopup';
 import { MetaStore } from './MetaStore';
+import { Economy } from './Economy';
 import { MetaUI } from './MetaUI';
 import { PhysicsWorld } from './PhysicsWorld';
 import { BoardRenderer } from './BoardRenderer';
@@ -73,6 +74,7 @@ export class GameScene {
   private board: BoardRenderer;
   private title: TitleScreen;
   private meta: MetaStore; // coin wallet + daily mission/attendance state (docs/30-systems/meta-economy)
+  private economy!: Economy; // economy/progression rules (stage-clear reward, charge purchase, black-hole bonus)
   private metaUI: MetaUI; // Title-lobby popups (missions/attendance/wheel/shop)
   private coinPill!: CoinPill; // 코인 잔액 표시(공통) — Title·인게임 동일 위치, 돌림판이 딤 위로 올림
   private coinHomeIndex = 0; // fgRoot에서의 평상시 z(돌림판 닫힐 때 복귀)
@@ -180,6 +182,7 @@ export class GameScene {
     });
 
     this.meta = new MetaStore();
+    this.economy = new Economy(this.meta, this.modeC, () => this.info.setCount(this.modeC.count));
     this.meta.subscribe(() => this.hud.refreshMenuBadges()); // 보상 수령·KST 리셋 시 ≡ 집계 레드닷 갱신
     this.hud.refreshMenuBadges(); // 부팅 직후 초기 상태(출석 등 받을 보상)
     // Reward fan-out + collision scoring (extracted from this orchestrator). Host = the flow/state
@@ -456,13 +459,7 @@ export class GameScene {
 
   // Spend coins to add launch count (docs/30-systems/planet-charge). Returns false if unaffordable.
   private buyCharge(n: number): boolean {
-    if (this.modeC.isStage) return false; // 카운트 증가는 Infinite 한정 (docs/30-systems/launch-count)
-    const c = MODES.infinite.charge;
-    const cost = (n / c.stepPlanets) * c.coinPer10;
-    if (!this.meta.spendCoins(cost)) return false;
-    this.modeC.addCount(n);
-    this.info.setCount(this.modeC.count);
-    return true;
+    return this.economy.buyCharge(n);
   }
 
   // Black hole + black hole (Infinite only): consume both for +blackHoleBonusCount count, no spawn
@@ -473,8 +470,7 @@ export class GameScene {
     const y = (pa.body.position.y + pb.body.position.y) / 2;
     this.removePlanet(pa);
     this.removePlanet(pb);
-    this.modeC.addCount(MODES.infinite.blackHoleBonusCount);
-    this.info.setCount(this.modeC.count);
+    this.economy.terminalMergeBonus(); // Infinite 카운트 +blackHoleBonusCount (economy rules)
     const d = tierData(MAX_TIER);
     this.effects.mergeBurst(x, y, d.colors[0], d.radius);
     sound.play('merge', { pitch: 0.55 });
@@ -516,10 +512,7 @@ export class GameScene {
       const finalScore = this.score.score;
       this.result.show(finalScore, this.maxCombo, finalScore > this.sessionPrevBest);
     } else if (kind === 'clear') {
-      this.meta.markStageCleared(this.modeC.stageIndex); // 클리어 기록(재클리어 보상 방지)
-      this.meta.addCoins(MODES.stage.clearReward); // +300 코인 (docs/30-systems/stage-mode)
-      this.modeC.nextStage(); // 다음 스테이지로 전진(마지막에서 clamp)
-      this.meta.setStageProgress(this.modeC.stageIndex); // 진행도 영속 — Title·다음 진입이 다음 스테이지
+      this.economy.awardStageClear(); // 클리어 기록 + 코인 + 다음 스테이지 전진·영속 (economy rules)
       this.stageClear.open();
     } else if (kind === 'fail') {
       this.stageFail.open();
