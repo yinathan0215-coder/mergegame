@@ -135,7 +135,10 @@ export class GameScene {
     });
 
     this.buildInitialRack();
-    this.title = new TitleScreen(() => this.setScene('PoolInGame'));
+    this.title = new TitleScreen(
+      () => this.setScene('PoolInGame'),
+      () => ({ current: this.score.score, maxTier: this.stats.maxTier }) // Title 현재 점수·최대 머지 아이콘
+    );
     this.app.stage.addChild(this.title.container);
     this.fade.beginFill(0x0a0e1a);
     this.fade.drawRect(0, 0, DESIGN.w, DESIGN.h);
@@ -167,6 +170,7 @@ export class GameScene {
     this.scene = scene;
     this.gameLayer.visible = scene === 'PoolInGame';
     this.title.container.visible = scene === 'Title';
+    if (scene === 'Title') this.title.refresh(); // 최대 머지 아이콘 + 현재 점수 갱신
     if (scene === 'PoolInGame') {
       this.acc = 0;
       this.unlockedTier = PROGRESSION.unlockStart; // new game: reset unlock progression

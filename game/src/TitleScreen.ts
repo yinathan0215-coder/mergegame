@@ -2,7 +2,14 @@ import { Container, Graphics, Rectangle, Sprite, Text, type FederatedPointerEven
 import { ASSETS, ASSET_SIZES } from './assets';
 import { GalaxyBackground } from './GalaxyBackground';
 import { makePlanetSprite } from './PlanetFactory';
+import { tierData } from './data/planets';
 import { COLORS, DESIGN, JUICE } from './data/config';
+
+// Title이 GameScene으로부터 받는 현재 세션 진행 상태(현재 점수 + 최대 머지 등급).
+export interface TitleProgress {
+  current: number; // 진행 중(이어하기) 점수
+  maxTier: number; // 현재 세션 최대 머지 행성 등급
+}
 
 interface Orbit {
   sprite: Container;
@@ -34,8 +41,15 @@ export class TitleScreen {
   private toggleKnob = new Graphics();
   private toggleGalaxy = true;
   private knobTargetX = -48; // 토글 하이라이트 슬라이드 목표 x
+  private currentIcon?: Container; // 현재 점수 옆 최대 머지 행성 아이콘
+  private currentScore!: Text;
+  private currentRowCx = 0;
+  private currentRowY = 0;
 
-  constructor(private onPlay: () => void) {
+  constructor(
+    private onPlay: () => void,
+    private getProgress: () => TitleProgress = () => ({ current: 0, maxTier: 1 })
+  ) {
     this.container.eventMode = 'static';
     this.container.addChild(this.galaxy, this.orbitLayer, this.uiLayer);
     this.buildOrbitBackground();
@@ -131,19 +145,39 @@ export class TitleScreen {
     this.uiLayer.addChild(crown, best);
   }
 
-  // 🪐 + 현재(이어하기) 점수 — Play 아래, 중앙 정렬
+  // 🪐 + 현재(이어하기) 점수 — Play 아래, 중앙 정렬. 아이콘 = 현재 세션 **최대 머지 행성**(docs §2-2).
   private currentRow(cx: number, y: number) {
-    const icon = makePlanetSprite(5);
-    icon.scale.set(0.45);
-    const cur = makeText('0', 24, 0xdde7ff, '800');
-    cur.anchor.set(0, 0.5);
+    this.currentRowCx = cx;
+    this.currentRowY = y;
+    this.currentScore = makeText('0', 24, 0xdde7ff, '800');
+    this.currentScore.anchor.set(0, 0.5);
+    this.uiLayer.addChild(this.currentScore);
+    this.refresh();
+  }
+
+  // 현재 세션 최대 머지 행성 아이콘 — 등급 무관 ~32px로 정규화(넵튠 고정 아님).
+  private makeMaxTierIcon(): Container {
+    const tier = Math.max(1, this.getProgress().maxTier);
+    const icon = makePlanetSprite(tier);
+    icon.scale.set(32 / (tierData(tier).radius * 2));
+    return icon;
+  }
+
+  // Title 진입(부팅·Pool→Title 복귀) 시 GameScene이 호출 — 현재 점수 + 최대 머지 아이콘 갱신.
+  refresh() {
+    this.currentScore.text = this.getProgress().current.toLocaleString();
+    if (this.currentIcon) {
+      this.uiLayer.removeChild(this.currentIcon);
+      this.currentIcon.destroy({ children: true });
+    }
+    this.currentIcon = this.makeMaxTierIcon();
+    this.uiLayer.addChild(this.currentIcon);
     const gap = 10;
-    const total = 28 + gap + cur.width;
-    icon.x = cx - total / 2 + 14;
-    icon.y = y;
-    cur.x = cx - total / 2 + 28 + gap;
-    cur.y = y;
-    this.uiLayer.addChild(icon, cur);
+    const total = 32 + gap + this.currentScore.width;
+    this.currentIcon.x = this.currentRowCx - total / 2 + 16;
+    this.currentIcon.y = this.currentRowY;
+    this.currentScore.x = this.currentRowCx - total / 2 + 32 + gap;
+    this.currentScore.y = this.currentRowY;
   }
 
   private buttonContainer(cx: number, cy: number, w: number, h: number, onPress: () => void) {
