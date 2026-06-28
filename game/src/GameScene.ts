@@ -20,6 +20,7 @@ import { ScoreSystem } from './ScoreSystem';
 import { MergeSystem } from './MergeSystem';
 import { Effects } from './Effects';
 import { UnlockModal } from './UnlockModal';
+import { StageClearFx } from './StageClearFx';
 import { Combo } from './Combo';
 import { sound } from './SoundManager';
 import { makePlanetSprite } from './PlanetFactory';
@@ -93,15 +94,17 @@ export class GameScene {
   private result!: ResultPopup; // Infinite 결과창
   private stageClear!: StageClearPopup;
   private stageFail!: StageFailPopup;
-  // In-session phase state machine (docs/20-core-loop/screen-flow §PoolInGame 내부 상태); endKind/endAt/clearFly
-  // are this state's payload. Transitions: playing→paused→playing (unlock modal); playing→pendingEnd→ended
-  // (armed Stage end); playing→clearing→ended (clear fly); playing→ended (immediate); *→playing on startSession.
+  // In-session phase state machine (docs/20-core-loop/screen-flow §PoolInGame 내부 상태); endKind/endAt are
+  // this state's payload, the 'clearing' animation lives in clearFx. Transitions: playing→paused→playing
+  // (unlock modal); playing→pendingEnd→ended (armed Stage end); playing→clearing→ended (clear fly);
+  // playing→ended (immediate); *→playing on startSession.
   private phase: 'playing' | 'paused' | 'pendingEnd' | 'clearing' | 'ended' = 'playing';
   private endKind: 'result' | 'clear' | 'fail' | null = null; // 종료 예약(2초 지연 후 창 표시)
   private endAt = 0; // 종료창 등장 예정 시각(performance.now 기준)
-  // Stage 클리어 연출 상태(docs/30-systems/stage-mode §클리어): 목표 행성이 우하단 목표 UI로 포물선
-  // 비행 → 도달 시 머지 버스트(burst) 잠깐 hold → 클리어창. 연출 중엔 물리·발사 정지.
-  private clearFly: { sprite: Container | null; phase: 'fly' | 'burst'; t0: number; from: { x: number; y: number }; to: { x: number; y: number }; r0: number; tier: number } | null = null;
+  // Stage 클리어 연출(docs/30-systems/stage-mode §클리어): 목표 행성이 우하단 목표 UI로 포물선 비행 →
+  // 도달 시 머지 버스트(burst) 잠깐 hold → 클리어창. 연출 모듈이 스프라이트 수명을 소유; 연출 중 물리·발사
+  // 정지는 GameScene phase('clearing')가 담당.
+  private clearFx!: StageClearFx;
   private maxCombo = 0; // 세션 최대 콤보(Infinite 결과창)
   private sessionPrevBest = 0; // 세션 시작 시점의 최고 점수(NEW RECORD 판정용)
 
@@ -182,7 +185,8 @@ export class GameScene {
         // animation (which then opens the clear window). Already-cleared stage: no reward → falls through.
         if (this.modeC.isStage && (this.phase === 'playing' || this.phase === 'pendingEnd') && tier >= this.modeC.targetTier
             && !this.meta.isStageCleared(this.modeC.stageIndex)) {
-          this.startClearFly(tier, x, y, planet);
+          this.clearFx.start(tier, x, y, planet, performance.now());
+          this.phase = 'clearing';
           return;
         }
         // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock).
@@ -228,6 +232,13 @@ export class GameScene {
       canAim: () => this.scene === 'PoolInGame' && !this.trans && this.phase === 'playing'
         && this.metaUI.openKind() === null && !this.charge.container.visible,
     }, this.fgRoot);
+    this.clearFx = new StageClearFx(this.effectLayer, {
+      removePlanet: (p) => this.removePlanet(p),
+      clearChamber: () => this.launcher.clearChamber(),
+      targetPos: () => this.info.targetPos(),
+      burst: (x, y, c, r) => this.effects.mergeBurst(x, y, c, r),
+      onComplete: () => this.showEnd('clear'),
+    });
 
     this.meta = new MetaStore();
     this.meta.subscribe(() => this.hud.refreshMenuBadges()); // 보상 수령·KST 리셋 시 ≡ 집계 레드닷 갱신
@@ -441,7 +452,7 @@ export class GameScene {
     // Infinite는 unlockStart부터 시작해 해금 모달로 한 단계씩 연다.
     if (this.modeC.isStage) this.modeC.stageIndex = this.meta.stageProgress; // 영속 진행도 = 현재 스테이지
     this.unlockedTier = this.modeC.isStage ? MAX_TIER : PROGRESSION.unlockStart;
-    this.clearStageFly();
+    this.clearFx.clear();
     this.phase = 'playing';
     this.endKind = null;
     this.unlockModal.hide();
@@ -502,56 +513,6 @@ export class GameScene {
     return true;
   }
 
-  // Stage clear animation (docs/30-systems/stage-mode §클리어): the just-made target planet is removed
-  // from the board and a render-only sprite arcs to the bottom-right target UI, where it bursts and
-  // vanishes (no real merge); the clear window opens once the animation finishes. Firing stops + the
-  // launcher chamber empties immediately, and board physics freezes while clearFly is set (tick).
-  private startClearFly(tier: number, x: number, y: number, planet: Planet) {
-    if (this.phase === 'clearing' || this.phase === 'ended') return;
-    this.removePlanet(planet); // 목표 행성은 보드에서 제거 — 실제 합성이 아니라 연출 스프라이트가 날아간다
-    this.launcher.clearChamber(); // 발사대 비움(추가 발사 정지는 fire()가 clearFly로 차단)
-    const sprite = makePlanetSprite(tier); // scale 1 = 보드 크기(diameter = radius*2)
-    sprite.x = x;
-    sprite.y = y;
-    this.effectLayer.addChild(sprite);
-    this.clearFly = { sprite, phase: 'fly', t0: performance.now(), from: { x, y }, to: this.info.targetPos(), r0: tierData(tier).radius, tier };
-    this.phase = 'clearing';
-    sound.play('merge', { pitch: 1.5 });
-  }
-
-  // Drive the clear animation each frame; on completion open the clear window (showEnd).
-  private updateClearFly(now: number) {
-    const cf = this.clearFly;
-    if (!cf) return;
-    if (cf.phase === 'fly') {
-      const k = Math.min(1, (now - cf.t0) / 650);
-      const e = k < 0.5 ? 2 * k * k : 1 - ((-2 * k + 2) ** 2) / 2; // easeInOutQuad
-      const endScale = 44 / (cf.r0 * 2); // 목표 UI 행성 크기(44px, GameInfoPanel)
-      if (cf.sprite) {
-        cf.sprite.x = cf.from.x + (cf.to.x - cf.from.x) * e;
-        cf.sprite.y = cf.from.y + (cf.to.y - cf.from.y) * e - 90 * Math.sin(Math.PI * e); // 위로 솟는 포물선
-        cf.sprite.rotation = now * 0.02;
-        cf.sprite.scale.set(1 + (endScale - 1) * e);
-      }
-      if (k >= 1) {
-        this.effects.mergeBurst(cf.to.x, cf.to.y, tierData(cf.tier).colors[0], cf.r0); // 합쳐지는 이펙트
-        sound.play('merge', { pitch: 1.7 });
-        if (cf.sprite) { this.effectLayer.removeChild(cf.sprite); cf.sprite.destroy({ children: true }); cf.sprite = null; }
-        cf.phase = 'burst';
-        cf.t0 = now;
-      }
-    } else if (now - cf.t0 >= 300) { // 버스트가 잠깐 보인 뒤 클리어창
-      this.clearFly = null;
-      this.showEnd('clear');
-    }
-  }
-
-  // Tear down any in-flight clear animation sprite (new session / cleanup).
-  private clearStageFly() {
-    if (this.clearFly?.sprite) { this.effectLayer.removeChild(this.clearFly.sprite); this.clearFly.sprite.destroy({ children: true }); }
-    this.clearFly = null;
-  }
-
   // End-of-session check (docs/30-systems/launch-count). Stage: arm the end window after a delay.
   // Infinite: end only once the count is gone AND every planet has settled (no fixed delay).
   private checkSessionEnd() {
@@ -597,7 +558,7 @@ export class GameScene {
   }
 
   // phase === 'clearing', read via getter so tick()'s earlier early-returns don't narrow this.phase
-  // out of 'clearing' — the loop mutates it back to 'clearing' via startClearFly (merge.process side effect).
+  // out of 'clearing' — the loop mutates it back to 'clearing' via clearFx.start (merge.process side effect).
   private get isClearing(): boolean { return this.phase === 'clearing'; }
 
   private tick() {
@@ -632,7 +593,7 @@ export class GameScene {
 
     // Stage 클리어 연출 중: 보드 물리·발사를 멈추고 비행+버스트 연출만 갱신(완료 시 클리어창).
     if (this.isClearing) {
-      this.updateClearFly(nowMs);
+      this.clearFx.update(nowMs);
       this.effects.update(nowMs);
       return;
     }
