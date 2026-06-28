@@ -12,6 +12,14 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-29] manual | 감사 수정 종결 — SessionController 추출, D2 천장 확정(91.0 유지)
+why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해" — 비차단 잔여였던 D2 세션종료 흐름을 실제 추출
+(SessionController, `ad35999`; phase·setPhase는 GameScene 유지로 D4=5 보존). 재감사
+[[70-verification/audits/2026-06-29-0536-methodology-structure-reaudit5]] **91.0/100** 유지 — D2는 4 천장
+확정(잔여 fire·rack·charge·terminal은 실 메카닉 로직, 추가 분리는 과분할로 코드 악화). GameScene 810→547,
+7모듈 분리, 17 수정 커밋, Playwright 80/0, 회귀 0. **유일 잔여 D1=3은 사용자 balance.json 미커밋 WIP 차단**
+(해소 시 진행). balance.json·ModeController 사용자 WIP 미수정 유지.
+
 ## [2026-06-29] manual | 감사 수정 종료 — 방법론 69.6→91.0 (+21.4), D5→5
 why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해" 최종. PlanetSystem 추출(엔티티 스토어·스프라이트
 동기, `67bb6b5`)로 D5 4→5. 재감사 [[70-verification/audits/2026-06-29-0520-methodology-structure-reaudit4]]

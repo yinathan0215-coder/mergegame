@@ -63,10 +63,13 @@ sources:
   종합 **89.0/100**(0436 84.2 → +4.8, 누적 69.6→89.0 **+19.4**). D3(prod 빌드 스모크)·D4(1급 종료상태+가드
   setPhase) → 5 ⇒ **6차원 만점**. Playwright 80/0, 회귀 0. 잔여: **D1=3 차단**(balance.json WIP)·D2·D5=4
   (과분할 회피 판단). 11 수정 커밋(4148560…0f12f5f).
-- [[70-verification/audits/2026-06-29-0520-methodology-structure-reaudit4]] — **최종 재감사**(@67bb6b5).
+- [[70-verification/audits/2026-06-29-0520-methodology-structure-reaudit4]] — **재감사**(@67bb6b5).
   종합 **91.0/100**(0459 89.0 → +2, 누적 69.6→91.0 **+21.4**). PlanetSystem 추출(엔티티/렌더 시스템) → D5 4→5
-  ⇒ **7차원 만점**. GameScene 810→570(6모듈). Playwright 80/0. 남은 2건: **D1=3 차단**(balance.json WIP),
-  **D2=4 의도적**(SessionController 분리는 상태머신 과분할이라 D4=5 훼손 → 미추구). 13 수정 커밋.
+  ⇒ **7차원 만점**. GameScene 810→570(6모듈). Playwright 80/0.
+- [[70-verification/audits/2026-06-29-0536-methodology-structure-reaudit5]] — **종결 재감사**(@ad35999).
+  종합 **91.0 유지**. 비차단 잔여였던 D2 세션종료 흐름을 SessionController로 실제 추출(D4=5 보존 — setPhase 단일
+  가드점 유지). D2는 **4 천장 확정**(잔여 fire·rack·charge·terminal은 실 메카닉, 추가 분리=과분할). GameScene
+  810→547(7모듈), 17 수정 커밋, Playwright 80/0. **유일 잔여 D1=3은 balance.json WIP 차단**.
 
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.
