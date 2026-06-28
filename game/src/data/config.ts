@@ -50,44 +50,64 @@ const OUTER_LOWER_R = LAUNCHER.r + INNER_INSET;
 
 type Pt = { x: number; y: number };
 
-// Gold shield outline (closed polyline) + the [ai,bi] index range of its lower arc block, so the
-// inner line can offset the whole shape and swap that block for an upper arc.
+// Polyline sampling — dense enough that large-radius curves read as smooth, not faceted. The board
+// geometry is STATIC, so this cost is paid once (boardOutline/innerOutline are memoised below).
+const DENS = 3.5; // ~px between samples
+const segN = (len: number) => Math.max(2, Math.ceil(Math.abs(len) / DENS));
+function quadInto(out: Pt[], p0: Pt, c: Pt, p1: Pt) {
+  const n = segN(Math.hypot(c.x - p0.x, c.y - p0.y) + Math.hypot(p1.x - c.x, p1.y - c.y));
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, u = 1 - t;
+    out.push({ x: u * u * p0.x + 2 * u * t * c.x + t * t * p1.x, y: u * u * p0.y + 2 * u * t * c.y + t * t * p1.y });
+  }
+}
+function arcInto(out: Pt[], cx: number, cy: number, r: number, a0: number, a1: number) {
+  const n = segN(Math.abs(a1 - a0) * r);
+  for (let i = 1; i <= n; i++) {
+    const a = a0 + ((a1 - a0) * i) / n;
+    out.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+  }
+}
+const FILLET = 14; // round-off length where a taper meets the launcher arc
+
+// Gold shield outline. ai/bi bracket the bottom block (right-taper-end .. left-taper-start), so the
+// inner line can keep the offset tapers and swap the gold's lower arc for a launcher-TOP cap.
 function shieldPath(): { pts: Pt[]; ai: number; bi: number } {
   const x0 = PLAY.x, x1 = PLAY.x + PLAY.w, ty = PLAY.y, by = LINE_Y;
-  const topR = L.cornerR, jr = JUNCTION_R;
-  const tL = rayCircle(x0, by, Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, OUTER_LOWER_R);
-  const tR = rayCircle(x1, by, -Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, OUTER_LOWER_R);
-  const pts: Pt[] = [];
-  const push = (x: number, y: number) => pts.push({ x, y });
-  const quad = (px: number, py: number, cx: number, cy: number, qx: number, qy: number) => {
-    for (let i = 1; i <= 5; i++) {
-      const t = i / 5, u = 1 - t;
-      push(u * u * px + 2 * u * t * cx + t * t * qx, u * u * py + 2 * u * t * cy + t * t * qy);
-    }
-  };
-  push(x0 + topR, ty);
-  push(x1 - topR, ty);
-  quad(x1 - topR, ty, x1, ty, x1, ty + topR);
-  push(x1, by - jr);
-  const ru = unit(tR.x - x1, tR.y - by);
-  quad(x1, by - jr, x1, by, x1 + ru.x * jr, by + ru.y * jr); // right junction → right taper
-  push(tR.x, tR.y);
-  const ai = pts.length - 1; // right taper endpoint = lower-arc start
-  const aR = Math.atan2(tR.y - LAUNCHER.y, tR.x - LAUNCHER.x);
-  let aL = Math.atan2(tL.y - LAUNCHER.y, tL.x - LAUNCHER.x);
+  const topR = L.cornerR, jr = JUNCTION_R, R = OUTER_LOWER_R, cX = LAUNCHER.x, cY = LAUNCHER.y;
+  const tL = rayCircle(x0, by, Math.cos(tA), Math.sin(tA), cX, cY, R);
+  const tR = rayCircle(x1, by, -Math.cos(tA), Math.sin(tA), cX, cY, R);
+  const ru = unit(tR.x - x1, tR.y - by), lu = unit(tL.x - x0, tL.y - by);
+  const Rj = { x: x1 + ru.x * jr, y: by + ru.y * jr }; // right rect→taper junction end (taper start)
+  const Lj = { x: x0 + lu.x * jr, y: by + lu.y * jr }; // left taper end (rect junction start)
+  const tdR = unit(tR.x - Rj.x, tR.y - Rj.y);
+  const tuL = unit(Lj.x - tL.x, Lj.y - tL.y);
+  const aR = Math.atan2(tR.y - cY, tR.x - cX);
+  let aL = Math.atan2(tL.y - cY, tL.x - cX);
   if (aL < aR) aL += Math.PI * 2;
-  const segs = 24;
-  for (let i = 1; i <= segs; i++) {
-    const ang = aR + ((aL - aR) * i) / segs;
-    push(LAUNCHER.x + Math.cos(ang) * OUTER_LOWER_R, LAUNCHER.y + Math.sin(ang) * OUTER_LOWER_R);
-  }
-  const bi = pts.length - 1; // left taper endpoint = lower-arc end
-  const lu = unit(tL.x - x0, tL.y - by);
-  push(x0 + lu.x * jr, by + lu.y * jr);
-  quad(x0 + lu.x * jr, by + lu.y * jr, x0, by, x0, by - jr); // left taper → left junction
-  push(x0, ty + topR);
-  quad(x0, ty + topR, x0, ty, x0 + topR, ty);
-  return { pts, ai, bi };
+  const dA = FILLET / R;
+  const rTaperEnd = { x: tR.x - tdR.x * FILLET, y: tR.y - tdR.y * FILLET };
+  const lTaperStart = { x: tL.x + tuL.x * FILLET, y: tL.y + tuL.y * FILLET };
+  const arc0 = { x: cX + Math.cos(aR + dA) * R, y: cY + Math.sin(aR + dA) * R };
+  const arc1 = { x: cX + Math.cos(aL - dA) * R, y: cY + Math.sin(aL - dA) * R };
+
+  const out: Pt[] = [];
+  out.push({ x: x0 + topR, y: ty });
+  out.push({ x: x1 - topR, y: ty });
+  arcInto(out, x1 - topR, ty + topR, topR, -Math.PI / 2, 0); // top-right corner (true arc)
+  out.push({ x: x1, y: by - jr }); // right side
+  quadInto(out, { x: x1, y: by - jr }, { x: x1, y: by }, Rj); // right rect→taper junction
+  out.push(rTaperEnd); // right taper (straight)
+  const ai = out.length - 1;
+  quadInto(out, rTaperEnd, tR, arc0); // right taper→arc fillet (rounded)
+  arcInto(out, cX, cY, R, aR + dA, aL - dA); // lower arc
+  quadInto(out, arc1, tL, lTaperStart); // arc→left taper fillet (rounded)
+  const bi = out.length - 1;
+  out.push(Lj); // left taper (straight)
+  quadInto(out, Lj, { x: x0, y: by }, { x: x0, y: by - jr }); // left taper→rect junction
+  out.push({ x: x0, y: ty + topR }); // left side
+  arcInto(out, x0 + topR, ty + topR, topR, -Math.PI, -Math.PI / 2); // top-left corner (true arc)
+  return { pts: out, ai, bi };
 }
 
 // Inward (toward interior) uniform offset of a closed polyline by d, using winding-consistent
@@ -112,28 +132,38 @@ function offsetInward(pts: Pt[], d: number): Pt[] {
   return out;
 }
 
-// Gold visual frame (outer shield).
+let _board: Pt[] | null = null;
+let _inner: Pt[] | null = null;
+
+// Gold visual frame (outer shield) — STATIC, baked once.
 export function boardOutline(): Pt[] {
-  return shieldPath().pts;
+  if (!_board) _board = shieldPath().pts;
+  return _board;
 }
 
-// Inner line (brown, collision): gold outline offset inward by INNER_INSET for a UNIFORM gap on the
-// rect + tapers, then the lower-arc block is replaced by the launcher's UPPER arc (over the top) —
-// so the launcher circle sits OUTSIDE the inner line, in the background-color band.
+// Inner line (brown, collision): gold offset inward by INNER_INSET (uniform gap), then the bottom is
+// a launcher-TOP cap rounded into the tapers — so the launcher sits OUTSIDE the inner line, in the
+// background-color band. STATIC, baked once (shared by render, physics, and aim raycasts).
 export function innerOutline(): Pt[] {
+  if (_inner) return _inner;
   const g = shieldPath();
   const off = offsetInward(g.pts, INNER_INSET);
-  const IR = off[g.ai], IL = off[g.bi]; // taper endpoints, now on the launcher circle (upper sides)
-  const aR = Math.atan2(IR.y - LAUNCHER.y, IR.x - LAUNCHER.x);
-  let aL = Math.atan2(IL.y - LAUNCHER.y, IL.x - LAUNCHER.x);
-  while (aL > aR) aL -= Math.PI * 2; // go the UPPER way (decreasing, through straight-up)
-  const upper: Pt[] = [];
-  const segs = 18;
-  for (let i = 1; i < segs; i++) {
-    const a = aR + ((aL - aR) * i) / segs;
-    upper.push({ x: LAUNCHER.x + Math.cos(a) * LAUNCHER.r, y: LAUNCHER.y + Math.sin(a) * LAUNCHER.r });
-  }
-  return [...off.slice(0, g.ai + 1), ...upper, ...off.slice(g.bi)];
+  const nn = off.length;
+  const A = off[g.ai], B = off[g.bi]; // offset taper ends (right, left)
+  const beforeA = off[(g.ai - 1 + nn) % nn], afterB = off[(g.bi + 1) % nn];
+  const cX = LAUNCHER.x, cY = LAUNCHER.y, R = LAUNCHER.r;
+  const aA = Math.atan2(A.y - cY, A.x - cX);
+  let aB = Math.atan2(B.y - cY, B.x - cX);
+  while (aB > aA) aB -= Math.PI * 2; // upper way: decreasing from aA through straight-up to aB
+  const dA = Math.min(FILLET / R, (aA - aB) / 4); // don't let the fillets swallow the cap
+  const arc0 = { x: cX + Math.cos(aA - dA) * R, y: cY + Math.sin(aA - dA) * R };
+  const arc1 = { x: cX + Math.cos(aB + dA) * R, y: cY + Math.sin(aB + dA) * R };
+  const cap: Pt[] = [];
+  quadInto(cap, beforeA, A, arc0); // round the right taper→cap corner
+  arcInto(cap, cX, cY, R, aA - dA, aB + dA); // launcher-top cap arc
+  quadInto(cap, arc1, B, afterB); // round the cap→left taper corner
+  _inner = [...off.slice(0, g.ai), ...cap, ...off.slice(g.bi + 2)];
+  return _inner;
 }
 
 // collision categories for the one-way line (docs/30-systems/play-area-boundary)

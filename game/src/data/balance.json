@@ -12,7 +12,7 @@
     "innerInset": 16,
     "play": { "x": 46, "y": 108, "w": 358, "h": 470 },
     "wallT": 20,
-    "cornerR": 48,
+    "cornerR": 64,
     "junctionR": 36,
     "taperAngleDeg": 140,
     "launcher": { "x": 225, "offsetY": 64, "r": 38 },
