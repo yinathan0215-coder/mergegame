@@ -8,9 +8,9 @@ import { attachButtonFeedback } from './ui/button';
 // just-unlocked planet + a single OK button over a full-screen dim. The game is paused while it is up;
 // OK closes it and unlocks the next tier. Render/UI only.
 //
-// The dim must cover the WHOLE viewport, but the Pixi canvas is contain-fit and letterboxed, so a Pixi
-// rect can only darken the board area. A DOM <div> sitting BEHIND the (opaque) canvas dims the
-// letterbox margins; together with the Pixi dim the entire screen reads as one continuous dim.
+// The dim covers the WHOLE viewport: the modal lives in GameScene's cover popup layer (popupRoot), so the
+// Pixi dim rect scales to fill the entire screen (top/bottom included) — the same 2-layer fit as the
+// galaxy/scene-fade. No separate DOM dim is needed (the canvas now fills the viewport).
 const ENTER_MS = 220; // entrance transition (dim fills + content pops/fades in)
 const DIM_ALPHA = 0.72;
 
@@ -20,7 +20,6 @@ export class UnlockModal {
   private content = new Container(); // rotating planet + name + OK button — scales/fades in together
   private planet?: Container;
   private nameText: Text; // English name of the unlocked planet (upright, above the rotating planet)
-  private letterboxDim: HTMLDivElement;
   private t0 = 0;
   private entering = false;
 
@@ -69,12 +68,6 @@ export class UnlockModal {
     });
     this.nameText.anchor.set(0.5);
     this.content.addChild(this.nameText);
-
-    // letterbox dim (DOM) — behind the opaque canvas, fades with CSS to match the entrance transition
-    this.letterboxDim = document.createElement('div');
-    this.letterboxDim.style.cssText =
-      'position:fixed;inset:0;background:rgba(0,0,0,0.72);opacity:0;transition:opacity 180ms ease;pointer-events:none;z-index:-1;';
-    document.body.appendChild(this.letterboxDim);
   }
 
   show(tier: number) {
@@ -88,14 +81,12 @@ export class UnlockModal {
     this.nameText.x = DESIGN.w / 2;
     this.nameText.y = DESIGN.h * 0.4 - tierData(tier).radius * 1.7 - 18; // above the (1.7×) planet
     this.container.visible = true;
-    this.letterboxDim.style.opacity = '1';
     this.t0 = performance.now();
     this.entering = true;
   }
 
   hide() {
     this.container.visible = false;
-    this.letterboxDim.style.opacity = '0';
     this.entering = false;
   }
 

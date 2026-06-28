@@ -12,6 +12,25 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 인게임 팝업 딤 뷰포트 전체로 — cover 팝업 레이어(popupRoot), 검증 완료
+why: 사용자 지시 — 인게임 딤 팝업(해금 모달 등)이 2-레이어 fit 후 상하 여백을 못 덮음. 원인: 모달이
+contain `fgRoot`에 있어 Pixi 딤이 9:16만 덮고, 기존 레터박스용 DOM 딤(`letterboxDim`)은 뷰포트를 꽉 채운
+캔버스 뒤(z-index:-1)라 가려짐. 해소: 신규 **`popupRoot`(cover)** 레이어에 모달을 두어 딤이 **뷰포트 전체
+(상하 여백 포함)**를 덮게 함(배경/fade와 동일 2-레이어 방식), 콘텐츠는 중앙. `UnlockModal`의 DOM
+`letterboxDim` 제거(불필요). [[50-art-ux/popup-system]] §입력·딤 정본화(딤=cover 레이어, DOM 딤 폐기).
+검증: tsc·vite build OK · headed로 해금 모달 딤이 상하까지 꽉 참 스크린샷 확인 · Playwright **24/24**.
+
+## [2026-06-28] manual | 메타 레이어 설계 — 공통 팝업 틀 + 일일 미션·출석·돌림판·상점 + 코인 경제(GDD)
+why: 사용자 지시(이미지 4종 첨부) — Title 로비 메타 기능 5종을 docs-write 선행 후 구현. 신규 정본 페이지:
+[[50-art-ux/popup-system]](BG/제목/X 3요소 + 머지 모달과 동일한 오픈 전환, BG 생략 가능),
+[[30-systems/meta-economy]](코인 지갑 + KST 자정 일일 리셋 + localStorage 영속, 게임플레이→미션 보고),
+[[30-systems/daily-missions]](미션 8개=콤보 피크 5/15/30·머지 100/200/300·태양 만들기·**광고 더미(달성불가)**;
+개당 50 자동지급 + 누적 받기 2/5/8=50/100/200, 8단계는 더미로 도달불가),
+[[30-systems/attendance]](7일 100~400, KST 일자 1회, 받기/일차칸 클릭, 받은 뒤 다음 보상 카운트다운),
+[[30-systems/lucky-wheel]](8칸 25~200, 120 코인, 정지 시 균등랜덤 결정 후 3초 감속 정착, BG 없음),
+[[30-systems/shop]](잠금 표시). 수치 SSoT [[40-balancing/meta-economy]]. 결정사항: 코인 시작=**0**(사용자
+확정), 8번째 미션=광고 더미(사용자 확정). 인덱스([[30-systems/index]]·[[50-art-ux/index]]·[[40-balancing/index]]) 갱신.
+
 ## [2026-06-28] manual | Title 은하수 2-레이어 구현 — cover로 상하 여백 채움(태양계·UI는 contain), 검증 완료
 why: 사용자 지시(동시 세션 정지 후 단독 구현). 근본 원인 = 고정 9:16 캔버스 + contain → Pixi 은하수가
 레터박스(캔버스 밖)를 못 칠함. 해소: 캔버스를 **뷰포트 크기**(`resizeTo: window`)로 바꾸고 배경/전경

@@ -62,6 +62,7 @@ export class GameScene {
   private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
   private bgRoot = new Container(); // 은하수 배경 — cover로 뷰포트 가득(Title 한정)
   private fgRoot = new Container(); // 태양계·로비 UI·보드·HUD — contain(9:16, 잘림 없음)
+  private popupRoot = new Container(); // 인게임/로비 팝업 — cover로 딤이 뷰포트 전체(상하 여백 포함)를 덮음
 
   stats = { shots: 0, merges: 0, maxTier: 1, sunReached: false };
 
@@ -75,7 +76,7 @@ export class GameScene {
     });
     mount.appendChild(this.app.view as unknown as HTMLCanvasElement);
     this.gameLayer.addChild(this.boardLayer, this.comboLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
-    this.app.stage.addChild(this.bgRoot, this.fgRoot); // 배경(cover) 뒤 · 전경(contain) 앞
+    this.app.stage.addChild(this.bgRoot, this.fgRoot, this.popupRoot); // 배경(cover)·전경(contain)·팝업(cover)
     this.fgRoot.addChild(this.gameLayer);
     this.app.stage.eventMode = 'static';
 
@@ -151,7 +152,7 @@ export class GameScene {
     this.fade.alpha = 0;
     this.fade.eventMode = 'none';
     this.unlockModal = new UnlockModal(() => this.onUnlockOk());
-    this.fgRoot.addChild(this.unlockModal.container); // 모달은 contain(9:16)
+    this.popupRoot.addChild(this.unlockModal.container); // 모달 딤은 cover 팝업 레이어(뷰포트 전체)
     this.app.stage.addChild(this.fade); // 씬 전이 페이드(최상위, 뷰포트 전체) — 크기는 layout()
     this.setScene('Title');
     this.app.ticker.add(() => this.tick());
@@ -370,6 +371,8 @@ export class GameScene {
     const sBg = Math.max(vw / DESIGN.w, vh / DESIGN.h);
     this.bgRoot.scale.set(sBg);
     this.bgRoot.position.set((vw - DESIGN.w * sBg) / 2, (vh - DESIGN.h * sBg) / 2);
+    this.popupRoot.scale.set(sBg); // 팝업 딤도 cover로 뷰포트 전체(상하 여백까지)
+    this.popupRoot.position.set((vw - DESIGN.w * sBg) / 2, (vh - DESIGN.h * sBg) / 2);
     this.app.stage.hitArea = new Rectangle(0, 0, vw, vh);
     this.fade.clear();
     this.fade.beginFill(0x0a0e1a);
