@@ -1,7 +1,7 @@
 import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi.js';
 import { HUD, COLORS, JUICE } from './data/config';
 import { ASSETS, ASSET_SIZES } from './assets';
-import { attachButtonFeedback } from './ui/button';
+import { attachButtonFeedback, redDot } from './ui/button';
 
 function txt(s: string, size: number, color: number, weight: string): Text {
   return new Text(s, { fill: color, fontSize: size, fontFamily: 'Arial, sans-serif', fontWeight: weight as any });
@@ -12,6 +12,7 @@ function txt(s: string, size: number, color: number, weight: string): Text {
 export interface HudMenuItem {
   icon: string;
   onTap: () => void;
+  badge?: () => boolean; // 받을 보상 있으면 항목 우상단 레드닷(일일미션·출석, docs/50-art-ux/layout §2-c)
 }
 
 // Top HUD (docs/50-art-ux/layout): left = back button (→ Title) sitting BELOW the coin pill (the coin
@@ -29,6 +30,8 @@ export class Hud {
   private dropdown = new Container(); // the icon-only shortcut list under the ≡ button
   private menuItems: HudMenuItem[];
   private menuOpen = false;
+  private menuDot = redDot(); // ≡ 버튼 집계 레드닷(드롭다운 항목 중 받을 보상 있으면)
+  private itemDots: { dot: Graphics; badge: () => boolean }[] = [];
 
   constructor(layer: Container, onBack: () => void, menuItems: HudMenuItem[] = []) {
     this.menuItems = menuItems;
@@ -59,13 +62,18 @@ export class Hud {
     // ── corners: back button (left, BELOW the coin pill at y18–50) + ≡ menu button (right) ──
     this.button(layer, 12, 54, 'exit', onBack);
     this.buildMenu(layer); // dropdown scrim + icon list (above the board, below the items + ≡ button)
-    this.button(layer, HUD.w - 44, 12, 'menu', () => this.toggleMenu()); // ≡ toggles the dropdown (added last → on top)
+    const menuBtn = this.button(layer, HUD.w - 44, 12, 'menu', () => this.toggleMenu()); // ≡ toggles the dropdown (added last → on top)
+    this.menuDot.x = 14; // ≡ 아이콘 우상단 집계 레드닷(docs/50-art-ux/layout §2-c)
+    this.menuDot.y = -14;
+    this.menuDot.visible = false;
+    menuBtn.addChild(this.menuDot);
+    this.refreshMenuBadges();
   }
 
   // Icon-only corner button (docs/50-art-ux/button-system: HUD corner buttons have NO background box —
   // the icon itself is the tap target). A 36×34 hitArea + the shared press feedback (feedback-effects §5);
   // the tap is swallowed so it never reaches the launcher (which would read it as an aim/fire on the board).
-  private button(layer: Container, x: number, y: number, kind: 'exit' | 'menu', onTap?: () => void) {
+  private button(layer: Container, x: number, y: number, kind: 'exit' | 'menu', onTap?: () => void): Container {
     const c = new Container();
     c.x = x + 16;
     c.y = y + 15;
@@ -76,6 +84,7 @@ export class Hud {
     c.addChild(icon);
     attachButtonFeedback(c, onTap ?? (() => {}));
     layer.addChild(c);
+    return c;
   }
 
   // ≡ dropdown (docs/50-art-ux/layout §2-c): an icon-only shortcut list that hangs DIRECTLY below the ≡
@@ -120,6 +129,13 @@ export class Hud {
       icon.anchor.set(0.5);
       icon.scale.set(34 / ASSET_SIZES.uiIcon.w);
       c.addChild(icon);
+      if (item.badge) { // 받을 보상 레드닷(일일미션·출석, docs/50-art-ux/layout §2-c)
+        const dot = redDot();
+        dot.x = 14;
+        dot.y = -14;
+        c.addChild(dot);
+        this.itemDots.push({ dot, badge: item.badge });
+      }
       attachButtonFeedback(c, () => { item.onTap(); this.closeMenu(); });
       this.dropdown.addChild(c);
     });
@@ -130,10 +146,23 @@ export class Hud {
   get menuIsOpen(): boolean { return this.menuOpen; }
   get menuItemCount(): number { return this.menuItems.length; }
 
+  // Re-evaluate each dropdown item's red-dot + the ≡ aggregate dot (docs/50-art-ux/layout §2-c).
+  // Called on open (item dots) and by GameScene on meta change / scene entry (≡ dot stays live).
+  refreshMenuBadges() {
+    let any = false;
+    for (const it of this.itemDots) {
+      const on = it.badge();
+      it.dot.visible = on;
+      any = any || on;
+    }
+    this.menuDot.visible = any;
+  }
+
   toggleMenu() { if (this.menuOpen) this.closeMenu(); else this.openMenu(); }
 
   private openMenu() {
     this.menuOpen = true;
+    this.refreshMenuBadges(); // 펼치기 직전 항목 레드닷 최신화
     this.dropdown.visible = true;
     this.scrim.eventMode = 'static'; // now catches outside taps (and blocks board input) to close
   }

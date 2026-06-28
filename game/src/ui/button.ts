@@ -15,6 +15,7 @@ export function attachButtonFeedback(target: Container, onTap: () => void): Cont
   target.eventMode = 'static';
   target.cursor = 'pointer';
   let raf = 0;
+  let pressed = false; // true only between a pointerdown ON this button and its release — a tap needs both
 
   const settle = () => {
     cancelAnimationFrame(raf);
@@ -33,20 +34,41 @@ export function attachButtonFeedback(target: Container, onTap: () => void): Cont
 
   target.on('pointerdown', (e: FederatedPointerEvent) => {
     e.stopPropagation(); // swallow so the tap never reaches the board/launcher behind it
+    pressed = true;
     sound.play('uiPress'); // common UI press SFX (docs/50-art-ux/sound-design)
     cancelAnimationFrame(raf);
     target.scale.set(downScale);
   });
   target.on('pointerup', (e: FederatedPointerEvent) => {
+    // Only a press that BEGAN on this button counts as a tap. A pointer pressed elsewhere (e.g. a launch
+    // drag from the board) that just happens to release over the button must NOT trigger it, nor be
+    // swallowed — let it fall through to the launcher so the shot still fires (docs/50-art-ux/feedback-effects §5).
+    if (!pressed) return;
+    pressed = false;
     e.stopPropagation();
     settle();
     onTap();
   });
   target.on('pointerupoutside', (e: FederatedPointerEvent) => {
+    if (!pressed) return;
+    pressed = false;
     e.stopPropagation();
     settle(); // released off the button → spring back, no action
   });
   return target;
+}
+
+// Red-dot "받을 보상 있음" badge: white-rimmed red dot centred on the origin (docs/50-art-ux/title-screen
+// §2-3 · layout §2-c). Caller positions it at a button's top-right and toggles `.visible`.
+export function redDot(): Graphics {
+  const g = new Graphics();
+  g.beginFill(0xffffff);
+  g.drawCircle(0, 0, 8);
+  g.endFill();
+  g.beginFill(0xe53935);
+  g.drawCircle(0, 0, 6);
+  g.endFill();
+  return g;
 }
 
 // Multiply a hex colour's channels by `f` (>1 lighten, <1 darken), clamped to [0,255].

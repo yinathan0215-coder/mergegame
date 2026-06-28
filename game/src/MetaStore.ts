@@ -57,10 +57,13 @@ function freshMissions(date: string): MetaState['missions'] {
 export class MetaStore {
   private s: MetaState;
   private listeners = new Set<() => void>();
+  private readonly freshInstall: boolean;
 
   constructor() {
     const today = kstDateStr(Date.now());
-    this.s = this.load() ?? {
+    const loaded = this.load();
+    this.freshInstall = loaded === null; // 세이브 부재 = 게임 최초 실행 → GameScene이 Stage 1로 직행
+    this.s = loaded ?? {
       coins: ECONOMY.startCoins,
       missions: freshMissions(today),
       attendance: { day: 1, lastClaimDate: '' },
@@ -68,6 +71,12 @@ export class MetaStore {
       clearedStages: [],
     };
     this.rollover(today);
+  }
+
+  /** True if no localStorage save existed at boot (docs/20-core-loop/screen-flow §최초 실행) —
+   *  the very first run skips Title and drops straight into Stage 1. */
+  get isFreshInstall(): boolean {
+    return this.freshInstall;
   }
 
   // ── subscription ───────────────────────────────────────────────────────────
@@ -193,6 +202,17 @@ export class MetaStore {
     this.s.coins += (MISSIONS.milestones as Record<string, number>)[String(threshold)];
     this.changed();
     return true;
+  }
+
+  /** Red-dot: any per-mission (done & unclaimed) OR milestone (reached & unclaimed) reward claimable
+   *  right now (docs/30-systems/daily-missions "레드닷"). Drives the daily-mission button badge. */
+  hasClaimableMission(): boolean {
+    this.rollover(kstDateStr(Date.now()));
+    const mp = this.s.missions;
+    const perMission = LIST.some((m) => this.missionDone(m) && !mp.claimed.includes(m.id));
+    const reached = LIST.filter((m) => this.missionDone(m)).length;
+    const milestone = MILESTONES.some((th) => reached >= th && !mp.claimedMilestones.includes(th));
+    return perMission || milestone;
   }
 
   // ── attendance ─────────────────────────────────────────────────────────────

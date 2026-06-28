@@ -4,8 +4,7 @@ import { GalaxyBackground } from './GalaxyBackground';
 import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
 import { COLORS, DESIGN } from './data/config';
-import { attachButtonFeedback } from './ui/button';
-import { coinSprite } from './ui/coin';
+import { attachButtonFeedback, redDot } from './ui/button';
 import { sound } from './SoundManager';
 import type { PopupKind } from './MetaUI';
 import type { GameMode } from './modes/ModeController';
@@ -22,6 +21,7 @@ export interface TitleMeta {
   coins: () => number;
   subscribe: (fn: () => void) => () => void;
   open: (kind: PopupKind) => void;
+  badge: (kind: PopupKind) => boolean; // 받을 보상 있으면 레드닷(일일미션·출석, docs/50-art-ux/title-screen §2-3)
 }
 
 interface Orbit {
@@ -43,6 +43,11 @@ function makeText(value: string, size: number, color = 0xffffff, weight: '400' |
 }
 
 const ORBIT_CY = DESIGN.h * 0.3; // 태양계 중점 y — 태양이 게임 시작 버튼보다 위에 보이도록 상단 배치
+// 하이라이트 캡슐 색 — Stage=파랑(기본·좌측), Infinite=보라(우측) (docs/50-art-ux/title-screen §2-4)
+const TOGGLE_ACTIVE_COLOR: Record<GameMode, number> = {
+  Stage: 0x1f8efa,
+  Infinite: 0x4e1da9,
+};
 
 export class TitleScreen {
   readonly container = new Container(); // 태양계 공전 + 로비 UI (contain 9:16)
@@ -51,10 +56,12 @@ export class TitleScreen {
   private uiLayer = new Container();
   private orbits: Orbit[] = [];
   private sun!: Container;
+  private playButtonBody?: Container;
+  private playButtonBodyAsset = '';
   private toggleKnob = new Graphics();
-  private gameMode: GameMode = 'Infinite'; // 하단 토글이 고르는 진입 모드 (docs/20-core-loop/game-modes)
+  private gameMode: GameMode = 'Stage'; // 하단 토글이 고르는 진입 모드, 기본 Stage (docs/20-core-loop/game-modes)
   private playLabel!: Text; // Play 버튼 라벨(두 모드 공통 'Game Start')
-  private knobTargetX = -48; // 토글 하이라이트 슬라이드 목표 x
+  private knobTargetX = -48; // 기본 Stage = 좌측(-48); Infinite = 우측(+48)
   private currentIcon?: Container; // 현재 점수 옆 최대 머지 행성 아이콘
   private currentScore!: Text;
   private currentRowCx = 0;
@@ -122,7 +129,7 @@ export class TitleScreen {
 
   private buildUi() {
     const cx = DESIGN.w / 2;
-    this.moneyPill(18, 18);
+    // 코인 잔액 표시는 GameScene 소유 공통 CoinPill(왼쪽 상단 18,18) — Title·인게임 동일 (docs/50-art-ux/layout)
     this.iconButton(DESIGN.w - 54, 18, ASSETS.ui.settings, () => this.meta?.open('settings'));
 
     // 중앙 컬럼(docs/50-art-ux/title-screen §2-2): 👑최고점수(Play 위)·Play·🪐현재점수(Play 아래)
@@ -132,9 +139,9 @@ export class TitleScreen {
     this.currentRow(cx, 512);
 
     // 좌·우 아이콘 카드 버튼(§2-3) — 각 팝업을 연다 (docs/30-systems/*, MetaUI)
-    this.sideButton(58, 374, ASSETS.ui.dailyMission, '일일 미션', () => this.meta?.open('dailyMission'));
+    this.sideButton(58, 374, ASSETS.ui.dailyMission, '일일 미션', () => this.meta?.open('dailyMission'), 'dailyMission');
     this.sideButton(58, 480, ASSETS.ui.shop, '상점', () => this.meta?.open('shop'));
-    this.sideButton(DESIGN.w - 58, 374, ASSETS.ui.checkIn, '출석 체크', () => this.meta?.open('attendance'));
+    this.sideButton(DESIGN.w - 58, 374, ASSETS.ui.checkIn, '출석 체크', () => this.meta?.open('attendance'), 'attendance');
     this.sideButton(DESIGN.w - 58, 480, ASSETS.ui.luckyWheel, '행운의 돌림판', () => this.meta?.open('wheel'));
 
     this.modeToggle(cx, 632);
@@ -202,6 +209,7 @@ export class TitleScreen {
   // Title 진입(부팅·Pool→Title 복귀) 시 GameScene이 호출 — 현재 점수 + 최대 머지 아이콘 갱신.
   refresh() {
     this.layoutBestRow(); // 👑 최고 점수(영속) 갱신
+    for (const u of this.badgeUpdaters) u(); // 일일미션·출석 레드닷 재평가(Title 진입 시)
     this.currentScore.text = this.getProgress().current.toLocaleString();
     if (this.currentIcon) {
       this.uiLayer.removeChild(this.currentIcon);
@@ -230,7 +238,9 @@ export class TitleScreen {
   private playButton(cx: number, cy: number) {
     const { w, h } = ASSET_SIZES.playButton;
     const c = this.buttonContainer(cx, cy, w, h, () => this.onPlay(this.gameMode));
-    this.addNineSliceBody(c, ASSETS.ui.playButton, w, h);
+    this.playButtonBody = new Container();
+    c.addChild(this.playButtonBody);
+    this.renderPlayButtonBody();
     const tri = new Graphics();
     tri.beginFill(0xffffff);
     tri.moveTo(-13, -16);
@@ -257,6 +267,19 @@ export class TitleScreen {
     if (this.currentIcon) this.currentIcon.visible = !stage;
     this.stageInfo.visible = stage;
     if (stage) this.stageInfo.text = `Stage ${this.getStageNo()}`;
+    this.renderPlayButtonBody();
+    this.renderToggleKnob();
+  }
+
+  private renderPlayButtonBody() {
+    if (!this.playButtonBody) return;
+    // Play 버튼 색도 모드별로 swap — Stage=파랑 playButton, Infinite=보라 playButtonStage (docs/50-art-ux/title-screen §2-2)
+    const asset = this.gameMode === 'Stage' ? ASSETS.ui.playButton : ASSETS.ui.playButtonStage;
+    if (this.playButtonBodyAsset === asset) return;
+    for (const child of this.playButtonBody.removeChildren()) child.destroy();
+    const { w, h } = ASSET_SIZES.playButton;
+    this.addNineSliceBody(this.playButtonBody, asset, w, h);
+    this.playButtonBodyAsset = asset;
   }
 
   private addNineSliceBody(c: Container, asset: string, w: number, h: number) {
@@ -289,7 +312,9 @@ export class TitleScreen {
   }
 
   // 아이콘 타일 + 라벨 카드(레퍼런스 이미지) — docs/50-art-ux/title-screen §2-3
-  private sideButton(cx: number, cy: number, iconAsset: string, label: string, onPress: () => void = () => {}) {
+  private badgeUpdaters: (() => void)[] = []; // 레드닷 갱신 클로저(meta 구독 + Title 진입 refresh)
+
+  private sideButton(cx: number, cy: number, iconAsset: string, label: string, onPress: () => void = () => {}, badgeKind?: PopupKind) {
     const c = this.buttonContainer(cx, cy, 84, 100, onPress);
     const tile = new Graphics();
     tile.beginFill(0x000000, 0.46);
@@ -316,6 +341,17 @@ export class TitleScreen {
     lbl.anchor.set(0.5);
     lbl.y = 40;
     c.addChild(lbl);
+    // 받을 보상 레드닷(일일 미션·출석, docs/50-art-ux/title-screen §2-3) — 타일 우상단
+    if (badgeKind) {
+      const dot = redDot();
+      dot.x = 28;
+      dot.y = -38;
+      c.addChild(dot);
+      const update = () => { dot.visible = !!this.meta?.badge(badgeKind); };
+      update();
+      this.meta?.subscribe(update); // 보상 수령·KST 리셋 시 실시간 갱신
+      this.badgeUpdaters.push(update);
+    }
     this.uiLayer.addChild(c);
   }
 
@@ -335,32 +371,11 @@ export class TitleScreen {
     this.uiLayer.addChild(c);
   }
 
-  private moneyPill(x: number, y: number) {
-    const g = new Graphics();
-    g.beginFill(COLORS.pillBlue);
-    g.drawRoundedRect(x, y, 98, 32, 16);
-    g.endFill();
-    this.uiLayer.addChild(g);
-    const coin = coinSprite(24); // 공유 코인 선언 참조 (docs/50-art-ux/popup-system 아이콘 규칙)
-    coin.x = x + 17;
-    coin.y = y + 16;
-    this.uiLayer.addChild(coin);
-    // 영속 코인 잔액(시작 0) — MetaStore 구독으로 미션/출석/돌림판 변동을 실시간 반영 (docs/30-systems/meta-economy).
-    const t = makeText(String(this.meta?.coins() ?? 0), 16, 0xffffff, '800');
-    t.anchor.set(0.5);
-    t.x = x + 57;
-    t.y = y + 16;
-    this.uiLayer.addChild(t);
-    this.meta?.subscribe(() => {
-      t.text = String(this.meta?.coins() ?? 0);
-    });
-  }
-
   // 하단 모드 토글 — Infinite | Stage (docs/50-art-ux/title-screen §2-4). 선택 모드는 Play로 진입.
   private modeToggle(cx: number, cy: number) {
     const c = this.buttonContainer(cx, cy, 204, 42, () => {
       this.gameMode = this.gameMode === 'Infinite' ? 'Stage' : 'Infinite';
-      this.knobTargetX = this.gameMode === 'Infinite' ? -48 : 48; // 하이라이트 슬라이드 목표
+      this.knobTargetX = this.gameMode === 'Stage' ? -48 : 48; // Stage=좌, Infinite=우
       this.applyModeUi();
       sound.play('toggle'); // 모드 전환 효과음 (docs/50-art-ux/sound-design)
     });
@@ -370,19 +385,27 @@ export class TitleScreen {
     bg.endFill();
     bg.lineStyle(2, 0x8aa0df, 0.45);
     bg.drawRoundedRect(-102, -21, 204, 42, 21);
-    // 하이라이트 노브: 한 번만 그리고 x만 애니메이션(update에서 슬라이드)
-    this.toggleKnob.beginFill(0x49a8e6, 0.92);
-    this.toggleKnob.drawRoundedRect(-48, -17, 96, 34, 17);
-    this.toggleKnob.endFill();
+    this.renderToggleKnob();
     this.toggleKnob.x = -48;
     c.addChild(bg, this.toggleKnob);
-    for (const [label, x] of [['Infinite', -51], ['Stage', 51]] as const) {
+    for (const [label, x] of [['Stage', -51], ['Infinite', 51]] as const) {
       const t = makeText(label, 15, 0xffffff, '800');
       t.anchor.set(0.5);
       t.x = x;
       c.addChild(t);
     }
+    const modeLabel = makeText('Mode', 13, 0xdde7ff, '800');
+    modeLabel.anchor.set(0.5);
+    modeLabel.y = -35;
+    c.addChild(modeLabel);
     this.uiLayer.addChild(c);
+  }
+
+  private renderToggleKnob() {
+    this.toggleKnob.clear();
+    this.toggleKnob.beginFill(TOGGLE_ACTIVE_COLOR[this.gameMode], 0.92);
+    this.toggleKnob.drawRoundedRect(-48, -17, 96, 34, 17);
+    this.toggleKnob.endFill();
   }
 
   update(nowMs: number) {
@@ -397,6 +420,6 @@ export class TitleScreen {
       o.sprite.rotation = nowMs * o.spin; // 자전(자체 축 회전)
     }
     this.sun.rotation = nowMs * 0.00025; // 태양도 제자리에서 느리게 자전
-    this.toggleKnob.x += (this.knobTargetX - this.toggleKnob.x) * 0.25; // 토글 노브 슬라이드 애니메이션
+    this.toggleKnob.x += (this.knobTargetX - this.toggleKnob.x) * 0.25;
   }
 }

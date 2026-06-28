@@ -3,7 +3,7 @@ id: log
 note_type: log
 status: active
 domain: meta
-updated: 2026-06-28
+updated: 2026-06-29
 ---
 
 # Vault log (mergegame 기획문서)
@@ -11,6 +11,27 @@ updated: 2026-06-28
 Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
+
+## [2026-06-29] manual | 기본 모드 Stage 전환 + 토글 위치·색상 swap + 최초 실행 Stage 1 직행
+why: 사용자 지시 — (1) 기본 활성 모드를 Infinite→**Stage**로, (2) 토글에서 Stage·Infinite의
+**위치(좌/우)와 색상(파랑/보라)을 서로 swap**(Stage=좌·파랑 `#1f8efa`·`play-button.png`,
+Infinite=우·보라 `#4e1da9`·`play-button-stage.png`), (3) **게임 최초 실행(localStorage 세이브
+없음) 시 Title을 건너뛰고 바로 Stage 1 플레이로 진입**. 정본: [[20-core-loop/game-modes]](기본
+모드 Stage·최초 실행)·[[20-core-loop/screen-flow]](§최초 실행 + 전이표)·[[50-art-ux/title-screen]]
+§2-2·§2-4(토글 순서·색·Play 버튼 색)·[[40-balancing/game-modes]](`startMode:"Stage"`). 구현:
+`balance.json modes.startMode "Stage"`, `TitleScreen` gameMode 기본 Stage·knob 좌측 기본·토글 라벨
+순서·`TOGGLE_ACTIVE_COLOR` swap·Play 텍스처 매핑 swap, `MetaStore.isFreshInstall` 추가, `GameScene`
+Loading→(세이브 없으면) Stage 1 PoolInGame 직행. 검증: tsc·vite build·Playwright.
+
+## [2026-06-29] manual | 일일 미션·출석 레드닷 뱃지(받을 보상 있으면 표시)
+why: 사용자 지시 — 일일 미션·출석 체크에 받을 수 있는 보상이 1개라도 있으면 버튼에 레드닷. 정본:
+[[30-systems/daily-missions]]·[[30-systems/attendance]](판정 조건 = 달성·미수령 미션/누적 보상,
+오늘 미청구 출석), 표시 [[50-art-ux/title-screen]] §2-3(Title 사이드 버튼 우상단)·[[50-art-ux/layout]]
+§2-c(인게임 ≡ 드롭다운 항목 + ≡ 버튼 집계 닷). 구현: `MetaStore.hasClaimableMission()` 추가(출석은
+`attendanceCanClaim`), 공통 `ui/button.redDot()`, `TitleScreen` 사이드 버튼 badge + meta 구독 갱신,
+`Hud` 드롭다운 항목 닷 + ≡ 집계 닷(`refreshMenuBadges`), `GameScene`이 TitleMeta.badge·menuItem.badge
+주입 + meta 구독으로 실시간 갱신. 검증: tsc·vite build OK · 헤드리스 스크린샷(새 상태에서 출석 닷 ON·
+일일미션 닷 OFF 확인).
 
 ## [2026-06-28] auto | audit 69.6/100 (방법론 구조 감사 @069fa7e)
 why: `methodology-audit` 스킬 실행(체크·보고만). 9차원을 차원별 채점+독립 회의론자 검증으로 점수화 →

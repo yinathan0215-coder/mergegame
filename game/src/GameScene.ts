@@ -124,8 +124,8 @@ export class GameScene {
     this.board = new BoardRenderer(this.boardLayer);
     this.hud = new Hud(this.uiLayer, () => this.setScene('Title'), [
       // ≡ dropdown shortcuts — same actions as the Title-lobby buttons (docs/50-art-ux/layout §2-c)
-      { icon: ASSETS.ui.dailyMission, onTap: () => this.metaUI.open('dailyMission') },
-      { icon: ASSETS.ui.checkIn, onTap: () => this.metaUI.open('attendance') },
+      { icon: ASSETS.ui.dailyMission, onTap: () => this.metaUI.open('dailyMission'), badge: () => !!this.meta?.hasClaimableMission() },
+      { icon: ASSETS.ui.checkIn, onTap: () => this.metaUI.open('attendance'), badge: () => !!this.meta?.attendanceCanClaim() },
       { icon: ASSETS.ui.luckyWheel, onTap: () => this.metaUI.open('wheel') },
       { icon: ASSETS.ui.settings, onTap: () => this.metaUI.open('settings') }, // 설정: Title 설정 기어와 동일한 설정 팝업
     ]); // back button → Title
@@ -150,17 +150,20 @@ export class GameScene {
         this.stats.merges++;
         this.stats.maxTier = Math.max(this.stats.maxTier, tier);
         if (tier >= MAX_TIER) this.stats.sunReached = true;
-        const pts = this.score.onMerge(tier);
         const d = tierData(tier);
-        this.effects.mergeBurst(x, y, d.colors[0], d.radius); // 발산 버스트
-        this.effects.scorePopup(pts, x, y); // +N at the merge location
+        this.effects.mergeBurst(x, y, d.colors[0], d.radius); // 발산 버스트(모드 공통 juice)
         sound.play('merge', { pitch: 1 + (tier - 1) * 0.05 }); // 생성 등급↑ → 피치↑ (docs/50-art-ux/sound-design)
-        const comboBonus = this.combo.onMerge(performance.now()); // chain counter; returns milestone bonus
-        if (comboBonus > 0) {
-          this.score.addBonus(comboBonus); // combo 5/10/15… milestone → large bonus score
-          this.effects.comboBonus(comboBonus, this.combo.value); // "+N(combo M)" at screen centre
-          this.lastComboBonus = comboBonus;
-          sound.play('comboMilestone');
+        // Stage는 점수·콤보를 집계/표시하지 않는다 (docs/30-systems/stage-mode §인게임 상단 표시)
+        if (!this.modeC.isStage) {
+          const pts = this.score.onMerge(tier);
+          this.effects.scorePopup(pts, x, y); // +N at the merge location
+          const comboBonus = this.combo.onMerge(performance.now()); // chain counter; returns milestone bonus
+          if (comboBonus > 0) {
+            this.score.addBonus(comboBonus); // combo 5/10/15… milestone → large bonus score
+            this.effects.comboBonus(comboBonus, this.combo.value); // "+N(combo M)" at screen centre
+            this.lastComboBonus = comboBonus;
+            sound.play('comboMilestone');
+          }
         }
         this.meta.onMerge(this.combo.value, tier === SUN_TIER); // daily missions: merge count / combo peak / sun
         this.maxCombo = Math.max(this.maxCombo, this.combo.value); // session combo peak (Infinite result)
@@ -192,13 +195,13 @@ export class GameScene {
       if (aP && bP) {
         this.merge.queuePair(a, b); // 머지 큐잉은 impact와 무관(동급 접촉 시)
         if (impact >= SCORING.minImpact) {
-          this.score.onBallHit(); // 행성–행성 충돌 +3
+          if (!this.modeC.isStage) this.score.onBallHit(); // 행성–행성 충돌 +3 (Stage 미집계)
           this.effects.hitBurst(cx, cy, bx, by);
           sound.play('ballHit'); // 다발 충돌은 throttle로 솎임 (docs/50-art-ux/sound-design)
         }
       } else if (aP || bP) {
         if (impact >= SCORING.minImpact) {
-          this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1
+          if (!this.modeC.isStage) this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1 (Stage 미집계)
           this.effects.hitBurst(cx, cy, bx, by);
           sound.play('wall');
         }
@@ -212,6 +215,8 @@ export class GameScene {
     }, this.fgRoot);
 
     this.meta = new MetaStore();
+    this.meta.subscribe(() => this.hud.refreshMenuBadges()); // 보상 수령·KST 리셋 시 ≡ 집계 레드닷 갱신
+    this.hud.refreshMenuBadges(); // 부팅 직후 초기 상태(출석 등 받을 보상)
     this.metaUI = new MetaUI(this.meta);
     this.coinPill = new CoinPill(this.meta); // 공통 코인 표시 (docs/30-systems/meta-economy · docs/50-art-ux/layout)
     this.metaUI.wheel.coinHooks = {
@@ -229,7 +234,8 @@ export class GameScene {
     this.title = new TitleScreen(
       (mode) => { this.modeC.setMode(mode); sound.play('play'); this.setScene('PoolInGame'); },
       () => ({ current: this.meta.currentScore, best: this.meta.bestScore, maxTier: this.stats.maxTier }), // Title 현재/최고(영속) + 최대 머지 아이콘
-      { coins: () => this.meta.coins, subscribe: (fn) => this.meta.subscribe(fn), open: (k) => this.metaUI.open(k) }, // 코인·팝업 훅
+      { coins: () => this.meta.coins, subscribe: (fn) => this.meta.subscribe(fn), open: (k) => this.metaUI.open(k),
+        badge: (k) => k === 'dailyMission' ? this.meta.hasClaimableMission() : k === 'attendance' ? this.meta.attendanceCanClaim() : false }, // 코인·팝업·레드닷 훅
       () => this.modeC.stageIndex + 1 // Play 라벨 "Stage N"
     );
     this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
@@ -565,8 +571,17 @@ export class GameScene {
     this.unlockModal.update();
     if (this.scene === 'Loading') {
       this.loadingScreen.update(nowMs);
-      // 최소 로딩 floor 경과 후 Title로 자동 페이드(에셋은 동기 로드라 floor가 곧 전이 조건)
-      if (!this.trans && nowMs - this.loadT0 >= LOAD_MIN_MS) this.setScene('Title');
+      // 최소 로딩 floor 경과 후 자동 전이(에셋은 동기 로드라 floor가 곧 전이 조건). 세이브 없는
+      // 최초 실행은 Title을 건너뛰고 곧장 Stage 1 플레이로 진입한다(docs/20-core-loop/screen-flow
+      // §최초 실행); 그 외에는 Title로 페이드.
+      if (!this.trans && nowMs - this.loadT0 >= LOAD_MIN_MS) {
+        if (this.meta.isFreshInstall) {
+          this.modeC.setMode('Stage');
+          this.setScene('PoolInGame');
+        } else {
+          this.setScene('Title');
+        }
+      }
       return;
     }
     if (this.scene !== 'PoolInGame' || this.paused || this.ended) return;
