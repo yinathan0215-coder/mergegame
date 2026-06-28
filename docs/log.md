@@ -12,6 +12,13 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 캔버스 cover-fit 되돌림 → contain(인게임/UI 잘림 방지)
+why: 사용자 지시 — 직전 cover-fit이 인게임/UI를 잘라 "UI가 다 짤림"(특히 데스크톱·비-9:16 뷰포트는
+대폭 크롭). 단일 캔버스라 배경만 cover·UI만 contain을 동시에 할 수 없으므로, `fitCanvas`를 cover(max)→
+**contain(min)**으로 되돌려 9:16 전체가 잘림 없이 보이게 함. 배경 풀블리드는 **게임 캔버스를 자르지 않는**
+별도 방식으로 가야 함(구현 방식은 사용자와 협의). [[50-art-ux/layout]] §1 정본화(인게임/UI=contain 보존).
+구현: `game/src/GameScene.ts` fitCanvas min. typecheck OK.
+
 ## [2026-06-28] manual | Title 행성 자전 추가 + 캔버스 cover-fit(모바일 풀블리드)
 why: 사용자 지시 2건. (1) **행성 자전** — Title 공전 행성이 공전과 동시에 자체 축 회전하도록
 (`Orbit.spin` 추가, update에서 `rotation = nowMs×spin`, 행성마다 다른 속도·방향). **태양도 제자리에서
