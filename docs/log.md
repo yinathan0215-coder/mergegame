@@ -12,6 +12,15 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Title 행성 자전 추가 + 캔버스 cover-fit(모바일 풀블리드)
+why: 사용자 지시 2건. (1) **행성 자전** — Title 공전 행성이 공전과 동시에 자체 축 회전하도록
+(`Orbit.spin` 추가, update에서 `rotation = nowMs×spin`, 행성마다 다른 속도·방향). **태양도 제자리에서
+느리게 자전**한다(`this.sun.rotation`). [[50-art-ux/title-screen]] §1. (2) **캔버스 cover-fit** — `fitCanvas`를 contain(min)→cover(max)로 바꿔
+모바일에서 상하 레터박스 없이 뷰포트를 꽉 채움(넘치는 폭은 잘림); playground 코어는 중앙 안전영역이라
+보존, 바깥 배경/HUD 모서리는 가장자리에 닿을 수 있음. [[50-art-ux/layout]] §1 정본화. 구현:
+`game/src/TitleScreen.ts`(spin)·`game/src/GameScene.ts`(fitCanvas max). typecheck OK. (코드 파일은
+동시 진행 세션 소유라 본 커밋은 docs 정본만.)
+
 ## [2026-06-28] manual | HTML 페이지/레터박스 배경을 outerBg로(잔존 와인 제거)
 why: 사용자 지시 — 캔버스 바깥(레터박스)에 보이던 와인색을 기본 배경색과 동일하게. `game/index.html`의
 `html,body { background }`가 아직 와인 `#3a0d1a`이라 캔버스 둘레에 와인 띠가 보였음 → `outerBg` #15203d
