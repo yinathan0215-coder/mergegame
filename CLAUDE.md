@@ -30,6 +30,16 @@ reflex: `.claude/rules/docs-auto-reflect.md`). **Don't fabricate undecided desig
 genre detail and tech stack are open; keep such pages `status: draft`. The bar for every
 page is **agent-executability**: state what an agent can't infer.
 
+## Commit on done
+
+When a turn **changes files in the repo, end it with a `git commit`** so the user can review
+that turn's work with `git diff`. Stage **only that turn's files** (not a blanket `git add
+-A`), write a meaningful message yourself, and don't push. Full rule:
+`.claude/rules/commit-on-done.md`. The `Stop` hook `.claude/hooks/commit-check.mjs` enforces
+it — it blocks **once** if a turn wrote files but ran no commit. Reconcile/reflect docs
+*before* committing so the commit captures them. Skip only when nothing changed, the user
+said not to, or the tree has unrelated pre-existing changes to sort first.
+
 ## 방법론 기준 (구조 표준)
 
 프로토타입 설계·구현은 **`docs/90-methodology/index.md`** (AI-Agent Friendly 표준)을 따른다:
