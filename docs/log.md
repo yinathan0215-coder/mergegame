@@ -12,6 +12,18 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-29] manual | 감사 수정 라운드 2 — GameScene 분해, 방법론 79.2→84.2
+why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해" 계속. GameScene god-object 분해로 D2·D5 3→4.
+3 커밋(typecheck+Playwright 78/0): StageClearFx(클리어 연출, `1cb74c2`)·MergeOutcome(머지 보상+충돌 점수,
+`3418223`)·Economy(클리어 보상·충전·블랙홀 보너스, `237903f`). GameScene 810→617, 규칙/효과/경제 5모듈
+분리(debug·Containment·StageClearFx·MergeOutcome·Economy). 재감사
+[[70-verification/audits/2026-06-29-0436-methodology-structure-reaudit2]] 84.2/100(누적 +14.6). docs reconcile:
+architecture 모듈맵(StageClearFx·MergeOutcome·Economy). **잔여**: D1 SSoT 토큰화(balance.json WIP 차단)·
+D2/D3/D4/D5 4→5 폴리시(SessionController·prod 빌드 스모크·1급 종료상태). balance.json·ModeController 사용자 WIP 미수정 유지.
+
+## [2026-06-29] manual | 게임 아이콘용 planet 아트스타일 이미지 생성
+why: 사용자 지시 — 게임 아이콘용 이미지를 기존 planet 아트스타일로 생성. `$imagegen` built-in으로 1254x1254 RGB 원본을 만들고, 최종 프로젝트 자산은 `game/public/assets/icons/game-icon.png` 1024x1024 RGB로 정규화했다. 런타임 리소스 교체/연결은 하지 않고 리소스만 추가. 프롬프트와 원본/후처리 기록은 `game/public/assets/prompts/game-icon.md`, 매니페스트는 `game/public/assets/generated-assets.json`.
+
 ## [2026-06-29] manual | 감사 0130 수정 라운드 — 방법론 점수 69.6→79.2 (+9.6)
 why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해". [[70-verification/audits/2026-06-29-0130-methodology-structure-audit]]
 워크리스트를 수정 프로세스로 처리, [[70-verification/audits/2026-06-29-0353-methodology-structure-reaudit]]로
