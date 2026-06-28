@@ -65,3 +65,4 @@ Stage 모드는 **데이터로 정의한 스테이지**를 차례로 푼다. 각
 - [[30-systems/initial-rack]] — Infinite 기본 랙(대비: Stage는 지정 랙)
 - [[50-art-ux/result-window]] — 클리어/실패 창
 - [[40-balancing/game-modes]] — 클리어 보상 300·스테이지 스키마 수치
+- [[40-balancing/stage-balance]] — 밸류(`2^단계`) 기반 난이도 설계 기준(렉·큐·최대·목표 밸류, 카운트·슬랙 `N`)
