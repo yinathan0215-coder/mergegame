@@ -69,7 +69,7 @@ export class GameScene {
 
     this.physics = new PhysicsWorld();
     this.board = new BoardRenderer(this.boardLayer);
-    this.hud = new Hud(this.uiLayer);
+    this.hud = new Hud(this.uiLayer, () => this.setScene('Title')); // back button → Title
     this.effects = new Effects(this.effectLayer);
     this.score = new ScoreSystem((s) => this.hud.setScore(s));
     this.queue = new QueueSystem(() => {}); // launcher shows the current planet; next is random-refilled
@@ -280,7 +280,7 @@ export class GameScene {
 
   private fitCanvas() {
     const cv = this.app.view as unknown as HTMLCanvasElement;
-    const scale = Math.min(window.innerWidth / DESIGN.w, window.innerHeight / DESIGN.h);
+    const scale = Math.min(window.innerWidth / DESIGN.w, window.innerHeight / DESIGN.h); // contain-fit (9:16 전체 보존, 잘림 없음)
     cv.style.width = Math.round(DESIGN.w * scale) + 'px';
     cv.style.height = Math.round(DESIGN.h * scale) + 'px';
   }

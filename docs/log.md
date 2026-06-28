@@ -12,6 +12,15 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Pool HUD: 머니·랭킹 제거 → 좌상단 뒤로가기(→Title)·우상단 메뉴
+why: 사용자 지시 — Pool In-Game 상단 좌(머니)·우(랭킹) 표시를 제거하고 그 자리에 셸 버튼만. 좌상단
+**뒤로가기 버튼(←)** → 누르면 **Title 화면 복귀**(`GameScene.setScene('Title')` 콜백), 우상단 **메뉴 버튼(≡)**
+(동작 placeholder). 중앙 Score·👑최고점수는 유지. 구현: `Hud`에서 `moneyPill`·`rankingPill` 제거, 버튼을
+상단 모서리(좌 12,12 / 우 HUD.w-44,12)로 배치, `button()`에 `pointerdown` stopPropagation(탭이 발사로
+새지 않게)+`pointertap` 콜백; `Hud(layer, onBack)` 시그니처에 콜백 추가, `GameScene`이 `()=>setScene('Title')`
+전달. docs: [[50-art-ux/layout]] HUD 표 정본화(좌=뒤로가기→Title·우=메뉴, 머니/랭킹 없음). 검증: typecheck·
+vite build OK · Playwright **18/18** · headed(startGame→back 클릭) scene 전이 PoolInGame→Title 확인.
+
 ## [2026-06-28] manual | Title 배경 풀블리드 설계: 배경 cover / 전경 contain 2-레이어
 why: 사용자 지시 — Title 태양계 배경은 화면 끝까지 채우되(cover) UI/플레이그라운드는 잘리지 않게
 (contain). 선택 = **전체화면 배경 레이어**. 단일 캔버스를 **뷰포트 크기**로 두고 배경(은하·태양계)=cover
