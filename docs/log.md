@@ -12,6 +12,22 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] auto | audit 69.6/100 (방법론 구조 감사 @069fa7e)
+why: `methodology-audit` 스킬 실행(체크·보고만). 9차원을 차원별 채점+독립 회의론자 검증으로 점수화 →
+[[70-verification/audits/2026-06-28-2347-methodology-structure-audit]]. 종합 **69.6/100**(이전 73 대비
+하락). 🔴 핵심: GameScene.ts 717줄 god-object(380→717 악화)·머지 단일 클로저·containPlanets 물리규칙
+오케스트레이터 혼재·세션 흐름 paused/ended/endKind 불리언 공존·dead export 2. 수정은 별도 단계(워크리스트
+P1 GameScene 분할·세션 상태화). 70-verification/index 감사 로그에 링크 추가.
+
+## [2026-06-29] manual | 첫 제스처 코치(👆) 추가 — 진입 시 press-drag 안내, 첫 발사 전까지
+why: 사용자 지시 — 게임 화면(Infinite/Stage 무관) 첫 진입 시 발사 방법을 알려주는 코치. 발사대(행성
+위치)에서 **`👆` 손가락이 꾹 누르고 아래로 당기는 동작을 반복**(렌더 전용 오버레이 `FirstGestureHint`)
+하고, **조준 시작 시 사라지며 첫 발사 이후 그 세션 종료**(조준 안 한 idle엔 재표시). 구현: 신규
+`game/src/FirstGestureHint.ts`(👆 + "꾹 눌러 아래로 당기기", 1.4s 루프 다운드래그), `Launcher.isAiming`
+getter, `GameScene`(uiLayer 코치 생성·startSession 리셋·fire 시 종료·tick에서 `!발사함 && !조준중`이면
+표시), 디버그 훅 `gestureHintShown`. docs: [[50-art-ux/input-ux]] §4 첫 제스처 코치. 검증: tsc·vite
+build·Playwright(코치 표시→첫 발사 후 사라짐 테스트 포함).
+
 ## [2026-06-28] manual | 정합 감사 반영 + ADR 4종 흡수·삭제 + 버전·토글·네이밍 정정
 why: 사용자 지시(정합 감사 기반 문서 수정 + 버전 표시 제거 + ADR 흡수/삭제). (1) **ADR 4종을 섹션
 정본에 흡수 후 삭제**: remove-combo→[[30-systems/scoring-combo]]·[[40-balancing/combo-scoring]],

@@ -512,6 +512,15 @@ test('Stage 실패: 카운트 0 + 목표 미달 → 실패 결과창', async ({ 
   expect(await page.evaluate(() => window.__game.stageFailed())).toBe(true);
 });
 
+test('첫 제스처 코치: 게임 진입 시 표시, 첫 발사 후 사라짐', async ({ page }) => {
+  await ready(page); // Infinite 진입
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect(await page.evaluate(() => (window.__game as any).gestureHintShown())).toBe(true);
+  await page.evaluate(() => window.__game.fire(-Math.PI / 2, 0.9)); // 첫 발사
+  await page.waitForTimeout(80);
+  expect(await page.evaluate(() => (window.__game as any).gestureHintShown())).toBe(false);
+});
+
 test('이미 클리어한 스테이지는 다시 클리어되지 않는다(보상·클리어창 없음)', async ({ page }) => {
   await readyStage(page);
   await page.evaluate(() => { window.__game.metaReset(); window.__game.unlockAll(); window.__game.clearBoard(); });

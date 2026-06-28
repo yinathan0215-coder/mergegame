@@ -4,6 +4,7 @@ import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, 
 import { tierData, MAX_TIER, INITIAL_RACK, SUN_TIER } from './data/planets';
 import { ModeController, type GameMode } from './modes/ModeController';
 import { GameInfoPanel } from './GameInfoPanel';
+import { FirstGestureHint } from './FirstGestureHint';
 import { ChargePopup } from './popups/ChargePopup';
 import { ResultPopup } from './popups/ResultPopup';
 import { StageClearPopup, StageFailPopup } from './popups/StageEndPopup';
@@ -84,6 +85,8 @@ export class GameScene {
   private fgRoot = new Container(); // 태양계·로비 UI·보드·HUD·모든 팝업 — contain(9:16, 잘림 없음)
   private modeC = new ModeController(); // 게임 모드 + 남은 카운트 (docs/20-core-loop/game-modes)
   private info!: GameInfoPanel; // 좌하단 Count/Next + 모드별 위젯
+  private gestureHint!: FirstGestureHint; // 첫 발사 전 손가락 코치
+  private gestureDone = false; // 이번 세션에서 첫 발사를 했는가(코치 종료 조건)
   private charge!: ChargePopup; // Infinite 충전 팝업
   private result!: ResultPopup; // Infinite 결과창
   private stageClear!: StageClearPopup;
@@ -124,11 +127,12 @@ export class GameScene {
       { icon: ASSETS.ui.dailyMission, onTap: () => this.metaUI.open('dailyMission') },
       { icon: ASSETS.ui.checkIn, onTap: () => this.metaUI.open('attendance') },
       { icon: ASSETS.ui.luckyWheel, onTap: () => this.metaUI.open('wheel') },
-      { icon: ASSETS.ui.settings, onTap: () => {} }, // 설정: mirrors the Title settings button (no dedicated popup yet)
+      { icon: ASSETS.ui.settings, onTap: () => this.metaUI.open('settings') }, // 설정: Title 설정 기어와 동일한 설정 팝업
     ]); // back button → Title
     this.effects = new Effects(this.effectLayer);
     this.combo = new Combo(this.comboLayer);
     this.info = new GameInfoPanel(this.uiLayer, () => this.openCharge()); // 좌하단 Count/Next + 모드별 위젯
+    this.gestureHint = new FirstGestureHint(this.uiLayer); // 첫 발사 전 손가락 코치(발사대 위)
     this.score = new ScoreSystem((s) => { this.hud.setScore(s); if (!this.modeC.isStage) this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드(Stage는 집계 안 함)
     this.queue = new QueueSystem(
       (slots) => this.info.setNext(slots[1] ?? slots[0]), // Next 미리보기 갱신(좌하단 HUD)
@@ -329,6 +333,7 @@ export class GameScene {
     this.stats.shots++;
     this.modeC.consume(); // 카운트 -1 (docs/30-systems/launch-count)
     this.info.setCount(this.modeC.count);
+    this.gestureDone = true; // 첫 발사 → 손가락 코치 종료(docs/50-art-ux/input-ux)
     sound.play('launch', { pitch: 0.85 + Math.min(1, Math.hypot(vx, vy) / LAUNCH.vMax) * 0.5 }); // 파워↑ → 피치↑
     return true;
   }
@@ -420,6 +425,7 @@ export class GameScene {
     this.score.reset();
     this.combo.reset();
     this.maxCombo = 0;
+    this.gestureDone = false; // 첫 제스처 코치 다시 표시(첫 발사 전까지)
     this.modeC.startSession();
     this.sessionPrevBest = this.meta.bestScore; // snapshot before this run → NEW RECORD compare at end
     this.hud.setBest(this.meta.bestScore); // 인게임 👑 = 영속 최고 점수(localStorage) 로드
@@ -597,6 +603,8 @@ export class GameScene {
     this.board.update(nowMs);
     this.hud.update(); // score odometer roll
     this.info.update(nowMs); // 좌하단 위젯/충전 버튼·목표 행성 회전
+    this.gestureHint.setActive(!this.gestureDone && !this.launcher.isAiming, nowMs); // 첫 발사 전·조준 전만
+    this.gestureHint.update(nowMs);
     this.combo.update(nowMs); // merge chain counter (window expiry + odometer + fade)
     this.effects.update(nowMs); // bursts + floating popups
   }
@@ -651,6 +659,7 @@ export class GameScene {
       bestScore: () => this.meta.bestScore,
       chargeBuy: (n: number) => this.buyCharge(n),
       resultShown: () => this.result.isOpen,
+      gestureHintShown: () => this.gestureHint.container.visible,
       stageCleared: () => this.stageClear.isOpen,
       stageFailed: () => this.stageFail.isOpen,
       comboValue: () => this.combo.value,

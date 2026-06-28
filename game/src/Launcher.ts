@@ -125,6 +125,11 @@ export class Launcher {
     return { vx: dirx * speed, vy: diry * speed, dirx, diry, power };
   }
 
+  // True while the player is pressing/dragging to aim — drives the first-gesture hint (GameScene).
+  get isAiming(): boolean {
+    return this.aiming;
+  }
+
   update() {
     const tier = this.host.currentTier();
     if (tier === this.shownTier) return;
