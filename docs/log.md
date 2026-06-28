@@ -19,6 +19,11 @@ why: `methodology-audit` 스킬 실행(체크·보고만). 9차원을 차원별 
 오케스트레이터 혼재·세션 흐름 paused/ended/endKind 불리언 공존·dead export 2. 수정은 별도 단계(워크리스트
 P1 GameScene 분할·세션 상태화). 70-verification/index 감사 로그에 링크 추가.
 
+## [2026-06-29] manual | 첫 제스처 코치 표시 중 화면 딤드
+why: 사용자 지시 — 코치가 떠 있는 동안 화면을 딤드한다. `FirstGestureHint`에 반투명 딤(oversized,
+contain 레터박스까지 덮음, alpha 0.55) 추가. **딤은 비인터랙티브(eventMode none)** 라 딤 위로 발사대를
+누르면 조준이 시작되며 코치+딤이 함께 사라진다([[50-art-ux/input-ux]] §4). 검증: tsc·vite build.
+
 ## [2026-06-29] manual | 첫 제스처 코치(👆) 추가 — 진입 시 press-drag 안내, 첫 발사 전까지
 why: 사용자 지시 — 게임 화면(Infinite/Stage 무관) 첫 진입 시 발사 방법을 알려주는 코치. 발사대(행성
 위치)에서 **`👆` 손가락이 꾹 누르고 아래로 당기는 동작을 반복**(렌더 전용 오버레이 `FirstGestureHint`)
