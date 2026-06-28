@@ -1,6 +1,7 @@
 import { Container, Graphics, LINE_CAP, Rectangle, Text } from 'pixi.js';
 import { DESIGN, POPUP } from '../data/config';
 import { attachButtonFeedback } from './button';
+import { sound } from '../SoundManager';
 
 // Common popup shell for every Title-lobby meta window (docs/50-art-ux/popup-system). Three elements:
 //   • BG  — rounded panel + purple title bar (optional: hasBg=false → just dim + content, e.g. the wheel)
@@ -140,11 +141,14 @@ export class Popup {
     this.container.visible = true;
     this.t0 = performance.now();
     this.entering = true;
+    sound.play('popupOpen'); // 등장 차임 (docs/50-art-ux/sound-design · docs/60-implementation/sound-manager)
   }
 
   close() {
+    if (!this.container.visible) return; // 이미 닫혀 있으면 닫힘음 중복 방지
     this.container.visible = false;
     this.entering = false;
+    sound.play('popupClose');
     this.onCloseCb?.();
   }
 

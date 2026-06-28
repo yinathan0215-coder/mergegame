@@ -39,8 +39,9 @@ sources:
 
 - **자동재생 해제**: `AudioContext`는 처음 suspended. **첫 `pointerdown`(1회)에서 `resume()`** 한다
   (전역 리스너, `{ once: true }`). 그 전 재생 요청은 무음.
-- **뮤트/볼륨**: `setMuted(b)`·`muted` — `localStorage`(`ppm.muted`)에 영속, 기본 OFF(소리 ON).
-  뮤트면 `play()`는 즉시 반환(보이스 생성 안 함). 마스터 게인 = `master`(뮤트 시 0).
+- **뮤트**: `setMuted(b)`·`muted` — `localStorage`(`ppm.muted`)에 영속, 기본 OFF(소리 ON).
+  뮤트면 `play()`는 즉시 반환(보이스 생성 안 함). 마스터 게인 = `master`(뮤트 시 0). 플레이어 토글
+  진입점은 [[../30-systems/settings]] 설정 팝업의 **사운드** 버튼. (볼륨 단계 조절은 미구현 — 뮤트만.)
 - **API**: `sound.play(id: SoundId, opts?: { pitch?: number })` — `pitch`는 머지 등급↑/발사 파워↑를 위한
   배수(주파수 곱). `sound.setMuted(b)` · `sound.toggleMuted()`.
 
@@ -49,13 +50,14 @@ sources:
 | play(id) | 호출 위치 |
 |---|---|
 | `uiPress` | `ui/button.ts` `attachButtonFeedback`(모든 버튼 공통) |
+| `toggle` | `TitleScreen` Galaxy/Fantasy 토글 핸들러 · 설정 팝업 사운드 ON 복귀 |
 | `play` | Title Play 버튼 콜백 (`GameScene` setScene→PoolInGame) |
 | `launch` | `GameScene.fire` (파워→`pitch`) |
 | `wall` / `ballHit` | `GameScene` `physics.onCollision`(스로틀로 솎임) |
 | `merge` | `GameScene` 머지 콜백 (생성 등급→`pitch`) |
 | `comboMilestone` | `GameScene` 머지 콜백, 콤보 보너스 발생 시 |
 | `unlock` | `GameScene` 해금 모달 `show` |
-| `popupOpen`/`popupClose` | `UnlockModal`·`MetaUI`·팝업 open/close |
+| `popupOpen`/`popupClose` | 공통 `ui/Popup` open/close (모든 메타·설정 팝업) |
 
 ## 검증
 

@@ -36,10 +36,8 @@ sources:
 - [[70-verification/audits/2026-06-28-1932-methodology-srp-audit]] — 종합 **73/100**. 강점:
   data-driven·Fixed Step·Layered·Acceptance. 약점: 단일책임(GameScene 갓오브젝트 2/5)·State(paused
   불리언 3/5)·Event(카탈로그 부재 3/5). P1: containPlanets 분리, 모달 일시정지 상태화.
-- [[70-verification/audits/2026-06-28-2050-docs-code-sync-audit]] — **코드↔문서 정합** 감사(별 축:
-  문서 정확도). 확정 불일치 **53건**(orphan-doc 13·doc-ne-code 33·undocumented 6·misclassified 1).
-  최대 결함: 게임 모드(무한/스테이지)·발사카운트·차지·결과창 레이어 통째 미구현, 콤보 "제거" ADR이
-  실제 구현과 모순, 점수 +1/+3·영속·아키텍처 9모듈 stale. P0 워크리스트 포함.
+- [[70-verification/audits/2026-06-28-2050-docs-code-sync-audit]] — 코드↔문서 정합 감사. 확정 불일치
+  53건(orphan-doc 13·doc-ne-code 33·undocumented 6·misclassified 1) + P0~P2 수정 워크리스트.
 
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.

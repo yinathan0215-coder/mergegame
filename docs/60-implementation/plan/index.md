@@ -21,8 +21,7 @@ sources:
 렌더=읽기 전용(매 프레임 바디 좌표 → 스프라이트). 수용 기준의 최종 출처는
 [[../../70-verification/index|KPI/체크리스트]].
 
-`game/src/` 모듈(9): GameScene · PhysicsWorld · PlanetFactory · Launcher · QueueSystem ·
-MergeSystem · ScoreSystem · Hud · BoardRenderer.
+`game/src/` 모듈 구성·단일 책임의 단일 출처는 [[../architecture]](레이어별 모듈 표).
 
 ---
 
@@ -41,19 +40,19 @@ MergeSystem · ScoreSystem · Hud · BoardRenderer.
 - [x] 완료
 
 ## Phase 2 — 행성 데이터 · 초기 랙
-- **만든다:** `src/data/planets.ts`(9단계 테이블: 순서[[../../10-concept/index]] · 반지름/점수
+- **만든다:** `src/data/planets.ts`(11단계 테이블: 순서[[../../10-concept/index]] · 반지름/점수
   [[../../40-balancing/index]] · 색/패턴 [[../../50-art-ux/index]]), `src/PlanetFactory.ts`
   (스프라이트 생성: 두꺼운 외곽선·플랫 2D·크기+패턴 구분), `src/Planet.ts`(entity: 바디+단계+스프라이트),
   초기 랙 배치(GameScene).
-- **수치:** 반지름 18·21·24·28·32·37·43·50·58px; 초기 랙 **수성4·화성3·금성2·지구1**(중앙 약간 위
-  벌집/삼각, 겹침 방지, 첫 발사 즉시 충돌 밀도, 해왕성↑ 제외).
-- **수용:** 시작 시 중앙 초기 랙이 보이고, 9단계가 크기+패턴으로 구분되며, 스프라이트가 바디를 따라간다.
+- **수치:** 반지름 15·18·21·24·28·32·37·43·50·58·67px; 초기 랙 **소행성4·수성3·화성2·금성1**(중앙 약간 위
+  벌집/삼각, 겹침 방지, 첫 발사 즉시 충돌 밀도, 지구↑ 제외).
+- **수용:** 시작 시 중앙 초기 랙이 보이고, 11단계가 크기+패턴으로 구분되며, 스프라이트가 바디를 따라간다.
 - [x] 완료
 
 ## Phase 3 — 발사대 · 큐 · 조준
-- **만든다:** `src/QueueSystem.ts`(3칸, 낮은 5종 균등 20% 보충), `src/Launcher.ts`(하단 중앙 고정,
+- **만든다:** `src/QueueSystem.ts`(현재 발사 행성 1칸, 해금 연동 낮은 단계 보충), `src/Launcher.ts`(하단 중앙 고정,
   press-drag 조준, 반투명 조준선=실제 방향, 거리→파워), `src/Hud.ts`(상단 HUD: Score·최고점수·머니·랭킹).
-- **수치:** 큐 후보 수성/화성/금성/지구/해왕성 각 20%; 상위 4종은 큐 제외(합성으로만); 파워 `clamp(드래그/120,0,1)`.
+- **수치:** 큐 후보는 `1 … min(unlockedTier - 2, queueCap=5)` 균등 추출, 최대 지구까지; 해왕성↑은 큐 제외(합성으로만); 파워 `clamp(드래그/120,0,1)`.
 - **수용:** 발사대 현재 행성 표시; 드래그 시 반대 방향 조준선 + 파워; (발사 연결은 Phase 4).
 - [x] 완료
 
@@ -66,15 +65,15 @@ MergeSystem · ScoreSystem · Hud · BoardRenderer.
 
 ## Phase 5 — 합성
 - **만든다:** `src/MergeSystem.ts`(충돌 이벤트 → 동급 판정 → 중간점에 다음 등급 1개 생성, 속도=두 속도
-  평균(작으면 충돌 법선 최소속도), **merge lock**(한 tick 1합성), 재합성 지연, **태양=종단**).
+  평균(작으면 충돌 법선 최소속도), **merge lock**(한 tick 1합성), 재합성 지연, **블랙홀=종단**).
 - **수용:** 동급 충돌 → 다음 등급 1개가 중간점에 생성되어 충돌 방향으로 이동; 중복 합성 없음;
-  태양+태양은 일반 충돌만([[../../30-systems/merge-rules|합성 규칙]]).
+  태양+태양은 블랙홀로 합성되고 블랙홀+블랙홀은 일반 충돌만([[../../30-systems/merge-rules|합성 규칙]]).
 - [x] 완료
 
 ## Phase 6 — 점수(충돌 +1 · 머지 등급)
 - **만든다:** `src/ScoreSystem.ts`(충돌마다 +1 가산(`scoring.collisionPoint`), 합성 시 생성 등급
   기본 점수 가산), Hud Score 갱신(1단위 오도미터 스크롤).
-- **수치:** 충돌 +1; 머지 점수 10·30·70·150·320·700·1500·3200(화성~태양).
+- **수치:** 충돌 +1; 머지 점수 10·30·70·150·320·700·1500·3200·7000·15000(수성~블랙홀).
 - **수용:** 충돌마다 +1, 머지마다 등급 점수, 상단 Score만 표시, 1단위 오도미터 스크롤.
 - [x] 완료
 
@@ -90,5 +89,5 @@ MergeSystem · ScoreSystem · Hud · BoardRenderer.
 
 ## 관련
 - [[../task-breakdown]] — 소스 §12의 16태스크(설계 수준 Phase)
-- [[../architecture]] — 9 모듈/데이터 모델 · [[../agent-runbook]] — 실행 표지
+- [[../architecture]] — 모듈/데이터 모델 · [[../agent-runbook]] — 실행 표지
 - [[../../40-balancing/index]] — 모든 수치 SSoT · [[../../70-verification/index]] — 수용 기준

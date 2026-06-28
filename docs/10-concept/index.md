@@ -21,7 +21,7 @@ sources:
 ## 페이지
 
 - [[concept]] — 목적 맥락 + 컨셉 한 줄(풀 조준 + Suika 성장 보상 결합, 포켓에 넣는 게임 아님) + 타겟/장르/플랫폼.
-- [[planet-ladder]] — 9단계 행성 사다리 순서(수성→…→태양). **행성 사다리 순서 SSoT → [[planet-ladder]]**.
+- [[planet-ladder]] — 11단계 행성 사다리 순서(소행성→…→블랙홀). **행성 사다리 순서 SSoT → [[planet-ladder]]**.
 - [[fun-hypothesis]] — 4개 핵심 재미 가설(조준 예측 / 물리 우연성 / 성장 보상 / 공간 관리), 검증 가능한 형태.
 
 > **행성 사다리 순서 SSoT → [[planet-ladder]].** 단계별 반지름·점수 수치는 [[../40-balancing/planet-stats]],

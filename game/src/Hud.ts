@@ -7,6 +7,13 @@ function txt(s: string, size: number, color: number, weight: string): Text {
   return new Text(s, { fill: color, fontSize: size, fontFamily: 'Arial, sans-serif', fontWeight: weight as any });
 }
 
+// One in-game dropdown shortcut: an icon that runs the same action as a Title-lobby button
+// (docs/50-art-ux/layout §2-c). `icon` is an ASSETS.ui.* path; `onTap` opens the matching popup.
+export interface HudMenuItem {
+  icon: string;
+  onTap: () => void;
+}
+
 // Top HUD (docs/50-art-ux/layout): left = back button (→ Title), center = Score + 👑best,
 // right = menu button. No money/ranking displays. Queue row sits below the bar.
 export class Hud {
@@ -16,8 +23,13 @@ export class Hud {
   private target = 0; // latest actual score
   private shown = 0; // odometer display value, rolls toward target
   private crown!: Sprite;
+  private scrim = new Graphics(); // full-screen tap-catcher: an outside tap closes the dropdown
+  private dropdown = new Container(); // the icon-only shortcut list under the ≡ button
+  private menuItems: HudMenuItem[];
+  private menuOpen = false;
 
-  constructor(layer: Container, onBack: () => void) {
+  constructor(layer: Container, onBack: () => void, menuItems: HudMenuItem[] = []) {
+    this.menuItems = menuItems;
     const cx = HUD.w / 2;
 
     // ── center (HUD 수평 중앙 정렬): 👑 best (작게, 위) + Score (크게, 아래) ──
@@ -35,39 +47,98 @@ export class Hud {
     this.scoreText.y = 50;
     layer.addChild(this.scoreText);
 
-    // ── corners: back button (left, → Title) + menu button (right) ──
+    // ── corners: back button (left, → Title) + ≡ menu button (right) ──
     this.button(layer, 12, 12, 'exit', onBack);
-    this.button(layer, HUD.w - 44, 12, 'menu');
+    this.buildMenu(layer); // dropdown scrim + icon list (above the board, below the items + ≡ button)
+    this.button(layer, HUD.w - 44, 12, 'menu', () => this.toggleMenu()); // ≡ toggles the dropdown (added last → on top)
   }
 
-  // x,y top-left of a 32×30 rounded shell button. Wrapped in a centred container so the shared press
-  // feedback (docs/50-art-ux/feedback-effects §5) scales it in place; the tap is swallowed so it never
-  // reaches the launcher (which would otherwise read it as an aim/fire on the board).
+  // Icon-only corner button (docs/50-art-ux/button-system: HUD corner buttons have NO background box —
+  // the icon itself is the tap target). A 36×34 hitArea + the shared press feedback (feedback-effects §5);
+  // the tap is swallowed so it never reaches the launcher (which would read it as an aim/fire on the board).
   private button(layer: Container, x: number, y: number, kind: 'exit' | 'menu', onTap?: () => void) {
     const c = new Container();
     c.x = x + 16;
     c.y = y + 15;
-    c.hitArea = new Rectangle(-16, -15, 32, 30);
-    const g = new Graphics();
-    g.beginFill(COLORS.btnBlue);
-    g.drawRoundedRect(-16, -15, 32, 30, 8);
-    g.endFill();
-    g.lineStyle(3, 0xffffff, 1);
-    if (kind === 'exit') {
-      g.moveTo(7, 0);
-      g.lineTo(-6, 0);
-      g.moveTo(-1, -5);
-      g.lineTo(-6, 0);
-      g.lineTo(-1, 5);
-    } else {
-      for (const dy of [-6, 0, 6]) {
-        g.moveTo(-8, dy);
-        g.lineTo(8, dy);
-      }
-    }
-    c.addChild(g);
+    c.hitArea = new Rectangle(-18, -17, 36, 34);
+    const icon = Sprite.from(kind === 'exit' ? ASSETS.ui.exit : ASSETS.ui.menu);
+    icon.anchor.set(0.5);
+    icon.scale.set(42 / ASSET_SIZES.uiIcon.w);
+    c.addChild(icon);
     attachButtonFeedback(c, onTap ?? (() => {}));
     layer.addChild(c);
+  }
+
+  // ≡ dropdown (docs/50-art-ux/layout §2-c): an icon-only shortcut list that hangs DIRECTLY below the ≡
+  // button. The 4 icons share ONE common dimmed box (not per-item tiles). The scrim sits above the board
+  // but below the panel + ≡ button, so an outside tap closes the list (and is swallowed, keeping the board
+  // inert) while the items/button stay tappable. Inert until opened.
+  private buildMenu(layer: Container) {
+    this.scrim.beginFill(0x000000, 0.001); // near-invisible; the filled geometry makes it hit-testable
+    this.scrim.drawRect(-2000, -2000, 5000, 5000); // covers the whole viewport incl. letterbox (contain transform)
+    this.scrim.endFill();
+    this.scrim.eventMode = 'none'; // dormant while closed → board input passes through
+    this.scrim.on('pointerdown', (e) => { e.stopPropagation(); this.closeMenu(); });
+    layer.addChild(this.scrim);
+
+    const slot = 44; // per-item vertical slot
+    const gap = 4;
+    const pad = 6; // panel inner padding around the icon column
+    const n = this.menuItems.length;
+    const cx = HUD.w - 28; // centred under the ≡ button
+    const topY = 48; // directly below the ≡ button (its hitArea bottom ≈ 44)
+    const panelW = slot + pad * 2;
+    const panelH = n * slot + (n - 1) * gap + pad * 2;
+
+    // ONE shared dimmed box wrapping the whole list (docs/50-art-ux/layout §2-c · button-system)
+    const panel = new Graphics();
+    panel.beginFill(0x000000, 0.46);
+    panel.drawRoundedRect(cx - panelW / 2, topY, panelW, panelH, 12);
+    panel.endFill();
+    panel.lineStyle(2, 0xffffff, 0.18);
+    panel.drawRoundedRect(cx - panelW / 2, topY, panelW, panelH, 12);
+    panel.eventMode = 'static';
+    panel.on('pointerdown', (e) => e.stopPropagation()); // taps between icons don't fall through to close
+    this.dropdown.addChild(panel);
+
+    // icon-only items over the shared panel
+    this.menuItems.forEach((item, i) => {
+      const c = new Container();
+      c.x = cx;
+      c.y = topY + pad + slot / 2 + i * (slot + gap);
+      c.hitArea = new Rectangle(-slot / 2, -slot / 2, slot, slot);
+      const icon = Sprite.from(item.icon);
+      icon.anchor.set(0.5);
+      icon.scale.set(34 / ASSET_SIZES.uiIcon.w);
+      c.addChild(icon);
+      attachButtonFeedback(c, () => { item.onTap(); this.closeMenu(); });
+      this.dropdown.addChild(c);
+    });
+    this.dropdown.visible = false;
+    layer.addChild(this.dropdown);
+  }
+
+  get menuIsOpen(): boolean { return this.menuOpen; }
+  get menuItemCount(): number { return this.menuItems.length; }
+
+  toggleMenu() { if (this.menuOpen) this.closeMenu(); else this.openMenu(); }
+
+  private openMenu() {
+    this.menuOpen = true;
+    this.dropdown.visible = true;
+    this.scrim.eventMode = 'static'; // now catches outside taps (and blocks board input) to close
+  }
+
+  closeMenu() {
+    this.menuOpen = false;
+    this.dropdown.visible = false;
+    this.scrim.eventMode = 'none';
+  }
+
+  // Test hook (Playwright): run item i's action then close — the same as a real tap on its icon.
+  tapMenuItem(i: number) {
+    const it = this.menuItems[i];
+    if (it) { it.onTap(); this.closeMenu(); }
   }
 
   // crown + best 를 HUD 수평 중앙에 정렬 (best 폭이 바뀌면 재호출).

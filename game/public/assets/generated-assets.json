@@ -1,6 +1,22 @@
 [
   {
-    "asset": "game/public/assets/planets/tier-1-moon.png",
+    "asset": "game/public/assets/planets/tier-1-asteroid.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0dd5-64b8-7b82-a830-3aa8924d0623\\ig_0804e646576e2903016a40fed446a4819185ef99f86d130678.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true,
+    "promptRecord": "game/public/assets/prompts/planet-sprite-canonical.md#tier-1-asteroid---2026-06-28"
+  },
+  {
+    "asset": "game/public/assets/planets/tier-2-mercury.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b884fadc8191b3291430d64c0511.png",
     "mode": "alpha",
     "size": [
@@ -15,7 +31,7 @@
     "normalizedForGame": true
   },
   {
-    "asset": "game/public/assets/planets/tier-2-mars.png",
+    "asset": "game/public/assets/planets/tier-3-mars.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b8bb5e588191bb958092ec81d70f.png",
     "mode": "alpha",
     "size": [
@@ -30,7 +46,7 @@
     "normalizedForGame": true
   },
   {
-    "asset": "game/public/assets/planets/tier-3-venus.png",
+    "asset": "game/public/assets/planets/tier-4-venus.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b8f17c208191953b32366f62db18.png",
     "mode": "alpha",
     "size": [
@@ -45,7 +61,7 @@
     "normalizedForGame": true
   },
   {
-    "asset": "game/public/assets/planets/tier-4-earth.png",
+    "asset": "game/public/assets/planets/tier-5-earth.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b92c93608191a6099d7c1e42f0cd.png",
     "mode": "alpha",
     "size": [
@@ -60,7 +76,7 @@
     "normalizedForGame": true
   },
   {
-    "asset": "game/public/assets/planets/tier-5-neptune.png",
+    "asset": "game/public/assets/planets/tier-6-neptune.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b967f2d48191af6e46c11ca2d109.png",
     "mode": "alpha",
     "size": [
@@ -75,9 +91,8 @@
     "normalizedForGame": true
   },
   {
-    "asset": "game/public/assets/planets/tier-6-uranus.png",
+    "asset": "game/public/assets/planets/tier-7-uranus.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c7f848d54dc3032016a40cbe65a4481918e2bf6c18424904b.png",
-    "promptRecord": "game/public/assets/prompts/planet-sprite-canonical.md#tier-6-uranus-ring-revision---2026-06-28",
     "mode": "alpha",
     "size": [
       256,
@@ -88,10 +103,11 @@
       1254,
       1254
     ],
-    "normalizedForGame": true
+    "normalizedForGame": true,
+    "promptRecord": "game/public/assets/prompts/planet-sprite-canonical.md#uranus-ring-revision---2026-06-28"
   },
   {
-    "asset": "game/public/assets/planets/tier-7-saturn.png",
+    "asset": "game/public/assets/planets/tier-8-saturn.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b9e0f4bc819185b0b691bc073a3e.png",
     "mode": "alpha",
     "size": [
@@ -106,7 +122,7 @@
     "normalizedForGame": true
   },
   {
-    "asset": "game/public/assets/planets/tier-8-jupiter.png",
+    "asset": "game/public/assets/planets/tier-9-jupiter.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40ba1e069481919d6b744238b6b492.png",
     "mode": "alpha",
     "size": [
@@ -121,7 +137,7 @@
     "normalizedForGame": true
   },
   {
-    "asset": "game/public/assets/planets/tier-9-sun.png",
+    "asset": "game/public/assets/planets/tier-10-sun.png",
     "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40ba5d847881919288a0309ca2abff.png",
     "mode": "alpha",
     "size": [
@@ -136,34 +152,52 @@
     "normalizedForGame": true
   },
   {
+    "asset": "game/public/assets/planets/tier-11-black-hole.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0dd5-64b8-7b82-a830-3aa8924d0623\\ig_0804e646576e2903016a40fef2ed7081918806695570e63cc5.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true,
+    "promptRecord": "game/public/assets/prompts/planet-sprite-canonical.md#tier-11-black-hole---2026-06-28"
+  },
+  {
     "asset": "game/public/assets/board/space-background.png",
-    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40ba9f22d08191b7c339b22b2f12dd.png",
-    "mode": "copy",
+    "source": "git:HEAD:game/public/assets/board/space-background.png",
+    "mode": "inpaint-remove-baked-stars",
     "size": [
       376,
       606
     ],
     "hasAlpha": false,
     "originalGeneratedSize": [
-      941,
-      1672
+      376,
+      606
     ],
-    "normalizedForGame": true
+    "normalizedForGame": true,
+    "promptRecord": "game/public/assets/prompts/galaxy-background.md#final-2026-06-28-edit"
   },
   {
-    "asset": "game/public/assets/board/board-frame.png",
-    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40bacb511c81918c63fca2d0987d49.png",
-    "mode": "alpha",
+    "asset": "game/public/assets/board/space-background-cover-16x9.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0dd5-64b8-7b82-a830-3aa8924d0623\\ig_06f61525b1828cdc016a41151644dc8191ab59d57b3dafeacf.png",
+    "mode": "generated-16x9-cover",
     "size": [
-      430,
-      660
+      1920,
+      1080
     ],
-    "hasAlpha": true,
+    "hasAlpha": false,
     "originalGeneratedSize": [
-      941,
-      1672
+      1672,
+      941
     ],
-    "normalizedForGame": true
+    "normalizedForGame": true,
+    "promptRecord": "game/public/assets/prompts/galaxy-background.md#cover-16x9-2026-06-28"
   },
   {
     "asset": "game/public/assets/ui/crown.png",
@@ -192,6 +226,134 @@
     "originalGeneratedSize": [
       1254,
       1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/settings.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0021b6a718388ada016a40fc0f8a70819185ada4fd5f5ae7a1.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#settings",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/daily-mission.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0021b6a718388ada016a40fc4fd5e48191ab590f6f8538ff93.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#daily-mission",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/check-in.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0021b6a718388ada016a40fc8426388191b0ef4abde5fe9adf.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#check-in",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/lucky-wheel.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0021b6a718388ada016a40fcc219c48191af601e28bee196e6.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#lucky-wheel",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/shop.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0021b6a718388ada016a40fd00148c819180d6abbd2639f4db.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#shop",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/play-button.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0f4765686cd82928016a41080f31c08191b905a37151a817c2.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#play-button-9-slice-body",
+    "mode": "alpha",
+    "size": [
+      224,
+      100
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1881,
+      836
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/exit.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0268db3682ae3893016a410ad65e6881918e562ae5c6df41fd.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#hud-exit",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1024,
+      1024
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/menu.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0268db3682ae3893016a410afe7ed481918c24fba344bf04f4.png",
+    "promptRecord": "game/public/assets/prompts/title-icons.md#hud-menu",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1024,
+      1024
     ],
     "normalizedForGame": true
   }

@@ -30,7 +30,7 @@ sources:
 - [[30-systems/launcher]] — §5.2 발사: 하단 고정 발사대, 당겨 조준·반대 방향 발사.
 - [[30-systems/launch-queue]] — §5.3 발사 행성 선택: 낮은 5종 균등 랜덤.
 - [[30-systems/merge-rules]] — §6 합성 규칙: 동급 충돌→다음 등급, 합성 위치/속도/merge lock.
-- [[30-systems/scoring-combo]] — §7 점수: 충돌 +1 + 머지 등급 점수.
+- [[30-systems/scoring-combo]] — §7 점수: 충돌(벽 +1·행성 +3) + 머지 등급 점수 + 콤보 마일스톤 보너스.
 - [[30-systems/play-area-boundary]] — 플레이 영역 ↔ 발사대 **일방향 경계**(발사는 위로 통과, 진입 후 복귀 불가).
 - [[30-systems/collision-shape]] — 행성 충돌 형태: 반지름 **원형 디스크**(이미지가 더 커도 충돌은 원).
 - [[30-systems/tier-unlock]] — 단계 **해금**: 새 단계 첫 합성 시 딤드 모달(회전 행성+OK), OK해야 다음 단계 해금.
@@ -46,6 +46,7 @@ sources:
 - [[30-systems/attendance]] — **출석 체크**: 7일 주기, KST 일자 1회 청구, 다음 보상 카운트다운.
 - [[30-systems/lucky-wheel]] — **행운의 돌림판**: 8칸(25~200), 120 코인, 정지 후 3초 감속 정착.
 - [[30-systems/shop]] — **상점**: 잠금 상태 표시(구매 없음).
+- [[30-systems/settings]] — **설정**: 공통 팝업, **사운드(뮤트 토글)만 동작**·나머지(진동·닉네임·UID·언어·저장·로그인) placeholder.
 
 ## 관련
 - [[20-core-loop/index]] — 이 시스템들이 엮이는 코어 루프.

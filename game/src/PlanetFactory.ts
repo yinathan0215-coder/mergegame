@@ -3,15 +3,17 @@ import { planetAsset } from './assets';
 import { tierData } from './data/planets';
 
 const PLANET_VISIBLE_DIAMETER: Record<number, number> = {
-  1: 235,
+  1: 222,
   2: 235,
-  3: 234,
-  4: 235,
+  3: 235,
+  4: 234,
   5: 235,
-  6: 168,
-  7: 172,
-  8: 236,
-  9: 234,
+  6: 235,
+  7: 168,
+  8: 172,
+  9: 236,
+  10: 234,
+  11: 218,
 };
 
 export function makePlanetSprite(tier: number): Container {

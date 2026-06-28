@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
-import { ASSETS } from './assets';
+import { ASSETS, ASSET_SIZES } from './assets';
 
 interface GalaxyBackgroundOptions {
   x: number;
@@ -30,23 +30,35 @@ function rng(seed: number) {
 }
 
 export class GalaxyBackground extends Container {
+  private bg = Sprite.from(ASSETS.board.background);
   private sparkles = new Graphics();
-  private twinkles: Twinkle[];
+  private twinkles: Twinkle[] = [];
+  private seed: number;
+  private count: number;
 
   constructor(opts: GalaxyBackgroundOptions) {
     super();
     this.x = opts.x;
     this.y = opts.y;
+    this.seed = opts.seed;
+    this.count = opts.count;
+    this.addChild(this.bg);
+    this.addChild(this.sparkles);
+    this.resize(opts.width, opts.height);
+  }
 
-    const bg = Sprite.from(ASSETS.board.background);
-    bg.width = opts.width;
-    bg.height = opts.height;
-    this.addChild(bg);
+  resize(width: number, height: number) {
+    const source = ASSET_SIZES.boardBackground;
+    const bgScale = Math.max(width / source.w, height / source.h);
+    this.bg.width = source.w * bgScale;
+    this.bg.height = source.h * bgScale;
+    this.bg.x = (width - this.bg.width) / 2;
+    this.bg.y = (height - this.bg.height) / 2;
 
-    const random = rng(opts.seed);
-    this.twinkles = Array.from({ length: opts.count }, (_, i) => ({
-      x: random() * opts.width,
-      y: random() * opts.height,
+    const random = rng(this.seed);
+    this.twinkles = Array.from({ length: this.count }, (_, i) => ({
+      x: random() * width,
+      y: random() * height,
       r: 1.2 + random() * 2.4,
       phase: random() * Math.PI * 2,
       speed: 0.0012 + random() * 0.0018,
@@ -54,7 +66,6 @@ export class GalaxyBackground extends Container {
       cross: i % 7 === 0,
       color: random() > 0.72 ? 0xf4c84d : 0x8fa7e8,
     }));
-    this.addChild(this.sparkles);
   }
 
   update(nowMs: number) {

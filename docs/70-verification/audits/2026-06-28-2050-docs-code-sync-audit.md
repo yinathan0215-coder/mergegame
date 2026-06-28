@@ -151,6 +151,10 @@ sources:
 
 ## 우선순위 수정 워크리스트 (다음 단계 입력)
 
+> **후속 처리(2026-06-28):** P0-1(콤보 최종 재정의)·P0-3(점수 +1/+3 통일)·P1-5(아키텍처 모듈 맵)·
+> 체크리스트/KPI 반영 완료(combo·scoring·architecture·checklist·kpi·plan/index·index MOC). **P0-2(게임
+> 모드 레이어)는 아직 구현 미진행이라 문서를 그대로 둠**(설계 정본 유지). 나머지 P1·P2는 미처리.
+
 **P0 — 정본이 거짓을 단언 (반드시 정리):**
 1. 콤보: ADR(remove-combo) + `balance.json _readme` + [[40-balancing/combo-scoring]] 헤더/의사코드를 "배율 제거→마일스톤 보너스(count×bonusPer)" 현 설계로 재작성. (C1·C2·C3·C4·C6·C7·P2·L3)
 2. 게임 모드 레이어 7문서를 `status: draft`(미구축)로 내리거나 구현 — GDD가 "구현됨"으로 단정 금지. (MO1~MO7)

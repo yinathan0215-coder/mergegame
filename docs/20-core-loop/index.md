@@ -20,12 +20,13 @@ sources:
 이 섹션은 **카탈로그**다. Core Loop의 상세는 각 자식 페이지에 둔다. status: `design`.
 
 ## 페이지
-- [[screen-flow]] — **앱 레벨 씬 흐름**(Loading→Title→Pool In-Game) + 최상위 상태/전이([[../90-methodology/state-machine]] 바인딩), Galaxy/Fantasy 테마 토글.
-- [[core-loop]] — 8단계 코어 루프, **게임 오버 없음**, 검증축(점수·최고 행성·합성 횟수·태양 달성), MVP 경계(포함/제외).
+- [[screen-flow]] — **앱 레벨 씬 흐름**(Loading→Title→Pool In-Game) + 최상위 상태/전이([[../90-methodology/state-machine]] 바인딩), Infinite/Stage 모드 선택 토글.
+- [[game-modes]] — **게임 모드**(Infinite/Stage): 모드 선택·시작 카운트·종료 조건·결과창 흐름.
+- [[core-loop]] — 8단계 코어 루프(모드가 종료를 정함), 검증축(점수·최고 단계·합성 횟수·블랙홀 달성), MVP 경계(포함/제외).
 - [[play-flow]] — 한 세션 흐름(부팅→초기 랙 표시→루프), 시작 상태(초기 랙) 요약, 온보딩(첫 발사가 학습), 시스템 상세 링크.
 
 ## 관련
-- [[../10-concept/index]] — 컨셉·핵심 재미 가설, 행성 사다리(9단계) 순서 정본
+- [[../10-concept/index]] — 컨셉·핵심 재미 가설, 행성 사다리(11단계) 순서 정본
 - [[../30-systems/index]] — 루프를 구성하는 시스템 상세(발사대·큐·합성·초기 랙)
 - [[../40-balancing/index]] — 단계별 반지름·점수, 보충 확률, 드래그/파워/쿨다운 수치
 - [[../60-implementation/task-breakdown]] — 루프를 만드는 단계별 태스크

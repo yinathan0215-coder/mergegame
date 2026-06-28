@@ -35,7 +35,7 @@ sources:
 
 | # | 태스크 | 완료 판정 |
 |---|---|---|
-| 6 | 행성 단계 데이터 + 아이콘 렌더러 (`PlanetFactory`) | 9단계가 [[../40-balancing/index|반지름]]·[[../50-art-ux/index|패턴]]대로 그려진다 |
+| 6 | 행성 단계 데이터 + 아이콘 렌더러 (`PlanetFactory`) | 11단계가 [[../40-balancing/index|반지름]]·[[../50-art-ux/index|패턴]]대로 그려진다 |
 | 7 | 중앙 초기 랙 배치 | 시작 시 중앙에 초기 행성 풀이 보인다([[../20-core-loop/index|시작 상태]]) |
 
 ## Phase 3 — 발사 / 큐

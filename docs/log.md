@@ -12,6 +12,87 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Play 버튼 텍스트 파란 면 안전영역 보정
+why: 사용자 지시 — 버튼 이미지를 줄이거나 9-slice 구조를 바꾸는 문제가 아니라 `게임 시작` 라벨이 파란 버튼 면 밖으로 내려오는 문제였음. 구현(`game/src/TitleScreen.ts`): `play-button.png`와 224x100 런타임 버튼 영역은 유지하고, 흰색 플레이 삼각형과 라벨 오버레이만 위로 재배치해 하단 금색 베벨 위로 내려오지 않게 함. docs: [[50-art-ux/button-system]] · [[50-art-ux/title-screen]] · `game/public/assets/prompts/title-icons.md`.
+
+## [2026-06-28] manual | 인게임 ≡ 메뉴 외형 — 코너 버튼 BG 제거 + 드롭다운 공통 BG·≡ 바로 아래
+why: 사용자 지시 — (1) 햄버거(≡)·나가기 **코너 버튼은 배경 박스 없이 아이콘만**(코너 버튼=아이콘 자체가
+탭 영역), (2) ≡ 드롭다운 리스트를 **≡ 버튼 바로 아래**(버튼 중심 정렬)에 매달리게, (3) 4개 항목을
+**항목별 박스 대신 하나의 공통 딤드 박스**로 묶음. 구현(`game/src/Hud.ts`): `button()`에서 코너 버튼 BG
+Graphics 제거(아이콘+hitArea+피드백만), `buildMenu()`는 공통 패널(검은 반투명 라운드) 1개를 ≡ 하단
+(topY=48, ≡ hitArea 하단 ≈44 바로 아래)에 그리고 그 위에 아이콘만 올림(패널은 아이콘 사이 탭 흡수→리스트
+유지). docs: [[50-art-ux/button-system]](코너=아이콘만·드롭다운=공통 박스) · [[50-art-ux/layout]] §2·§2-c.
+검증: tsc OK · Playwright 메뉴 테스트 8/8(토글·바깥닫힘·4아이콘·실포인터 z-order, 양 뷰포트 ×2).
+
+## [2026-06-28] manual | 해금 모달 와이드(웹 16:9) 과대 크기 수정 — contain 레이어 + 오버사이즈 딤
+why: 사용자 보고 — 웹 16:9(와이드)에서 신규 행성 해금 팝업이 다른 메타 팝업과 달리 **엄청 크게** 표시됨.
+원인: 해금 모달이 **cover 레이어(`popupRoot`, `sBg=max(...)`)**에 있어 콘텐츠가 cover 스케일로 커짐(와이드일수록
+`sBg≫sFg`). 해소: 모달을 메타 팝업과 동일하게 **contain 레이어(`fgRoot`)**로 옮기고(콘텐츠=정상 contain
+스케일), **딤만 DESIGN을 크게 넘는 사각(±3000)**으로 그려 contain 변환 아래에서도 레터박스까지 화면 전체를
+덮게 함. 이제 모든 전체화면 팝업(메타+해금)이 동일한 2-레이어 fit을 쓴다. 죽은 `popupRoot` 레이어 제거.
+docs: [[50-art-ux/popup-system]] 입력·딤(모든 팝업=contain+오버사이즈 딤) · [[30-systems/tier-unlock]] 모달 UX.
+검증: tsc OK · Playwright **40/40**(신규 회귀 테스트: 1600×900에서 모달 부모 스케일 = sFg(contain), cover 아님).
+
+## [2026-06-28] manual | 설정 팝업(공통 셸) + 사운드 효과음 3종 배선
+why: 사용자 지시(레퍼런스 이미지 첨부) — Title 설정 기어에 **설정 팝업**을 공통 팝업 시스템으로 구현.
+**사운드(마스터 뮤트 토글)만 실제 동작**하고 진동·닉네임·UID 복사·언어·게임 저장·구글/Apple 로그인은
+구색용 비동작 placeholder(탭=프레스 피드백만). 신규 정본 [[30-systems/settings]], 진입점
+[[50-art-ux/title-screen]] §2-1 갱신. 감사(pass2) 사운드 orphan 해소: `toggle`(Galaxy/Fantasy 토글)·
+`popupOpen`/`popupClose`(공통 `ui/Popup` open/close) 배선, 뮤트 UI = 설정 팝업 사운드 버튼 →
+[[50-art-ux/sound-design]] 볼륨 문구 제거(뮤트만)·[[60-implementation/sound-manager]] 연결표 갱신.
+구현: `game/src/popups/SettingsPopup.ts`(공통 `Popup`+`button3D`), `MetaUI`(`settings` 종류 추가),
+`TitleScreen`(기어→open·토글음), `ui/Popup`(open/close 차임). 검증: tsc·vite build OK · Playwright 38/38 ·
+헤드리스 스크린샷으로 레퍼런스 일치 확인.
+
+## [2026-06-28] manual | Galaxy background 16:9 cover master 추가
+why: 사용자 지시 — 기존 9:16 계열 `space-background.png`는 유지하되, 16:9 화면과 9:16·1:2 cover 크롭에서도 패턴이 충분히 보이도록 더 촘촘한 물결 밴드의 새 정적 배경을 추가. 런타임 기본 배경은 `game/public/assets/board/space-background-cover-16x9.png`(1920x1080)로 전환하고, `GalaxyBackground`는 원본 비율을 유지한 cover 배치로 렌더한다. docs: [[50-art-ux/galaxy-background]].
+
+## [2026-06-28] manual | Play 버튼 크기 원복 + 내부 텍스트 위치 보정
+why: 사용자 정정 — 문제는 9-slice 버튼 이미지를 줄이는 것이 아니라, 기존 크기 버튼 안에서 `게임 시작`
+텍스트가 벗어나는 배치였다. `play-button.png` 소스와 런타임 버튼 영역은 224x100으로 되돌리고,
+플레이 삼각형·라벨만 버튼 안전영역 내부에 맞춰 배치하도록 정정. [[50-art-ux/button-system]]·
+[[50-art-ux/title-screen]] 및 프롬프트 기록에서 204x82 표시 크기 설명 제거.
+
+## [2026-06-28] manual | Play 9-slice 버튼 표시 크기 조정
+why: 사용자 지시 — 9-slice 적용 후 게임 시작 버튼 몸체가 내부 플레이 삼각형·라벨 대비 과하게 커 보임.
+`play-button.png` 소스 캔버스는 224x100으로 유지하고 런타임 표시 크기를 204x82로 분리해 9-slice 절단선을
+보존하면서 내부 요소와 CTA 몸체 비율을 맞춤. [[50-art-ux/button-system]]·[[50-art-ux/title-screen]] 및
+프롬프트 기록을 갱신.
+
+## [2026-06-28] manual | 인게임 ≡ 메뉴 → 드롭다운 단축 메뉴(일일미션·출석·돌림판·설정)
+why: 사용자 지시 — Pool In-Game 상단 오른쪽 햄버거(≡) 버튼을 누르면 그 아래로 **아이콘만 있는 4버튼
+드롭다운**이 토글된다. 항목 = Title 로비의 일일 미션·출석 체크·행운의 돌림판·설정과 **동일 아이콘·동일
+기능**(같은 `MetaUI` 팝업을 연다). **설정**은 Title 설정 버튼과 동일 동작(전용 팝업 없음 → 공유 no-op).
+햄버거 재탭 또는 **바깥(다른 화면) 탭으로 닫힘**. 구현: `Hud`에 드롭다운+투명 스크림(바깥 탭 가로채 닫기,
+보드 입력 차단; 스크림 위에 항목·≡ 버튼만 눌림), `GameScene`이 4항목을 `metaUI.open`(+설정 no-op)으로
+배선, `MetaUI.openKind()`. docs: [[50-art-ux/layout]] §2-c(인게임 드롭다운) · [[50-art-ux/popup-system]]
+(두 진입점=로비 사이드 버튼+인게임 ≡). 검증: tsc OK · Playwright **34/34**(메뉴 토글·바깥닫힘·4아이콘→
+팝업·설정 no-op 상태머신 + 실포인터 햄버거 열기/바깥 닫힘 z-order, 양 뷰포트 ×3 반복 결정론 확인).
+
+## [2026-06-28] manual | Loading 씬 추가 — GALAXY PINBALL 텍스트 스트림 + 최소 로딩 2초
+why: 사용자 지시("게임 처음 실행 시 최소 로딩 2초 확보, 텍스트 스트림으로 '은하 핀볼(영문)' 이름이
+경쾌하게 등장"). 코드엔 Loading 씬이 없어 부팅 즉시 Title이었음 → `SceneState`에 `Loading` 추가,
+부팅 시 Loading으로 진입해 `LoadingScreen`이 플레이어 노출 타이틀 **GALAXY PINBALL**을 글자 단위
+팝(easeOutBack) 스트림 + 하단 골드 프로그레스 바로 표시, 경과 ≥ 2000ms이면 Title로 페이드. 정본은
+[[20-core-loop/screen-flow]] §Loading(전이 조건에 최소 로딩 floor 명문화, 플레이어 타이틀=Galaxy
+Pinball·내부 디스크립터=Planet Pool Merge 구분). 헤드리스 프로브로 스트림/2초 floor(Title 도달
+~2.4s) 확인, Playwright 34/34.
+
+## [2026-06-28] manual | 충돌음 가청도 — wall/ballHit 게인을 발사·머지와 동등 수준으로 상향
+why: 사용자 지시 "충돌 사운드가 빠졌어". 헤드리스 프로브로 검증 결과 충돌음은 정상 발화(보이스 캡 0회
+preempt, 폭주는 스로틀로 솎임)했으나 게인이 wall 0.09·ballHit 0.12로 launch 0.17·merge 0.22의 약 절반
+이라 인접한 발사·머지 소리에 묻혀 "빠진" 것처럼 들렸다. wall→0.16, ballHit→0.20(+dur 0.06→0.08로 타격
+바디 보강)으로 상향해 가청 동등화. `balance.json` `sound`와 `SoundManager` DEFAULTS 동기, 정본 규칙은
+[[50-art-ux/sound-design]] §3 "충돌음 가청도"에 기록. Playwright 34/34.
+
+## [2026-06-28] manual | 버튼 리소스 정정: Play 9-slice 단일 이미지 + HUD PNG 버튼 + 사이드 라벨 분리
+why: 사용자 정정 지시 — 게임 시작 버튼은 `play-button-pressed.png`를 쓰지 않고 단일 `play-button.png`를
+9-slice로 채우며, 눌림 상태는 공통 `juice.buttonPress` 피드백으로만 처리한다. 출석체크·행운의 돌림판·
+일일 미션·상점 버튼은 텍스트를 이미지/딤드 박스 안에 넣지 않고, 검은 반투명 라운드 박스는 아이콘 뒤
+배경으로만 둔다. 인게임 HUD 나가기·햄버거 메뉴도 `exit.png`·`menu.png` 이미지 아이콘으로 연결한다.
+정본 규칙은 신규 [[50-art-ux/button-system]]에 기록하고 [[50-art-ux/title-icons]]·[[50-art-ux/title-screen]]·
+[[50-art-ux/layout]]을 갱신.
+
 ## [2026-06-28] auto | 코드↔문서 정합 감사 보고서 추가 (53건 확정)
 why: 사용자 지시("구현 여부 + 문서 미반영 + 구현과 다른 내용 + 오분류를 찾아봐"). 2-pass 멀티에이전트
 교차 대조(반증 검증 포함)로 `docs/` vs `game/src/` 불일치 **53건** 확정 → 진단 전용 보고서

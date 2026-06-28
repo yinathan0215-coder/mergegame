@@ -5,12 +5,13 @@ import { DailyMissionPopup } from './popups/DailyMissionPopup';
 import { AttendancePopup } from './popups/AttendancePopup';
 import { LuckyWheelPopup } from './popups/LuckyWheelPopup';
 import { ShopPopup } from './popups/ShopPopup';
+import { SettingsPopup } from './popups/SettingsPopup';
 
-// Owns the four Title-lobby meta popups and a single layer they live in (mounted in fgRoot by
+// Owns the Title-lobby popups (meta + settings) and a single layer they live in (mounted in fgRoot by
 // GameScene). One popup open at a time; opening one closes any other. update() drives every popup's
 // entrance transition + per-frame work (wheel spin, attendance countdown) and must run even on the
 // Title scene, so GameScene calls it before its PoolInGame early-return.
-export type PopupKind = 'dailyMission' | 'attendance' | 'wheel' | 'shop';
+export type PopupKind = 'dailyMission' | 'attendance' | 'wheel' | 'shop' | 'settings';
 
 export class MetaUI {
   readonly layer = new Container();
@@ -22,7 +23,8 @@ export class MetaUI {
     const attendance = new AttendancePopup(store);
     this.wheel = new LuckyWheelPopup(store);
     const shop = new ShopPopup();
-    this.popups = { dailyMission, attendance, wheel: this.wheel, shop };
+    const settings = new SettingsPopup();
+    this.popups = { dailyMission, attendance, wheel: this.wheel, shop, settings };
     for (const p of Object.values(this.popups)) this.layer.addChild(p.container);
   }
 

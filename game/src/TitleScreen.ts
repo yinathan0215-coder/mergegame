@@ -220,16 +220,16 @@ export class TitleScreen {
     this.addNineSliceBody(c, ASSETS.ui.playButton, w, h);
     const tri = new Graphics();
     tri.beginFill(0xffffff);
-    tri.moveTo(-14, -18);
-    tri.lineTo(18, 0);
-    tri.lineTo(-14, 18);
+    tri.moveTo(-13, -16);
+    tri.lineTo(17, 0);
+    tri.lineTo(-13, 16);
     tri.closePath();
     tri.endFill();
-    tri.y = -11;
+    tri.y = -18;
     c.addChild(tri);
     const play = makeText('게임 시작', 22, 0xffffff, '800');
     play.anchor.set(0.5);
-    play.y = 25;
+    play.y = 14;
     c.addChild(play);
     this.uiLayer.addChild(c);
   }

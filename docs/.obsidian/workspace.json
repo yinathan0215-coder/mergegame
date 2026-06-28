@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "60-implementation/architecture.md",
+                "file": "50-art-ux/index.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "architecture"
+              "title": "index"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "60-implementation/architecture.md",
+                "file": "50-art-ux/index.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "architecture 의 백링크"
+              "title": "index 의 백링크"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "60-implementation/architecture.md",
+                "file": "50-art-ux/index.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "architecture 의 나가는 링크"
+              "title": "index 의 나가는 링크"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "60-implementation/architecture.md",
+                "file": "50-art-ux/index.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "architecture 의 개요"
+              "title": "index 의 개요"
             }
           }
         ]
@@ -185,41 +185,41 @@
   },
   "active": "61516ab81416d07a",
   "lastOpenFiles": [
-    "60-implementation/agent-runbook.md",
-    "60-implementation/task-breakdown.md",
-    "60-implementation/tech-stack.md",
-    "60-implementation/architecture.md",
-    "60-implementation/index.md",
-    "60-implementation/decisions/2026-06-28-data-driven-balance-json.md",
-    "40-balancing/decisions/2026-06-28-remove-combo.md",
-    "40-balancing/launch-physics.md",
-    "40-balancing/planet-stats.md",
-    "30-systems/launcher.md",
-    "30-systems/launch-queue.md",
-    "30-systems/play-area-boundary.md",
-    "30-systems/launcher.md.tmp.73464.bbe6bba58cbf",
-    "30-systems/play-area-boundary.md.tmp.73464.08b14d77ca2c",
-    "50-art-ux/screen-structure.md.tmp.73464.994e05ef08bd",
-    "60-implementation/architecture.md.tmp.73464.8c493ccc824b",
-    "50-art-ux/planet-art.md.tmp.73464.3b9e8f376b88",
-    "40-balancing/spawn-rack.md.tmp.73464.692086fb15fc",
-    "40-balancing/spawn-rack.md.tmp.73464.0770e5dcac84",
-    "50-art-ux/input-ux.md.tmp.73464.18aa0bfdf5c8",
-    "50-art-ux/input-ux.md.tmp.73464.8eb83feb1888",
-    "60-implementation/plan/index.md.tmp.73464.ed9b4ac7450d",
-    "50-art-ux/screen-structure.md",
-    "50-art-ux/feedback-effects.md",
-    "60-implementation/decisions/2026-06-28-stack-pixijs-matter.md",
-    "70-verification/checklist.md",
-    "70-verification/index.md",
-    "70-verification/audit-methodology-numbers.md",
-    "80-research/reverse-merge-genre.md",
-    "80-research/drop-merge-research.md",
-    "80-research/index.md",
-    "90-methodology/index.md",
-    "90-methodology/game-loop.md",
-    "90-methodology/event-driven.md",
-    "90-methodology/checklists.md",
-    "90-methodology/agent-friendly-spec.md"
+    "log.md.tmp.27448.01bc9792e9ac",
+    "50-art-ux/layout.md.tmp.27448.d54a40f571cf",
+    "50-art-ux/button-system.md.tmp.27448.8cf535d94537",
+    "log.md.tmp.27448.ea4d1de8c673",
+    "log.md.tmp.41836.6150cbfc9ba0",
+    "60-implementation/tech-stack.md.tmp.5748.9cfe34eb16ee",
+    "30-systems/meta-economy.md.tmp.73464.6ec9faff34dc",
+    "30-systems/tier-unlock.md.tmp.27448.23bbe9deafea",
+    "50-art-ux/popup-system.md.tmp.27448.ddc6ace40fb9",
+    "60-implementation/sound-manager.md.tmp.41836.2a9208eddff0",
+    "60-implementation/sound-manager.md.tmp.41836.8a8cc07c5f1b",
+    "30-systems/settings.md",
+    "50-art-ux/art-direction.md",
+    "index.md",
+    "10-concept/planet-ladder.md",
+    "50-art-ux/button-system.md",
+    "70-verification/audits/2026-06-28-2050-docs-code-sync-audit.md",
+    "30-systems/decisions/2026-06-28-blackhole-infinite-count.md",
+    "40-balancing/game-modes.md",
+    "50-art-ux/result-window.md",
+    "30-systems/stage-mode.md",
+    "30-systems/planet-charge.md",
+    "30-systems/launch-count.md",
+    "20-core-loop/game-modes.md",
+    "60-implementation/sound-manager.md",
+    "50-art-ux/sound-design.md",
+    "40-balancing/meta-economy.md",
+    "30-systems/shop.md",
+    "30-systems/lucky-wheel.md",
+    "30-systems/attendance.md",
+    "30-systems/daily-missions.md",
+    "50-art-ux/popup-system.md",
+    "30-systems/meta-economy.md",
+    "10-concept/index.md",
+    "10-concept/fun-hypothesis.md",
+    "50-art-ux/galaxy-background.md"
   ]
 }
