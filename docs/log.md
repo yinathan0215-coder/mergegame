@@ -12,6 +12,13 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] auto | 조준 충돌각 UX 구현 + input-ux 정본화
+why: 조준선을 드래그 길이 비례 직선에서 **충돌 궤적 예측**으로. `Launcher.predict`가 발사 방향으로
+다른 행성(원, shot 반지름 팽창)+사각 벽을 레이캐스트해 **첫 충돌 지점까지 조준선 + 충돌점 마커 +
+반사각**을 그리고, 파워는 힘 게이지로 표시(드래그 길이 무관). `GameScene`이 obstacles 제공. UX 정본
+[[50-art-ux/input-ux]]를 새 동작(충돌 궤적·게이지 파워·자연 경계 종료)으로 갱신, 메카닉 정본
+[[30-systems/launcher]]는 기존 정합. typecheck·build·Playwright 18/18.
+
 ## [2026-06-28] manual | 화면 3분할(씬) 추가: Loading · Title(로비) · Pool In-Game
 why: 사용자 지시 — 현재 구현 화면을 **Pool In-Game**으로 명명하고, **Title(로비)**·**Loading**
 씬을 추가. (1) 신규 [[20-core-loop/screen-flow]]: 세 씬 + 최상위 상태/전이(Loading→Title→
