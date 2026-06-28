@@ -1,8 +1,8 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
 import { Body } from 'matter-js';
-import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS, SCORING, PROGRESSION, MODES, RESULT } from './data/config';
+import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, JUICE, SCORING, PROGRESSION, MODES, RESULT } from './data/config';
 import { tierData, MAX_TIER, INITIAL_RACK, SUN_TIER } from './data/planets';
-import { ModeController, type GameMode } from './modes/ModeController';
+import { ModeController } from './modes/ModeController';
 import { GameInfoPanel } from './GameInfoPanel';
 import { FirstGestureHint } from './FirstGestureHint';
 import { ChargePopup } from './popups/ChargePopup';
@@ -26,6 +26,8 @@ import { makePlanetSprite } from './PlanetFactory';
 import { LoadingScreen } from './LoadingScreen';
 import { CoinPill } from './ui/CoinPill';
 import { ASSETS } from './assets';
+import { exposeDebug } from './debug';
+import { containPlanets } from './Containment';
 import type { Planet } from './Planet';
 
 type SceneState = 'Loading' | 'Title' | 'PoolInGame';
@@ -77,7 +79,7 @@ export class GameScene {
   private unlockedTier = PROGRESSION.unlockStart; // highest tier merges may create (docs/30-systems/tier-unlock)
   private pendingUnlockTier = 0;
   private paused = false; // true while the unlock modal is up (game frozen)
-  private lastComboBonus = 0; // most recent awarded combo milestone bonus (verification hook)
+  lastComboBonus = 0; // most recent awarded combo milestone bonus (verification hook; read via window.__game)
   private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위, 뷰포트 전체)
   private endSkip = new Graphics(); // Stage 종료 지연 중 화면 탭 → 지연 스킵(평소 비활성)
   private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
@@ -266,7 +268,7 @@ export class GameScene {
 
     this.layout();
     this.app.renderer.on('resize', () => this.layout());
-    if (import.meta.env.DEV) this.exposeDebug(); // 디버그 API(window.__game)는 dev에서만 — 프로덕션 빌드에선 제거
+    if (import.meta.env.DEV) exposeDebug(this); // 디버그 API(window.__game)는 dev에서만 — 프로덕션 빌드에선 제거
   }
 
   private setScene(scene: SceneState) {
@@ -583,43 +585,6 @@ export class GameScene {
     }
   }
 
-  // Absolute play-area containment (docs/30-systems/play-area-boundary). Matter has no continuous
-  // collision detection, so a fast ball (strong launch / hard collision) can tunnel through the
-  // thin walls and escape the playground. We enforce the rectangular boundary ANALYTICALLY every
-  // physics substep — clamp the ball inside and reflect the outward velocity component. This also
-  // turns the one-way bottom line into a crisp reflecting wall (no mushy stop). Collision filters
-  // still handle the upward one-way pass-through.
-  private containPlanets() {
-    const e = PHYSICS.wallRestitution;
-    const floorY = GAUGE.cy + GAUGE.r; // coarse bottom floor (bulge bottom)
-    for (const p of this.planets) {
-      const r = tierData(p.tier).radius;
-      const b = p.body;
-      // launched ball: once it has cleared the launcher circle, the circle blocks re-entry
-      if (!p.inPlayArea) {
-        const d = Math.hypot(b.position.x - LAUNCHER.x, b.position.y - LAUNCHER.y);
-        if (d > LAUNCHER.r + r) {
-          p.inPlayArea = true;
-          this.physics.blockAtLauncher(b);
-        }
-      }
-      // rectangular containment (top/left/right) + coarse bottom floor (fast-ball anti-tunnel)
-      let x = b.position.x;
-      let y = b.position.y;
-      let vx = b.velocity.x;
-      let vy = b.velocity.y;
-      let hit = false;
-      if (x < PLAY.x + r) { x = PLAY.x + r; if (vx < 0) vx = -vx * e; hit = true; }
-      else if (x > PLAY.x + PLAY.w - r) { x = PLAY.x + PLAY.w - r; if (vx > 0) vx = -vx * e; hit = true; }
-      if (y < PLAY.y + r) { y = PLAY.y + r; if (vy < 0) vy = -vy * e; hit = true; }
-      else if (y > floorY - r) { y = floorY - r; if (vy > 0) vy = -vy * e; hit = true; }
-      if (hit) {
-        Body.setPosition(b, { x, y });
-        Body.setVelocity(b, { x: vx, y: vy });
-      }
-    }
-  }
-
   private tick() {
     const nowMs = performance.now();
     this.title.update(nowMs);
@@ -662,7 +627,7 @@ export class GameScene {
     while (this.acc >= STEP_MS && steps < 5 && !this.clearFly) { // 연출 시작 시 즉시 중단
       this.physics.update(STEP_MS);
       this.merge.process(performance.now());
-      this.containPlanets(); // absolute play-area containment + one-way line (per substep)
+      containPlanets(this.planets, this.physics); // absolute play-area containment + one-way line (per substep)
       this.acc -= STEP_MS;
       steps++;
     }
@@ -710,107 +675,5 @@ export class GameScene {
     this.fade.beginFill(0x0a0e1a);
     this.fade.drawRect(0, 0, vw, vh);
     this.fade.endFill();
-  }
-
-  // Verification hooks (Playwright). Not part of the player-facing game.
-  private exposeDebug() {
-    (window as any).__game = {
-      scene: () => this.scene,
-      transitioning: () => this.trans !== null, // true while the scene-fade overlay still captures input
-
-      fgRect: () => {
-        const s = Math.min(this.app.screen.width / DESIGN.w, this.app.screen.height / DESIGN.h);
-        return { w: DESIGN.w * s, h: DESIGN.h * s }; // 전경(9:16) 화면 크기
-      },
-      startGame: (mode?: GameMode) => { if (mode) this.modeC.setMode(mode); this.setScene('PoolInGame'); },
-      showTitle: () => this.setScene('Title'),
-      skipLoad: () => { if (this.scene === 'Loading' && !this.trans) this.setScene('Title'); }, // 테스트용 로딩 floor 건너뛰기
-      loadingActive: () => this.scene === 'Loading',
-      unlockedTier: () => this.unlockedTier,
-      unlockPending: () => this.paused,
-      unlockModalScale: () => (this.unlockModal.container.parent as any)?.scale?.x ?? 0, // parent layer scale (contain sFg, not cover) — docs/50-art-ux/popup-system
-      okUnlock: () => this.onUnlockOk(),
-      unlockAll: () => {
-        this.unlockedTier = MAX_TIER;
-      },
-      stats: () => ({ ...this.stats }),
-      score: () => this.score.score,
-      // game modes (docs/20-core-loop/game-modes)
-      mode: () => this.modeC.mode,
-      count: () => this.modeC.count,
-      setCount: (n: number) => { this.modeC.count = n; this.info.setCount(n); },
-      targetTier: () => this.modeC.targetTier,
-      nextTier: () => this.queue.next(),
-      maxCombo: () => this.maxCombo,
-      bestScore: () => this.meta.bestScore,
-      chargeBuy: (n: number) => this.buyCharge(n),
-      resultShown: () => this.result.isOpen,
-      gestureHintShown: () => this.gestureHint.container.visible,
-      stageCleared: () => this.stageClear.isOpen,
-      stageFailed: () => this.stageFail.isOpen,
-      stageNo: () => this.modeC.stageIndex + 1, // 현재 플레이 스테이지 번호
-      stageProgress: () => this.meta.stageProgress, // 영속 진행도(0-based)
-      clearing: () => !!this.clearFly, // Stage 클리어 비행 연출 진행 중
-      launcherLoaded: () => this.launcher.loaded, // 발사대에 대기 행성이 있는가
-      comboValue: () => this.combo.value,
-      comboBonusAwarded: () => this.lastComboBonus,
-      planetCount: () => this.planets.length,
-      queue: () => this.queue.peek(),
-      tiersOnBoard: () => this.planets.map((p) => p.tier).sort((a, b) => a - b),
-      snapshot: () =>
-        this.planets.map((p) => ({
-          tier: p.tier,
-          x: p.body.position.x,
-          y: p.body.position.y,
-          speed: Math.hypot(p.body.velocity.x, p.body.velocity.y),
-          inPlayArea: p.inPlayArea,
-          inBoard:
-            p.body.position.x > PLAY.x - 30 &&
-            p.body.position.x < PLAY.x + PLAY.w + 30 &&
-            p.body.position.y > PLAY.y - 30 &&
-            p.body.position.y < LINE_Y + 90,
-        })),
-      lineY: () => LINE_Y,
-      launcher: () => ({ x: LAUNCHER.x, y: LAUNCHER.y, r: LAUNCHER.r }),
-      bounds: () => {
-        const floorY = GAUGE.cy + GAUGE.r;
-        return { x: PLAY.x, y: PLAY.y, w: PLAY.w, h: floorY - PLAY.y, lineY: floorY };
-      },
-      fire: (angleRad: number, power: number) => {
-        this.cooldownUntil = 0;
-        const speed = Math.max(0, Math.min(power, 1)) * LAUNCH.vMax;
-        return this.fire(this.queue.current(), Math.cos(angleRad) * speed, Math.sin(angleRad) * speed);
-      },
-      clearBoard: () => {
-        for (const p of [...this.planets]) this.removePlanet(p);
-      },
-      spawnPair: (tier: number) => {
-        const now = performance.now() - 1000;
-        const cx = PLAY.x + PLAY.w / 2;
-        const cy = PLAY.y + PLAY.h * 0.5;
-        const r = tierData(tier).radius;
-        this.spawnPlanet(tier, cx - r - 1, cy, 5, 0, now, true);
-        this.spawnPlanet(tier, cx + r + 1, cy, -5, 0, now, true);
-      },
-      // meta layer (coin wallet + missions + attendance + wheel) — docs/30-systems/meta-economy
-      meta: () => ({ coins: this.meta.coins, completed: this.meta.completedCount(), attendanceDay: this.meta.attendanceDay, best: this.meta.bestScore, current: this.meta.currentScore }),
-      metaMissions: () => this.meta.missionRows(),
-      metaReset: () => this.meta.__reset(),
-      metaAddCoins: (n: number) => this.meta.addCoins(n),
-      openPopup: (kind: 'dailyMission' | 'attendance' | 'wheel' | 'shop') => this.metaUI.open(kind),
-      openPopupKind: () => this.metaUI.openKind(),
-      // in-game ≡ HUD dropdown (docs/50-art-ux/layout §2-c)
-      hudMenuOpen: () => this.hud.menuIsOpen,
-      hudMenuBurger: () => this.hud.toggleMenu(),
-      hudMenuItemCount: () => this.hud.menuItemCount,
-      hudMenuItem: (i: number) => this.hud.tapMenuItem(i),
-      hudMenuOutside: () => this.hud.closeMenu(),
-      claimAttendance: () => this.meta.claimAttendance(),
-      claimMission: (id: string) => this.meta.claimMission(id),
-      claimMilestone: (n: number) => this.meta.claimMilestone(n),
-      wheelStart: () => this.metaUI.wheel.startSpin(),
-      wheelStop: (i: number) => this.metaUI.wheel.stopOn(i),
-      wheelWin: () => this.metaUI.wheel.lastWin,
-    };
   }
 }
