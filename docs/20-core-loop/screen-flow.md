@@ -57,6 +57,25 @@ sources:
 Title 배경의 태양계 공전과 Pool In-Game의 물리 시뮬레이션은 **서로 다른 시간 정책**이다:
 Title의 공전은 순수 렌더 연출(시뮬레이션 아님), Pool In-Game만 고정 스텝 물리가 돈다.
 
+## PoolInGame 내부 상태 (in-session phase)
+
+`PoolInGame` 씬 안의 세션 흐름은 단일 `phase` 상태로 고정한다 — 불리언 조합으로 흐름을 암묵화하지
+않는다([[../90-methodology/state-machine]]). 상태는 **상호배타적**이며 한 번에 하나만 활성이다.
+
+| phase | 의미 | 물리 | 발사 | 진입 | 이탈 |
+|---|---|---|---|---|---|
+| `playing` | 일반 플레이 | 진행 | 가능 | 세션 시작·재개 | 아래 전이 |
+| `paused` | 해금 모달(RewardPopup) | 정지 | 불가 | 새 단계 첫 합성(Infinite) | OK → `playing` |
+| `pendingEnd` | Stage 카운트 소진 후 종료 대기(2초) | 진행 | 불가 | 카운트 0(Stage) | 타이머/탭 → `ended` |
+| `clearing` | Stage 클리어 비행 연출 | 정지 | 불가 | 목표 행성 생성 | 연출 종료 → `ended` |
+| `ended` | 결과/클리어/실패 창 표시 | 정지 | 불가 | 종료 확정(Infinite 정지·Stage 타이머/연출) | 탭 → Title/다음(씬 전이) |
+
+`* → playing` 은 세션 시작(`startSession`, 재시작 포함)에서 일어난다. 종료 종류(result/clear/fail)는
+`pendingEnd`/`ended` 가 함께 실어 나른다. `pendingEnd` 가 별도 상태이므로 종료 대기 중 발생한 합성이
+해금 모달(`paused`)을 띄우는 **상태 공존**은 구조적으로 발생하지 않는다. 인게임 메타/충전 팝업 표시
+중에는 phase와 별개로 물리·발사를 정지한다(딤 오버레이 동안 시간정책 일관). 이 표는 [[game-modes]]
+§상태 전이의 모드 종료를 **세션 내부 관점**에서 구현한 것이다.
+
 ## Loading 씬
 
 - **목적:** 앱 부팅 시 첫 화면. 에셋이 준비되는 동안, 그리고 **최소 2초** 동안 게임 타이틀을 보여준다(부팅

@@ -21,7 +21,7 @@ export function exposeDebug(g: GameScene): void {
     skipLoad: () => { if (a.scene === 'Loading' && !a.trans) a.setScene('Title'); }, // 테스트용 로딩 floor 건너뛰기
     loadingActive: () => a.scene === 'Loading',
     unlockedTier: () => a.unlockedTier,
-    unlockPending: () => a.paused,
+    unlockPending: () => a.phase === 'paused',
     unlockModalScale: () => (a.unlockModal.container.parent as any)?.scale?.x ?? 0, // parent layer scale (contain sFg, not cover) — docs/50-art-ux/popup-system
     okUnlock: () => a.onUnlockOk(),
     unlockAll: () => {
@@ -44,7 +44,7 @@ export function exposeDebug(g: GameScene): void {
     stageFailed: () => a.stageFail.isOpen,
     stageNo: () => a.modeC.stageIndex + 1, // 현재 플레이 스테이지 번호
     stageProgress: () => a.meta.stageProgress, // 영속 진행도(0-based)
-    clearing: () => !!a.clearFly, // Stage 클리어 비행 연출 진행 중
+    clearing: () => a.phase === 'clearing', // Stage 클리어 비행 연출 진행 중
     launcherLoaded: () => a.launcher.loaded, // 발사대에 대기 행성이 있는가
     comboValue: () => a.combo.value,
     comboBonusAwarded: () => a.lastComboBonus,

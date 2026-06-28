@@ -79,7 +79,6 @@ export class GameScene {
   private unlockModal!: UnlockModal;
   private unlockedTier = PROGRESSION.unlockStart; // highest tier merges may create (docs/30-systems/tier-unlock)
   private pendingUnlockTier = 0;
-  private paused = false; // true while the unlock modal is up (game frozen)
   lastComboBonus = 0; // most recent awarded combo milestone bonus (verification hook; read via window.__game)
   private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위, 뷰포트 전체)
   private endSkip = new Graphics(); // Stage 종료 지연 중 화면 탭 → 지연 스킵(평소 비활성)
@@ -94,7 +93,10 @@ export class GameScene {
   private result!: ResultPopup; // Infinite 결과창
   private stageClear!: StageClearPopup;
   private stageFail!: StageFailPopup;
-  private ended = false; // 세션 종료(결과/클리어/실패 창이 떠 있음)
+  // In-session phase state machine (docs/20-core-loop/screen-flow §PoolInGame 내부 상태); endKind/endAt/clearFly
+  // are this state's payload. Transitions: playing→paused→playing (unlock modal); playing→pendingEnd→ended
+  // (armed Stage end); playing→clearing→ended (clear fly); playing→ended (immediate); *→playing on startSession.
+  private phase: 'playing' | 'paused' | 'pendingEnd' | 'clearing' | 'ended' = 'playing';
   private endKind: 'result' | 'clear' | 'fail' | null = null; // 종료 예약(2초 지연 후 창 표시)
   private endAt = 0; // 종료창 등장 예정 시각(performance.now 기준)
   // Stage 클리어 연출 상태(docs/30-systems/stage-mode §클리어): 목표 행성이 우하단 목표 UI로 포물선
@@ -122,7 +124,7 @@ export class GameScene {
     this.endSkip.drawRect(0, 0, DESIGN.w, DESIGN.h);
     this.endSkip.endFill();
     this.endSkip.eventMode = 'none';
-    this.endSkip.on('pointerdown', (e) => { e.stopPropagation(); if (this.endKind) this.showEnd(this.endKind); });
+    this.endSkip.on('pointerdown', (e) => { e.stopPropagation(); if (this.phase === 'pendingEnd') this.showEnd(this.endKind!); });
     this.fgRoot.addChild(this.endSkip);
     this.app.stage.eventMode = 'static';
 
@@ -178,16 +180,16 @@ export class GameScene {
         this.maxCombo = Math.max(this.maxCombo, this.combo.value); // session combo peak (Infinite result)
         // Stage clear: created the target tier (docs/30-systems/stage-mode) — launches the fly-to-target
         // animation (which then opens the clear window). Already-cleared stage: no reward → falls through.
-        if (this.modeC.isStage && !this.ended && !this.clearFly && tier >= this.modeC.targetTier
+        if (this.modeC.isStage && (this.phase === 'playing' || this.phase === 'pendingEnd') && tier >= this.modeC.targetTier
             && !this.meta.isStageCleared(this.modeC.stageIndex)) {
           this.startClearFly(tier, x, y, planet);
           return;
         }
         // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock).
         // Infinite only — Stage starts fully unlocked and never shows the modal (docs/30-systems/stage-mode).
-        if (!this.modeC.isStage && tier > this.unlockedTier && !this.paused) {
+        if (!this.modeC.isStage && tier > this.unlockedTier && this.phase === 'playing') {
           this.pendingUnlockTier = tier;
-          this.paused = true;
+          this.phase = 'paused';
           const bonus = this.modeC.mode === 'Infinite' ? MODES.infinite.unlockBonusCount : 0;
           if (bonus > 0) {
             this.modeC.addCount(bonus);
@@ -223,8 +225,8 @@ export class GameScene {
       fire: (tier, vx, vy) => this.fire(tier, vx, vy),
       obstacles: () =>
         this.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
-      canAim: () => this.scene === 'PoolInGame' && !this.trans && !this.paused && !this.ended
-        && !this.endKind && !this.clearFly && this.metaUI.openKind() === null && !this.charge.container.visible,
+      canAim: () => this.scene === 'PoolInGame' && !this.trans && this.phase === 'playing'
+        && this.metaUI.openKind() === null && !this.charge.container.visible,
     }, this.fgRoot);
 
     this.meta = new MetaStore();
@@ -310,7 +312,7 @@ export class GameScene {
   private onUnlockOk() {
     eventLog.emit('UNLOCK_OK', {});
     this.unlockedTier = Math.max(this.unlockedTier, this.pendingUnlockTier);
-    this.paused = false;
+    this.phase = 'playing';
     this.unlockModal.hide();
   }
 
@@ -335,7 +337,7 @@ export class GameScene {
   }
 
   private fire(tier: number, vx: number, vy: number): boolean {
-    if (this.scene !== 'PoolInGame' || this.paused || this.ended || this.endKind || this.clearFly) return false;
+    if (this.scene !== 'PoolInGame' || this.phase !== 'playing') return false;
     if (!this.modeC.canFire()) return false; // 카운트 소진 → 발사 불가 (docs/30-systems/launch-count)
     const now = performance.now();
     if (now < this.cooldownUntil) return false;
@@ -440,8 +442,7 @@ export class GameScene {
     if (this.modeC.isStage) this.modeC.stageIndex = this.meta.stageProgress; // 영속 진행도 = 현재 스테이지
     this.unlockedTier = this.modeC.isStage ? MAX_TIER : PROGRESSION.unlockStart;
     this.clearStageFly();
-    this.paused = false;
-    this.ended = false;
+    this.phase = 'playing';
     this.endKind = null;
     this.unlockModal.hide();
     this.charge.container.visible = false; // 새 세션: 떠 있던 충전/종료 팝업 정리(닫기 콜백 없이)
@@ -469,7 +470,7 @@ export class GameScene {
 
   // Open the Infinite charge popup (no-op in Stage / when the session has ended).
   private openCharge() {
-    if (this.modeC.isStage || this.ended) return;
+    if (this.modeC.isStage || this.phase === 'ended') return;
     this.charge.open();
   }
 
@@ -506,7 +507,7 @@ export class GameScene {
   // vanishes (no real merge); the clear window opens once the animation finishes. Firing stops + the
   // launcher chamber empties immediately, and board physics freezes while clearFly is set (tick).
   private startClearFly(tier: number, x: number, y: number, planet: Planet) {
-    if (this.clearFly || this.ended) return;
+    if (this.phase === 'clearing' || this.phase === 'ended') return;
     this.removePlanet(planet); // 목표 행성은 보드에서 제거 — 실제 합성이 아니라 연출 스프라이트가 날아간다
     this.launcher.clearChamber(); // 발사대 비움(추가 발사 정지는 fire()가 clearFly로 차단)
     const sprite = makePlanetSprite(tier); // scale 1 = 보드 크기(diameter = radius*2)
@@ -514,6 +515,7 @@ export class GameScene {
     sprite.y = y;
     this.effectLayer.addChild(sprite);
     this.clearFly = { sprite, phase: 'fly', t0: performance.now(), from: { x, y }, to: this.info.targetPos(), r0: tierData(tier).radius, tier };
+    this.phase = 'clearing';
     sound.play('merge', { pitch: 1.5 });
   }
 
@@ -553,7 +555,7 @@ export class GameScene {
   // End-of-session check (docs/30-systems/launch-count). Stage: arm the end window after a delay.
   // Infinite: end only once the count is gone AND every planet has settled (no fixed delay).
   private checkSessionEnd() {
-    if (this.ended || this.endKind || this.paused || this.clearFly) return;
+    if (this.phase !== 'playing') return;
     if (this.modeC.count > 0) return;
     if (this.modeC.isStage) {
       this.scheduleEnd('fail');
@@ -566,17 +568,18 @@ export class GameScene {
   // Arm the end window after RESULT.endDelayMs (docs/50-art-ux/result-window). 'clear' overrides a
   // pending 'fail' (a target made during the fail delay still wins); 'result'/'fail' don't re-arm.
   private scheduleEnd(kind: 'result' | 'clear' | 'fail') {
-    if (this.ended) return;
+    if (this.phase === 'ended') return;
     if (kind !== 'clear' && this.endKind) return;
     this.endKind = kind;
     this.endAt = performance.now() + RESULT.endDelayMs;
+    this.phase = 'pendingEnd';
     this.endSkip.eventMode = 'static'; // 지연 중 화면 탭 → 즉시 종료창(showEnd)
   }
 
   // Show an end window — Stage after the armed delay (tick), Infinite immediately on settle.
   private showEnd(kind: 'result' | 'clear' | 'fail') {
-    if (this.ended) return;
-    this.ended = true;
+    if (this.phase === 'ended') return;
+    this.phase = 'ended';
     this.endKind = null;
     this.endSkip.eventMode = 'none';
     if (kind === 'result') {
@@ -592,6 +595,10 @@ export class GameScene {
       this.stageFail.open();
     }
   }
+
+  // phase === 'clearing', read via getter so tick()'s earlier early-returns don't narrow this.phase
+  // out of 'clearing' — the loop mutates it back to 'clearing' via startClearFly (merge.process side effect).
+  private get isClearing(): boolean { return this.phase === 'clearing'; }
 
   private tick() {
     const nowMs = performance.now();
@@ -621,10 +628,10 @@ export class GameScene {
     }
     // 인게임 메타/충전 팝업이 떠 있으면 물리·발사를 정지(해금 모달과 동일한 시간정책 — docs/20-core-loop/screen-flow §씬별 입력·시간)
     const popupOpen = this.metaUI.openKind() !== null || this.charge.container.visible;
-    if (this.scene !== 'PoolInGame' || this.paused || this.ended || popupOpen) return;
+    if (this.scene !== 'PoolInGame' || this.phase === 'paused' || this.phase === 'ended' || popupOpen) return;
 
     // Stage 클리어 연출 중: 보드 물리·발사를 멈추고 비행+버스트 연출만 갱신(완료 시 클리어창).
-    if (this.clearFly) {
+    if (this.isClearing) {
       this.updateClearFly(nowMs);
       this.effects.update(nowMs);
       return;
@@ -632,7 +639,7 @@ export class GameScene {
 
     this.acc += this.app.ticker.deltaMS;
     let steps = 0;
-    while (this.acc >= STEP_MS && steps < 5 && !this.clearFly) { // 연출 시작 시 즉시 중단
+    while (this.acc >= STEP_MS && steps < 5 && !this.isClearing) { // 연출 시작 시 즉시 중단
       this.physics.update(STEP_MS);
       this.merge.process(performance.now());
       containPlanets(this.planets, this.physics); // absolute play-area containment + one-way line (per substep)
@@ -640,8 +647,8 @@ export class GameScene {
       steps++;
     }
     if (this.acc > STEP_MS * 5) this.acc = 0;
-    if (!this.clearFly) this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
-    if (this.endKind && nowMs >= this.endAt) this.showEnd(this.endKind); // Stage 종료창 지연 등장
+    if (!this.isClearing) this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
+    if (this.phase === 'pendingEnd' && nowMs >= this.endAt) this.showEnd(this.endKind!); // Stage 종료창 지연 등장
 
     for (const p of this.planets) {
       p.sprite.x = p.body.position.x;
@@ -658,7 +665,7 @@ export class GameScene {
         }
       }
     }
-    if (!this.clearFly) this.launcher.update(); // 연출 중엔 비운 발사대를 다시 채우지 않음
+    if (!this.isClearing) this.launcher.update(); // 연출 중엔 비운 발사대를 다시 채우지 않음
     this.board.update(nowMs);
     this.hud.update(nowMs); // score odometer roll
     this.info.update(nowMs); // 좌하단 위젯/충전 버튼·목표 행성 회전

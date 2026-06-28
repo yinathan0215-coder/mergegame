@@ -28,7 +28,7 @@ sources:
 ### 시뮬레이션 · 코어 루프
 | 모듈 | 단일 책임 | 방법론 매핑 |
 |---|---|---|
-| `GameScene` | Pixi 앱·렌더 루프·씬 상태(`Loading`→`Title`→`PoolInGame`)·시스템 오케스트레이션·세션 종료 판정. 검증 훅(`debug`)·경계 물리(`Containment`)는 별 모듈로 분리 | [[../90-methodology/state-machine]] · [[../90-methodology/game-loop]] |
+| `GameScene` | Pixi 앱·렌더 루프·씬 상태(`Loading`→`Title`→`PoolInGame`) + **세션 내부 phase**(`playing`/`paused`/`pendingEnd`/`clearing`/`ended`, [[../20-core-loop/screen-flow]])·시스템 오케스트레이션·세션 종료 판정. 검증 훅(`debug`)·경계 물리(`Containment`)는 별 모듈로 분리 | [[../90-methodology/state-machine]] · [[../90-methodology/game-loop]] |
 | `Containment` | 절대 플레이 영역 경계 — 매 substep clamp+반사로 터널링 방지 + 발사대 원 재진입 차단(물리 규칙, 오케스트레이터에서 분리) | [[../90-methodology/game-loop]] · [[../90-methodology/ecs-lite]] |
 | `LoadingScreen` | 부팅 로딩 씬 — `GALAXY PINBALL` 타이틀 글자 스트림 + 최소 2초 floor | [[../90-methodology/state-machine]] · [[../90-methodology/layered-rendering]] |
 | `modes/ModeController` | 게임 모드 권위(Infinite/Stage): 남은 카운트·차지·스테이지 레벨 로드·클리어/실패 판정 | [[../90-methodology/state-machine]] · [[../90-methodology/data-driven]] |
