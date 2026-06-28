@@ -1,5 +1,5 @@
 import { Container, Rectangle, Text } from 'pixi.js';
-import { DESIGN, MODES } from '../data/config';
+import { DESIGN, MODES, COLORS } from '../data/config';
 import { Popup } from '../ui/Popup';
 import { button3D, attachButtonFeedback, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
@@ -42,7 +42,7 @@ export class StageClearPopup extends Popup {
     reward.x = cx - 18;
     reward.y = 372;
     this.body.addChild(coin, reward);
-    this.body.addChild(bigButton(cx, 520, '다음 스테이지', 0x49a8e6, () => { this.close(); onNext(); }));
+    this.body.addChild(bigButton(cx, 520, '다음 스테이지', COLORS.btnBlue, () => { this.close(); onNext(); }));
     this.body.addChild(bigButton(cx, 596, '돌아가기', 0x55617f, () => { this.close(); onHome(); }));
   }
 }
@@ -52,6 +52,6 @@ export class StageFailPopup extends Popup {
     super({ title: 'STAGE FAILED', hasBg: true, onClose: onRetry });
     const cx = DESIGN.w / 2;
     this.body.addChild(centred('목표 행성을 만들지 못했어요', 20, 0xdde7ff, 320));
-    this.body.addChild(bigButton(cx, 520, '다시 시도', 0x49a8e6, () => { this.close(); onRetry(); }));
+    this.body.addChild(bigButton(cx, 520, '다시 시도', COLORS.btnBlue, () => { this.close(); onRetry(); }));
   }
 }

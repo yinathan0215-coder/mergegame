@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text, type FederatedPointerEvent } from 'pixi.js';
-import { DESIGN, MODES } from '../data/config';
+import { DESIGN, MODES, COLORS } from '../data/config';
 import { tierData } from '../data/planets';
 import { Popup } from '../ui/Popup';
 import { button3D, attachButtonFeedback, BUTTON3D_DY } from '../ui/button';
@@ -108,7 +108,7 @@ export class ChargePopup extends Popup {
     const frac = this.maxValue > 0 ? this.value / this.maxValue : 0;
     const kx = TRACK_L + (TRACK_R - TRACK_L) * frac;
     this.fill.clear();
-    this.fill.beginFill(0x49a8e6);
+    this.fill.beginFill(COLORS.btnBlue);
     this.fill.drawRoundedRect(TRACK_L, TRACK_Y - 5, Math.max(0, kx - TRACK_L), 10, 5);
     this.fill.endFill();
     this.knob.clear();
@@ -118,7 +118,7 @@ export class ChargePopup extends Popup {
     this.plusText.text = `+${this.value}`;
     const enabled = this.value > 0;
     this.btnFace.removeChildren();
-    this.btnFace.addChild(button3D(240, 64, 0x49a8e6, 14, !enabled));
+    this.btnFace.addChild(button3D(240, 64, COLORS.btnBlue, 14, !enabled));
     this.coinText.text = `${this.getCoins()}/${this.needed()}`;
   }
 

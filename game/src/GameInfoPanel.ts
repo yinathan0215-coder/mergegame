@@ -1,7 +1,7 @@
 import { Container, Rectangle, Text } from 'pixi.js';
 import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
-import { LAUNCHER, INNER_INSET } from './data/config';
+import { LAUNCHER, INNER_INSET, COLORS } from './data/config';
 import { button3D, attachButtonFeedback, BUTTON3D_DY } from './ui/button';
 import type { GameMode } from './modes/ModeController';
 
@@ -54,7 +54,7 @@ export class GameInfoPanel {
     this.chargeBtn.x = RIGHT_X;
     this.chargeBtn.y = STRIP_C;
     this.chargeBtn.hitArea = new Rectangle(-56, -BTN_H / 2, 112, BTN_H);
-    this.chargeBtn.addChild(button3D(112, BTN_H, 0x49a8e6));
+    this.chargeBtn.addChild(button3D(112, BTN_H, COLORS.btnBlue));
     this.chargeEarth = makePlanetSprite(5); // 회전하는 지구 아이콘
     this.chargeEarth.scale.set(40 / (tierData(5).radius * 2));
     this.chargeEarth.x = -34;

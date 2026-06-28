@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
-import { DESIGN, WHEEL } from '../data/config';
+import { DESIGN, WHEEL, COLORS } from '../data/config';
 import { Popup } from '../ui/Popup';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
@@ -122,7 +122,7 @@ export class LuckyWheelPopup extends Popup {
       return;
     }
     const broke = this.store.coins < WHEEL.cost;
-    this.btn.addChild(button3D(w, h, 0x49a8e6, 16, broke));
+    this.btn.addChild(button3D(w, h, COLORS.btnBlue, 16, broke));
     const ink = broke ? 0x9aa6c4 : 0xffffff;
     const coin = coinSprite(22); coin.x = -52; coin.y = dy - 11; coin.alpha = broke ? 0.6 : 1;
     const cost = new Text(String(WHEEL.cost), { fill: ink, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
