@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { JUICE, COLORS } from './data/config';
+import { JUICE, COLORS, DESIGN } from './data/config';
 
 interface FX {
   g: Graphics;
@@ -11,12 +11,15 @@ interface FX {
   fan?: { angs: number[]; len: number }; // hit: directional spray
 }
 interface Popup {
-  t: Text;
+  t: Container; // a Text (merge +N) or a Container of two Texts (combo bonus)
   start: number;
   y0: number;
+  ms: number;
+  rise: number;
 }
 
 const POPUP_COLOR = parseInt(JUICE.scorePopup.color.slice(1), 16);
+const BONUS_COLOR = parseInt(JUICE.combo.bonusColor.slice(1), 16);
 const MAX_FX = 28; // bound concurrent effects → bounded draw calls (frame-drop guard)
 const MAX_POPUPS = 12;
 
@@ -79,7 +82,26 @@ export class Effects {
     t.x = x;
     t.y = y;
     this.worldLayer.addChild(t);
-    this.popups.push({ t, start: performance.now(), y0: y });
+    this.popups.push({ t, start: performance.now(), y0: y, ms: JUICE.scorePopup.ms, rise: JUICE.scorePopup.rise });
+  }
+
+  // Combo milestone bonus: two lines at SCREEN CENTRE — "combo M" (smaller) over "+N" (bigger) —
+  // longer hold than the merge popup (docs/50-art-ux/feedback-effects §8). Rare → skips the popup cap.
+  comboBonus(points: number, combo: number) {
+    const c = JUICE.combo;
+    const mk = (s: string, size: number, anchorY: number, y: number): Text => {
+      const t = new Text(s, { fill: BONUS_COLOR, fontSize: size, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      t.anchor.set(0.5, anchorY);
+      t.y = y;
+      return t;
+    };
+    const g = new Container();
+    g.addChild(mk(`combo ${combo}`, c.bonusLabelSize, 1, -2)); // smaller label, above
+    g.addChild(mk(`+${points}`, c.bonusFontSize, 0, 2)); // bigger amount, below
+    g.x = DESIGN.w / 2;
+    g.y = DESIGN.h / 2;
+    this.worldLayer.addChild(g);
+    this.popups.push({ t: g, start: performance.now(), y0: g.y, ms: c.bonusMs, rise: c.bonusRise });
   }
 
   update(now: number) {
@@ -109,16 +131,15 @@ export class Effects {
         }
       }
     }
-    const pop = JUICE.scorePopup;
     for (let i = this.popups.length - 1; i >= 0; i--) {
       const p = this.popups[i];
-      const k = (now - p.start) / pop.ms;
+      const k = (now - p.start) / p.ms;
       if (k >= 1) {
-        p.t.destroy();
+        p.t.destroy({ children: true });
         this.popups.splice(i, 1);
         continue;
       }
-      p.t.y = p.y0 - pop.rise * k;
+      p.t.y = p.y0 - p.rise * k;
       p.t.alpha = 1 - k;
     }
   }

@@ -27,4 +27,10 @@ export class ScoreSystem {
     this.onChange(this.score);
     return pts;
   }
+
+  // Combo milestone bonus (docs/30-systems/scoring-combo) — a large flat reward at every 5th combo.
+  addBonus(pts: number) {
+    this.score += pts;
+    this.onChange(this.score);
+  }
 }

@@ -43,10 +43,12 @@ export class Combo {
   }
 
   // A successful merge: increment if the hold timer is still alive, else restart the chain at 1;
-  // then reset the timer (absolute hold window from now).
-  onMerge(now: number) {
+  // then reset the timer (absolute hold window from now). Returns the milestone bonus score to award
+  // (count × bonusPer) when the count lands on a multiple of `step` (5/10/15…), else 0.
+  onMerge(now: number): number {
     this.count = now < this.lastMergeAt + C.holdMs ? this.count + 1 : 1;
     this.lastMergeAt = now;
+    return this.count % C.step === 0 ? this.count * C.bonusPer : 0;
   }
 
   update(now: number) {

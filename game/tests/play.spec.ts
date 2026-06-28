@@ -25,6 +25,7 @@ declare global {
       spawnPair: (tier: number) => void;
       clearBoard: () => void;
       comboValue: () => number;
+      comboBonusAwarded: () => number;
       unlockAll: () => void;
     };
   }
@@ -116,6 +117,23 @@ test('콤보 카운터: 유지 시간(4s) 안에 연속 머지하면 콤보가 1
   await page.evaluate(() => window.__game.spawnPair(5)); // 유지 시간 안 두 번째 머지 → 콤보 증가(리셋 아님)
   await page.waitForFunction(() => window.__game.comboValue() >= 2, null, { timeout: 5000 });
   expect(await page.evaluate(() => window.__game.comboValue())).toBeGreaterThanOrEqual(2);
+});
+
+test('콤보 마일스톤: 5단위 도달 시 큰 보너스 점수 지급(콤보값×bonusPer)', async ({ page }) => {
+  await ready(page);
+  await page.evaluate(() => {
+    window.__game.unlockAll();
+    window.__game.clearBoard();
+  });
+  // 연속 머지로 콤보를 5 이상 쌓는다(유지 5s 안)
+  for (let i = 0; i < 6; i++) {
+    await page.evaluate(() => window.__game.spawnPair(5));
+    await page.waitForTimeout(250);
+  }
+  await page.waitForFunction(() => window.__game.comboBonusAwarded() > 0, null, { timeout: 6000 });
+  const bonus = await page.evaluate(() => window.__game.comboBonusAwarded());
+  expect(bonus).toBeGreaterThanOrEqual(2000); // 첫 마일스톤(콤보5) = 5×400
+  expect((bonus / 400) % 5).toBe(0); // 5의 배수 콤보에서만 지급
 });
 
 test('태양(최종 단계)은 합성되지 않는다', async ({ page }) => {

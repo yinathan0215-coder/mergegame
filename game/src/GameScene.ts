@@ -57,6 +57,7 @@ export class GameScene {
   private unlockedTier = PROGRESSION.unlockStart; // highest tier merges may create (docs/30-systems/tier-unlock)
   private pendingUnlockTier = 0;
   private paused = false; // true while the unlock modal is up (game frozen)
+  private lastComboBonus = 0; // most recent awarded combo milestone bonus (verification hook)
   private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위)
   private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
 
@@ -102,7 +103,12 @@ export class GameScene {
         const d = tierData(tier);
         this.effects.mergeBurst(x, y, d.colors[0], d.radius); // 발산 버스트
         this.effects.scorePopup(pts, x, y); // +N at the merge location
-        this.combo.onMerge(performance.now()); // merge chain counter (docs/50-art-ux/feedback-effects §8)
+        const comboBonus = this.combo.onMerge(performance.now()); // chain counter; returns milestone bonus
+        if (comboBonus > 0) {
+          this.score.addBonus(comboBonus); // combo 5/10/15… milestone → large bonus score
+          this.effects.comboBonus(comboBonus, this.combo.value); // "+N(combo M)" at screen centre
+          this.lastComboBonus = comboBonus;
+        }
         // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock)
         if (tier > this.unlockedTier && !this.paused) {
           this.pendingUnlockTier = tier;
@@ -379,6 +385,7 @@ export class GameScene {
       stats: () => ({ ...this.stats }),
       score: () => this.score.score,
       comboValue: () => this.combo.value,
+      comboBonusAwarded: () => this.lastComboBonus,
       planetCount: () => this.planets.length,
       queue: () => this.queue.peek(),
       tiersOnBoard: () => this.planets.map((p) => p.tier).sort((a, b) => a - b),

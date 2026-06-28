@@ -12,6 +12,17 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 콤보 5s/3s + 5단위 마일스톤 보너스(중앙 2줄 "combo M / +N")
+why: 사용자 지시 — 콤보 유지 5초(`holdMs` 4000→5000)·**3초부터 페이드아웃**(`fadeStartMs` 2000→3000).
+**콤보가 5의 배수(5·10·15·20·25…)에 도달할 때마다 큰 보너스 점수**(`콤보값 × bonusPer=400`) 지급 —
+배율 아님, 마일스톤 정액(콤보는 어렵게 쌓이므로 상당히 큰 베네핏). 보너스는 **화면 중앙에 2줄 플로팅**:
+위 `combo M`(작은 글씨 `bonusLabelSize=22`) + 아래 `+N`(큰 글씨 `bonusFontSize=40`, 머지 22보다 큼·유지
+`bonusMs=1800`>머지 950), 색 `bonusColor`. 구현: `Combo.onMerge`가 마일스톤 보너스 반환, `ScoreSystem.addBonus`,
+`Effects.comboBonus(points, combo)`(2줄 Container·팝업 ms/rise 개별화), `GameScene` 머지 콜백에서 보너스 가산+
+중앙 팝업+`lastComboBonus` 훅. SSoT `balance.json` `juice.combo`. docs: [[50-art-ux/feedback-effects]] §8 ·
+[[30-systems/scoring-combo]](보너스=세 번째 점수원) 정본화. 검증: typecheck·vite build OK · Playwright
+**24/24**(신규 마일스톤 보너스 테스트 포함) · headed 콤보5 도달 시 "combo 5 / +2000" 중앙 표시 확인.
+
 ## [2026-06-28] manual | 방법론 감사 스킬 신설 + 첫 코드 준수 감사(73/100) + SRP enforcement·karpathy 규약 보강
 why: 사용자 지시 — (1) karpathy 개발철학이 방법론·CLAUDE.md에 빠졌는지 점검: **단일책임(SRP)은
 [[90-methodology/ecs-lite]]에 명시**돼 있으나 *검증(enforcement)*이 없어 GameScene 갓오브젝트(380줄·5책임)가
