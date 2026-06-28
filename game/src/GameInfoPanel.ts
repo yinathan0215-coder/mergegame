@@ -13,9 +13,9 @@ import type { GameMode } from './modes/ModeController';
 // Lives on GameScene's uiLayer (visible only in PoolInGame). Planets here rotate every frame.
 const BOARD_BOTTOM = LAUNCHER.y + LAUNCHER.r + INNER_INSET; // gold shield outline bottom (~696)
 const BTN_H = 72;
-const STRIP_C = BOARD_BOTTOM; // widget VERTICAL CENTRE sits on the board outline end (유아이 중앙 = 보드 끝)
+const STRIP_C = BOARD_BOTTOM + 18; // widget vertical centre just below the board outline end
 const COUNT_X = 66;
-const NEXT_X = 152;
+const NEXT_X = 130;
 const RIGHT_X = 388;
 
 function cap(s: string, x: number, y: number): Text {
