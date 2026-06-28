@@ -117,7 +117,9 @@ export class GameScene {
     const spd = Math.hypot(vx, vy) || 1;
     const sx = LAUNCHER.x + (vx / spd) * sp;
     const sy = LAUNCHER.y + (vy / spd) * sp;
-    this.spawnPlanet(tier, sx, sy, vx, vy, now, false);
+    // bornAt in the past → a launched ball merges on its FIRST collision (the re-merge delay is
+    // only for freshly MERGED balls — docs/30-systems/merge-rules).
+    this.spawnPlanet(tier, sx, sy, vx, vy, now - 1000, false);
     this.queue.shift();
     this.stats.shots++;
     return true;
