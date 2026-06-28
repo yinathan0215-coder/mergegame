@@ -53,7 +53,7 @@ export class TitleScreen {
   private sun!: Container;
   private toggleKnob = new Graphics();
   private gameMode: GameMode = 'Infinite'; // 하단 토글이 고르는 진입 모드 (docs/20-core-loop/game-modes)
-  private playLabel!: Text; // Play 버튼 라벨(모드별)
+  private playLabel!: Text; // Play 버튼 라벨(두 모드 공통 'Game Start')
   private knobTargetX = -48; // 토글 하이라이트 슬라이드 목표 x
   private currentIcon?: Container; // 현재 점수 옆 최대 머지 행성 아이콘
   private currentScore!: Text;
@@ -63,6 +63,7 @@ export class TitleScreen {
   private bestCrown!: Sprite;
   private bestRowCx = 0;
   private bestRowY = 0;
+  private stageInfo!: Text; // Stage 모드 시 최고 점수 영역에 표시되는 'Stage N'
 
   constructor(
     private onPlay: (mode: GameMode) => void,
@@ -137,7 +138,7 @@ export class TitleScreen {
     this.sideButton(DESIGN.w - 58, 480, ASSETS.ui.luckyWheel, '행운의 돌림판', () => this.meta?.open('wheel'));
 
     this.modeToggle(cx, 632);
-    this.updatePlayLabel();
+    this.applyModeUi();
   }
 
   // 최고 점수 + 게임 시작 버튼을 감싸는 검은 반투명 사각 박스 (docs §2-2)
@@ -159,6 +160,13 @@ export class TitleScreen {
     this.bestText = makeText('0', 26, 0xf2d071, '800');
     this.bestText.anchor.set(0, 0.5);
     this.uiLayer.addChild(this.bestCrown, this.bestText);
+    // Stage 모드 전용: 최고 점수 영역에 'Stage N'을 대신 표시(평소 숨김, applyModeUi가 토글)
+    this.stageInfo = makeText('Stage 1', 28, 0xffe28a, '800');
+    this.stageInfo.anchor.set(0.5);
+    this.stageInfo.x = cx;
+    this.stageInfo.y = y;
+    this.stageInfo.visible = false;
+    this.uiLayer.addChild(this.stageInfo);
     this.layoutBestRow();
   }
 
@@ -207,6 +215,7 @@ export class TitleScreen {
     this.currentIcon.y = this.currentRowY;
     this.currentScore.x = this.currentRowCx - total / 2 + 32 + gap;
     this.currentScore.y = this.currentRowY;
+    this.applyModeUi(); // 모드별 점수 UI/Stage 정보 표시 재적용(currentIcon 재생성 후)
   }
 
   // Centred button shell; press feedback comes from the shared module (docs/50-art-ux/feedback-effects §5).
@@ -238,9 +247,16 @@ export class TitleScreen {
     this.uiLayer.addChild(c);
   }
 
-  // Play 라벨 = 선택 모드 (docs/20-core-loop/game-modes): Infinite="Game Start", Stage="Stage N".
-  private updatePlayLabel() {
-    this.playLabel.text = this.gameMode === 'Infinite' ? 'Game Start' : `Stage ${this.getStageNo()}`;
+  // 모드별 Title UI (docs/50-art-ux/title-screen §2-2·§2-4): Play 라벨은 두 모드 공통 'Game Start'.
+  // Stage 모드에서는 최고·현재 점수 UI를 숨기고 최고 점수 영역에 'Stage N'을 표시한다.
+  private applyModeUi() {
+    const stage = this.gameMode === 'Stage';
+    this.bestCrown.visible = !stage;
+    this.bestText.visible = !stage;
+    this.currentScore.visible = !stage;
+    if (this.currentIcon) this.currentIcon.visible = !stage;
+    this.stageInfo.visible = stage;
+    if (stage) this.stageInfo.text = `Stage ${this.getStageNo()}`;
   }
 
   private addNineSliceBody(c: Container, asset: string, w: number, h: number) {
@@ -345,7 +361,7 @@ export class TitleScreen {
     const c = this.buttonContainer(cx, cy, 204, 42, () => {
       this.gameMode = this.gameMode === 'Infinite' ? 'Stage' : 'Infinite';
       this.knobTargetX = this.gameMode === 'Infinite' ? -48 : 48; // 하이라이트 슬라이드 목표
-      this.updatePlayLabel();
+      this.applyModeUi();
       sound.play('toggle'); // 모드 전환 효과음 (docs/50-art-ux/sound-design)
     });
     const bg = new Graphics();

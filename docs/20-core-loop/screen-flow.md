@@ -73,9 +73,9 @@ Title의 공전은 순수 렌더 연출(시뮬레이션 아님), Pool In-Game만
 ## 게임 모드 선택 (Infinite | Stage)
 
 Title 하단 토글 `Infinite | Stage`가 진입할 **게임 모드**를 고른다([[game-modes]]). 기본 활성은
-**Infinite**다. 토글을 옮기면 시작(Play) 버튼 라벨이 바뀐다 — Infinite = `Game Start`,
-Stage = `Stage N`. Play를 누르면 선택 모드로 Pool In-Game에 진입하고, 모드는 한 세션 동안
-고정된다. 토글의 시각/애니메이션 규칙은 [[../50-art-ux/title-screen]] §2-4.
+**Infinite**다. Play 버튼 라벨은 두 모드 공통 `Game Start`이고, **Stage를 고르면** Title의
+최고·현재 점수 영역이 `Stage N` 정보로 대체된다([[../50-art-ux/title-screen]] §2-2·§2-4).
+Play를 누르면 선택 모드로 Pool In-Game에 진입하고, 모드는 한 세션 동안 고정된다.
 
 ## 관련
 - [[index]] — 섹션 카탈로그

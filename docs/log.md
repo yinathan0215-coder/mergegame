@@ -12,6 +12,16 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 게임 모드 main 반영 + HUD 하단 정렬 + Stage Title(점수 UI→Stage 정보)
+why: 사용자 지시 — (1) feat/game-modes를 main에 반영(동시 세션 중단 후 인플라이트 작업 일괄
+커밋 → cherry-pick, TitleScreen 충돌 1건 해결[playLabel 유지 + main의 위치 튜닝 y=14]).
+(2) 인게임 HUD 재배치: Count/Next를 **가로로 나란히**, 행성 충전/목표 행성을 **하단 우측**으로,
+전체를 보드/발사대 **아래 하단 스트립**으로 내려 플레이 영역을 가리지 않게 함([[50-art-ux/layout]] §2-b).
+(3) Title 모드 UX 변경: Play 라벨은 두 모드 공통 **`Game Start`**(Stage N 라벨 폐기), **Stage 선택 시
+최고·현재 점수 UI를 숨기고 최고 점수 영역에 `Stage N` 정보 표시**([[50-art-ux/title-screen]] §2-2·§2-4 ·
+[[20-core-loop/game-modes]] · [[20-core-loop/screen-flow]]). 구현: `GameInfoPanel`(하단 스트립·가로 정렬),
+`TitleScreen`(playLabel 고정·Stage 정보 토글·점수 UI show/hide). 검증: tsc·vite build·Playwright.
+
 ## [2026-06-28] manual | Play 버튼 텍스트 파란 면 안전영역 보정
 why: 사용자 지시 — 버튼 이미지를 줄이거나 9-slice 구조를 바꾸는 문제가 아니라 `게임 시작` 라벨이 파란 버튼 면 밖으로 내려오는 문제였음. 구현(`game/src/TitleScreen.ts`): `play-button.png`와 224x100 런타임 버튼 영역은 유지하고, 흰색 플레이 삼각형과 라벨 오버레이만 위로 재배치해 하단 금색 베벨 위로 내려오지 않게 함. docs: [[50-art-ux/button-system]] · [[50-art-ux/title-screen]] · `game/public/assets/prompts/title-icons.md`.
 
