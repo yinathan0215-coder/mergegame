@@ -8,11 +8,14 @@ import { attachButtonFeedback, button3D, BUTTON3D_DY } from './ui/button';
 // just-unlocked planet + a single OK button over a full-screen dim. The game is paused while it is up;
 // OK closes it and unlocks the next tier. Render/UI only.
 //
-// The dim covers the WHOLE viewport: the modal lives in GameScene's cover popup layer (popupRoot), so the
-// Pixi dim rect scales to fill the entire screen (top/bottom included) — the same 2-layer fit as the
-// galaxy/scene-fade. No separate DOM dim is needed (the canvas now fills the viewport).
+// The modal lives in GameScene's CONTAIN layer (fgRoot), exactly like the meta popups (docs/50-art-ux/
+// popup-system). Content therefore renders at the contain scale = normal size on every aspect ratio. The
+// dim is drawn far past the DESIGN rect so that, under the contain transform, it still bleeds over the
+// letterbox and covers the whole viewport. (A cover-scaled layer would instead oversize the CONTENT on
+// wide/web 16:9 viewports, blowing the modal up — which is why it is NOT used.)
 const ENTER_MS = 220; // entrance transition (dim fills + content pops/fades in)
 const DIM_ALPHA = 0.72;
+const DIM_MARGIN = 3000; // dim oversize past DESIGN so contain-fit still covers the full viewport
 
 export class UnlockModal {
   readonly container = new Container();
@@ -26,9 +29,11 @@ export class UnlockModal {
   constructor(onOk: () => void) {
     this.container.visible = false;
 
-    // board dim (Pixi) — alpha animated via this.dim.alpha; swallows board pointer input while up
+    // dim (Pixi) — alpha animated via this.dim.alpha; swallows board pointer input while up. Oversized
+    // past DESIGN so that, under the contain transform, it bleeds over the letterbox to cover the viewport.
+    const M = DIM_MARGIN;
     this.dim.beginFill(0x000000, 1);
-    this.dim.drawRect(0, 0, DESIGN.w, DESIGN.h);
+    this.dim.drawRect(-M, -M, DESIGN.w + 2 * M, DESIGN.h + 2 * M);
     this.dim.endFill();
     this.dim.eventMode = 'static';
     this.dim.on('pointerdown', (e) => e.stopPropagation());
