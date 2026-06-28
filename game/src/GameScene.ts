@@ -78,6 +78,7 @@ export class GameScene {
   private paused = false; // true while the unlock modal is up (game frozen)
   private lastComboBonus = 0; // most recent awarded combo milestone bonus (verification hook)
   private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위, 뷰포트 전체)
+  private endSkip = new Graphics(); // Stage 종료 지연 중 화면 탭 → 지연 스킵(평소 비활성)
   private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
   private bgRoot = new Container(); // 은하수 배경 — cover로 뷰포트 가득(Title 한정)
   private fgRoot = new Container(); // 태양계·로비 UI·보드·HUD·모든 팝업 — contain(9:16, 잘림 없음)
@@ -107,6 +108,13 @@ export class GameScene {
     this.gameLayer.addChild(this.boardLayer, this.comboLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
     this.app.stage.addChild(this.bgRoot, this.fgRoot); // 배경(cover)·전경+팝업(contain)
     this.fgRoot.addChild(this.gameLayer);
+    // Stage 종료 지연(클리어/실패 2초) 중 화면을 탭하면 지연을 건너뛴다(평소 비활성, 보드 입력 통과).
+    this.endSkip.beginFill(0x000000, 0.001);
+    this.endSkip.drawRect(0, 0, DESIGN.w, DESIGN.h);
+    this.endSkip.endFill();
+    this.endSkip.eventMode = 'none';
+    this.endSkip.on('pointerdown', (e) => { e.stopPropagation(); if (this.endKind) this.showEnd(this.endKind); });
+    this.fgRoot.addChild(this.endSkip);
     this.app.stage.eventMode = 'static';
 
     this.physics = new PhysicsWorld();
@@ -121,7 +129,7 @@ export class GameScene {
     this.effects = new Effects(this.effectLayer);
     this.combo = new Combo(this.comboLayer);
     this.info = new GameInfoPanel(this.uiLayer, () => this.openCharge()); // 좌하단 Count/Next + 모드별 위젯
-    this.score = new ScoreSystem((s) => { this.hud.setScore(s); this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드
+    this.score = new ScoreSystem((s) => { this.hud.setScore(s); if (!this.modeC.isStage) this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드(Stage는 집계 안 함)
     this.queue = new QueueSystem(
       (slots) => this.info.setNext(slots[1] ?? slots[0]), // Next 미리보기 갱신(좌하단 HUD)
       () => Math.max(1, Math.min(this.unlockedTier - PROGRESSION.queueBelow, PROGRESSION.queueCap))
@@ -152,8 +160,10 @@ export class GameScene {
         }
         this.meta.onMerge(this.combo.value, tier === SUN_TIER); // daily missions: merge count / combo peak / sun
         this.maxCombo = Math.max(this.maxCombo, this.combo.value); // session combo peak (Infinite result)
-        // Stage clear: created the target tier (docs/30-systems/stage-mode) — preempts the unlock modal
-        if (this.modeC.isStage && !this.ended && tier >= this.modeC.targetTier) {
+        // Stage clear: created the target tier (docs/30-systems/stage-mode) — preempts the unlock modal.
+        // An already-cleared stage cannot be re-cleared (no reward/clear window) — it falls through.
+        if (this.modeC.isStage && !this.ended && tier >= this.modeC.targetTier
+            && !this.meta.isStageCleared(this.modeC.stageIndex)) {
           this.scheduleEnd('clear');
           return;
         }
@@ -374,10 +384,24 @@ export class GameScene {
     });
   }
 
-  // Stage rack: planets placed at the stage's authored positions/tiers (docs/30-systems/stage-mode).
-  private buildStageRack(rack: { tier: number; x: number; y: number }[]) {
+  // Stage rack: lay out the stage's composition ({tier,count}) as one centred row per tier, stacked
+  // top→down with tier-aware spacing so big planets never spawn overlapping (docs/30-systems/stage-mode ·
+  // 40-balancing/stage-balance). Positions form the "shape"; physics settles them.
+  private buildStageRack(rack: { tier: number; count: number }[]) {
     const born = performance.now() - 1000;
-    for (const r of rack) this.spawnPlanet(r.tier, r.x, r.y, 0, 0, born, true);
+    const cx = PLAY.x + PLAY.w / 2;
+    let y = PLAY.y + PLAY.h * 0.22;
+    for (const r of rack) {
+      const rad = tierData(r.tier).radius;
+      const want = 2 * rad + 6; // spacing that avoids spawn overlap
+      const maxW = PLAY.w - 2 * rad - 8;
+      const spacing = r.count > 1 && (r.count - 1) * want > maxW ? maxW / (r.count - 1) : want;
+      for (let ci = 0; ci < r.count; ci++) {
+        const x = cx + (ci - (r.count - 1) / 2) * spacing;
+        this.spawnPlanet(r.tier, x, y, 0, 0, born, true);
+      }
+      y += 2 * rad + 10; // next row below, spaced by this row's planet size
+    }
   }
 
   // Start a fresh session of the current mode: clear the board, reset score/combo/count, build the
@@ -389,12 +413,19 @@ export class GameScene {
     this.ended = false;
     this.endKind = null;
     this.unlockModal.hide();
+    this.charge.container.visible = false; // 새 세션: 떠 있던 충전/종료 팝업 정리(닫기 콜백 없이)
+    this.result.container.visible = false;
+    this.stageClear.container.visible = false;
+    this.stageFail.container.visible = false;
     this.score.reset();
     this.combo.reset();
     this.maxCombo = 0;
     this.modeC.startSession();
     this.sessionPrevBest = this.meta.bestScore; // snapshot before this run → NEW RECORD compare at end
     this.hud.setBest(this.meta.bestScore); // 인게임 👑 = 영속 최고 점수(localStorage) 로드
+    this.hud.setStageMode(this.modeC.isStage ? this.modeC.stageIndex + 1 : null); // Stage: 점수 대신 'STAGE N'
+    this.comboLayer.visible = !this.modeC.isStage; // Stage는 콤보 미표시 (docs/20-core-loop/game-modes)
+    this.endSkip.eventMode = 'none';
     this.queue.reset(this.modeC.isStage ? this.modeC.stageDef.queue : null);
     if (this.modeC.isStage) this.buildStageRack(this.modeC.stageDef.rack);
     else this.buildInitialRack();
@@ -457,6 +488,7 @@ export class GameScene {
     if (kind !== 'clear' && this.endKind) return;
     this.endKind = kind;
     this.endAt = performance.now() + RESULT.endDelayMs;
+    this.endSkip.eventMode = 'static'; // 지연 중 화면 탭 → 즉시 종료창(showEnd)
   }
 
   // Show an end window — Stage after the armed delay (tick), Infinite immediately on settle.
@@ -464,10 +496,12 @@ export class GameScene {
     if (this.ended) return;
     this.ended = true;
     this.endKind = null;
+    this.endSkip.eventMode = 'none';
     if (kind === 'result') {
       const finalScore = this.score.score;
       this.result.show(finalScore, this.maxCombo, finalScore > this.sessionPrevBest);
     } else if (kind === 'clear') {
+      this.meta.markStageCleared(this.modeC.stageIndex); // 클리어 기록(재클리어 보상 방지)
       this.meta.addCoins(MODES.stage.clearReward); // +300 코인 (docs/30-systems/stage-mode)
       this.stageClear.open();
     } else if (kind === 'fail') {

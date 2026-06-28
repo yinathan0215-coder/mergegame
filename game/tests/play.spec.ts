@@ -444,10 +444,10 @@ async function readyStage(page: Page) {
   await page.waitForFunction(() => !window.__game.transitioning(), null, { timeout: 5000 });
 }
 
-test('게임 모드: 기본 Infinite, 카운트 30으로 시작', async ({ page }) => {
+test('게임 모드: 기본 Infinite, 카운트 50으로 시작', async ({ page }) => {
   await ready(page); // startGame() → Infinite
   expect(await page.evaluate(() => window.__game.mode())).toBe('Infinite');
-  expect(await page.evaluate(() => window.__game.count())).toBe(30);
+  expect(await page.evaluate(() => window.__game.count())).toBe(50);
 });
 
 test('카운트: 발사마다 1 감소, 0이면 발사 불가', async ({ page }) => {
@@ -466,13 +466,13 @@ test('Infinite 종료: 카운트 0 → 2초 뒤 결과창', async ({ page }) => 
   expect(await page.evaluate(() => window.__game.resultShown())).toBe(true);
 });
 
-test('Infinite 해금 보너스: 새 단계 해금 팝업 시 카운트 +5', async ({ page }) => {
-  await ready(page); // Infinite, count 30
+test('Infinite 해금 보너스: 새 단계 해금 팝업 시 카운트 +10', async ({ page }) => {
+  await ready(page); // Infinite, count 50
   await page.evaluate(() => window.__game.clearBoard());
   const c0 = await page.evaluate(() => window.__game.count());
   await page.evaluate(() => window.__game.spawnPair(5)); // 지구+지구 → 넵튠(6) → 첫 해금 팝업
   await page.waitForFunction(() => window.__game.unlockPending(), null, { timeout: 5000 });
-  expect(await page.evaluate(() => window.__game.count())).toBe(c0 + 5); // 해금 시 +5 (Infinite)
+  expect(await page.evaluate(() => window.__game.count())).toBe(c0 + 10); // 해금 시 +10 (Infinite)
 });
 
 test('행성 충전: 코인으로 카운트 구매(10당 100), 잔액 부족 시 실패', async ({ page }) => {
@@ -510,4 +510,22 @@ test('Stage 실패: 카운트 0 + 목표 미달 → 실패 결과창', async ({ 
   await page.evaluate(() => { window.__game.clearBoard(); window.__game.setCount(0); });
   await page.waitForFunction(() => window.__game.stageFailed(), null, { timeout: 5000 });
   expect(await page.evaluate(() => window.__game.stageFailed())).toBe(true);
+});
+
+test('이미 클리어한 스테이지는 다시 클리어되지 않는다(보상·클리어창 없음)', async ({ page }) => {
+  await readyStage(page);
+  await page.evaluate(() => { window.__game.metaReset(); window.__game.unlockAll(); window.__game.clearBoard(); });
+  const target = await page.evaluate(() => window.__game.targetTier());
+  await page.evaluate((t) => window.__game.spawnPair(t - 1), target); // 1차 클리어
+  await page.waitForFunction(() => window.__game.stageCleared(), null, { timeout: 5000 });
+  const coinsAfter1 = await page.evaluate(() => window.__game.meta().coins);
+  // 같은(이미 클리어한) 스테이지 재진입 → 목표를 다시 만들어도 클리어/보상 없음
+  await page.evaluate(() => window.__game.startGame('Stage'));
+  await page.waitForFunction(() => window.__game.scene() === 'PoolInGame' && !window.__game.transitioning(), null, { timeout: 8000 });
+  expect(await page.evaluate(() => window.__game.stageCleared())).toBe(false); // 재진입 시 클리어창 닫힘
+  await page.evaluate(() => { window.__game.unlockAll(); window.__game.clearBoard(); });
+  await page.evaluate((t) => window.__game.spawnPair(t - 1), target);
+  await page.waitForTimeout(3000); // 2초 지연 + 여유
+  expect(await page.evaluate(() => window.__game.stageCleared())).toBe(false); // 재클리어 없음
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(coinsAfter1); // 추가 보상 없음
 });

@@ -20,6 +20,7 @@ export interface HudMenuItem {
 export class Hud {
   private scoreText: Text;
   private bestText: Text;
+  private stageText: Text; // Stage 모드 시 점수 대신 표시되는 'STAGE N'
   private best = 0;
   private target = 0; // latest actual score
   private shown = 0; // odometer display value, rolls toward target
@@ -47,6 +48,13 @@ export class Hud {
     this.scoreText.x = cx;
     this.scoreText.y = 50;
     layer.addChild(this.scoreText);
+    // Stage 모드: 점수/콤보를 집계·표시하지 않으므로 중앙 상단에 'STAGE N'을 대신 표시한다(docs/50-art-ux/layout).
+    this.stageText = txt('', 30, COLORS.hudText, '800');
+    this.stageText.anchor.set(0.5, 0.5);
+    this.stageText.x = cx;
+    this.stageText.y = 40;
+    this.stageText.visible = false;
+    layer.addChild(this.stageText);
 
     // ── corners: back button (left, BELOW the coin pill at y18–50) + ≡ menu button (right) ──
     this.button(layer, 12, 54, 'exit', onBack);
@@ -160,6 +168,16 @@ export class Hud {
     this.best = best;
     this.bestText.text = this.best.toLocaleString();
     this.centerBest();
+  }
+
+  // Stage 모드 → 점수·최고 점수를 숨기고 'STAGE N' 표시; Infinite → 점수/최고 점수 표시 (docs/50-art-ux/layout).
+  setStageMode(stageNo: number | null) {
+    const stage = stageNo !== null;
+    this.crown.visible = !stage;
+    this.bestText.visible = !stage;
+    this.scoreText.visible = !stage;
+    this.stageText.visible = stage;
+    if (stage) this.stageText.text = `STAGE ${stageNo}`;
   }
 
   setScore(score: number) {

@@ -25,7 +25,7 @@ sources:
 ## Details (decisions)
 
 ### 시작값
-- **Infinite:** `30` 으로 시작한다(수치 [[40-balancing/game-modes]]).
+- **Infinite:** `50` 으로 시작한다(수치 [[40-balancing/game-modes]]).
 - **Stage:** 스테이지 데이터가 정의한 값으로 시작한다([[30-systems/stage-mode]]). 레벨 수치는 차후.
 
 ### 소비
@@ -35,9 +35,8 @@ sources:
 ### 획득 (Infinite 한정)
 - **행성 충전:** 충전 팝업에서 코인으로 카운트를 산다(10개당 100코인,
   [[30-systems/planet-charge]]).
-- **마지막 행성 보너스:** 블랙홀끼리 합성하면 **카운트 +20**(둘 다 소멸, [[30-systems/merge-rules]] ·
-  ADR [[30-systems/decisions/2026-06-28-blackhole-infinite-count]]).
-- **해금 보너스:** 새 단계 해금 팝업(넵튠 6단계부터)이 뜰 때마다 **카운트 +5**([[30-systems/tier-unlock]]).
+- **마지막 행성 보너스:** 블랙홀끼리 합성하면 **카운트 +20**(둘 다 소멸, [[30-systems/merge-rules]]).
+- **해금 보너스:** 새 단계 해금 팝업(넵튠 6단계부터)이 뜰 때마다 **카운트 +10**([[30-systems/tier-unlock]]).
 
 ### 종료 판정
 - **Infinite:** 카운트 0 **그리고** 보드의 모든 행성이 정지하면 세션이 끝나고 결과창이 뜬다

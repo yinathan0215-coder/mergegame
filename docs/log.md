@@ -12,6 +12,28 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Stage 1~100 데이터 생성 + 랙 스키마 구조 변경(좌표→구성)
+why: 사용자 지시 — [[40-balancing/stage-balance]] 기조로 스테이지 1~100 데이터 작업, 구조가 없으면 수정.
+구조: `StageDef.rack`을 `{tier,x,y}[]`(좌표) → **`{tier,count}[]`(구성)** 로 바꾸고 `GameScene.buildStageRack`이
+등급당 한 줄씩(등급별 spacing) 모양 배치하도록 변경(밸류=Σ count·2^단계가 데이터에 직접 드러남, balance.json
+경량화). 데이터: 생성기로 100스테이지 산출(카운트 cadence·슬랙 `N`·큐 지구상한·렉:큐 5:5 정확·목표=
+첫 count−N로 만들 수 있는 최고 행성) → `balance.json modes.stage.levels`. 분포: 카운트 15×43·20×47·30×10,
+목표 지구(5)~태양(10) 상승, 랙 3~7개; **블랙홀은 5:5+큐≤지구에서 도달불가라 목표 제외**(문서에 명시).
+docs: [[30-systems/stage-mode]]·[[40-balancing/game-modes]] 스키마 정정 + [[40-balancing/stage-balance]] 생성 절차.
+검증: tsc·vite build OK · 신규 `game/tests/stages.spec.ts` — 데이터 100/100 기조 충족 + Stage1 인게임 스폰(보드
+밸류=랙 밸류, 합성 보존) · Stage/모드 e2e 22/22(격리 실행) 통과.
+why: 사용자 지시 — Stage 모드 전환 시 스타트 버튼 몸체는 기존 `play-button.png`와 동일한 9-slice 구조에서 색상만 짙은 보라색으로 바꾼 `play-button-stage.png`로 교체한다. 하단 토글은 디자인/구조를 바꾸지 않고 기존 pill+슬라이드 하이라이트를 유지하며, 버튼 이미지에서 추출한 색상만 Infinite=`#1f8efa`, Stage=`#4e1da9`로 반영한다. 토글 중앙 위에는 `Mode` 라벨을 추가한다. `$imagegen` 보라색 변형 요청과 최종 자산/색상 기록은 `game/public/assets/prompts/title-icons.md`에 저장. docs: [[50-art-ux/button-system]] · [[50-art-ux/title-screen]].
+
+## [2026-06-28] manual | 게임 모드 다듬기 5건 — 카운트 50·해금 +10·Stage 상단 STAGE N·클리어 탭스킵·재클리어 금지
+why: 사용자 지시 5건. (1) Infinite 시작 카운트 30→**50**(`modes.infinite.startCount`). (2) 해금 보너스
++5→**+10**(`unlockBonusCount`, 팝업 `Count +10`). (3) Stage는 점수·콤보를 집계/표시하지 않으므로 인게임
+**최상단에 점수 대신 `STAGE N`** 표시(`Hud.setStageMode`, 콤보 레이어 숨김, Stage 점수 records 미반영).
+(4) Stage 클리어 2초 지연 중 **화면 탭 시 즉시** 클리어창(`endSkip` 오버레이 → showEnd). (5) **이미 클리어한
+스테이지는 재클리어 불가**(보상·클리어창 없음) — `MetaStore.clearedStages` 영속, 클리어 시 mark, onMerge에서
+이미 클리어면 게이트. 새 세션 시작 시 떠 있던 종료/충전 팝업 정리. 카운트 증가(충전·블랙홀·해금)는 Infinite
+한정 재확인. docs: [[20-core-loop/game-modes]]·[[30-systems/{launch-count,tier-unlock,stage-mode}]]·
+[[50-art-ux/{layout,result-window}]]·[[40-balancing/game-modes]]. 검증: tsc·vite build·Playwright.
+
 ## [2026-06-28] manual | 게임 모드 다듬기 4건 — PLANET 라벨·최고점수 로드·Infinite 정지종료·카운트증가 Infinite한정
 why: 사용자 지시 4건. (1) 남은 발사 수 HUD 라벨 `COUNT`→**`PLANET`**(사용자 확정, GameInfoPanel·
 [[50-art-ux/layout]]·[[20-core-loop/game-modes]]·[[30-systems/launch-count]]). (2) **버그픽스**: 인게임

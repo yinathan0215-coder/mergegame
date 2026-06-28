@@ -47,6 +47,7 @@ interface MetaState {
     best: number; // all-time high score (👑)
     current: number; // current/resume score (🪐)
   };
+  clearedStages: number[]; // stage indices already cleared (docs/30-systems/stage-mode) — no re-clear reward
 }
 
 function freshMissions(date: string): MetaState['missions'] {
@@ -64,6 +65,7 @@ export class MetaStore {
       missions: freshMissions(today),
       attendance: { day: 1, lastClaimDate: '' },
       records: { best: 0, current: 0 },
+      clearedStages: [],
     };
     this.rollover(today);
   }
@@ -115,6 +117,17 @@ export class MetaStore {
   }
   get currentScore(): number {
     return this.s.records.current;
+  }
+
+  // ── stage progress ───────────────────────────────────────────────────────────
+  // Cleared stage indices (docs/30-systems/stage-mode) — an already-cleared stage grants no re-clear.
+  isStageCleared(i: number): boolean {
+    return this.s.clearedStages.includes(i);
+  }
+  markStageCleared(i: number) {
+    if (this.s.clearedStages.includes(i)) return;
+    this.s.clearedStages.push(i);
+    this.changed();
   }
 
   // ── daily missions ─────────────────────────────────────────────────────────
@@ -210,7 +223,7 @@ export class MetaStore {
   // `claimed` replaced `granted`), so every field is filled from defaults here — a stale save must never
   // crash missionRows()/claim*(). Coins/progress are preserved; only the shape is repaired.
   private load(): MetaState | null {
-    let p: { coins?: unknown; missions?: Record<string, unknown>; attendance?: Record<string, unknown>; records?: Record<string, unknown> };
+    let p: { coins?: unknown; missions?: Record<string, unknown>; attendance?: Record<string, unknown>; records?: Record<string, unknown>; clearedStages?: unknown };
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
@@ -239,6 +252,7 @@ export class MetaStore {
         best: typeof r.best === 'number' ? r.best : 0,
         current: typeof r.current === 'number' ? r.current : 0,
       },
+      clearedStages: Array.isArray(p.clearedStages) ? (p.clearedStages as number[]) : [],
     };
   }
   private save() {
@@ -257,6 +271,7 @@ export class MetaStore {
       missions: freshMissions(kstDateStr(Date.now())),
       attendance: { day: 1, lastClaimDate: '' },
       records: { best: 0, current: 0 },
+      clearedStages: [],
     };
     this.changed();
   }

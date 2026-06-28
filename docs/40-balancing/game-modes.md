@@ -24,9 +24,9 @@ sources:
 ## Infinite (`modes.infinite`)
 | 키 | 값 | 의미 |
 |---|---|---|
-| `startCount` | **30** | 세션 시작 카운트(발사 예산) |
+| `startCount` | **50** | 세션 시작 카운트(발사 예산) |
 | `blackHoleBonusCount` | **20** | 블랙홀끼리 합성 시 추가 카운트(둘 다 소멸) |
-| `unlockBonusCount` | **5** | 새 단계 해금 팝업(넵튠 6단계+)마다 추가 카운트 |
+| `unlockBonusCount` | **10** | 새 단계 해금 팝업(넵튠 6단계+)마다 추가 카운트 |
 | `charge.coinPer10` | **100** | 카운트 10개당 코인 단가 |
 | `charge.stepPlanets` | **10** | 충전 단위(슬라이더는 10 단위로만 선택) |
 | `charge.defaultPlanets` | **10** | 충전 팝업 기본 선택값(+10) |
@@ -46,10 +46,11 @@ sources:
 |---|---|---|
 | `count` | int | 시작 카운트 |
 | `target` | int(tier) | 목표 행성 단계(이 등급 생성 시 클리어) |
-| `rack` | `{tier,x,y}[]` | 시작 랙(보드 DESIGN 좌표, [[../50-art-ux/layout]] PLAY 영역) |
-| `queue` | int(tier)[] | 발사 큐 등장 시퀀스(결정적) |
+| `rack` | `{tier,count}[]` | 시작 랙 구성(등급별 개수; 코드가 등급당 한 줄씩 모양 배치, PLAY 영역) |
+| `queue` | int(tier)[] | 발사 큐 등장 시퀀스(결정적, 지구/5 이하) |
 
-> 플레이스홀더 **Stage 1**: 구조 검증용 1개. 실제 난이도(목표·랙·큐·카운트)는 레벨 디자인 단계에서 확정.
+> **Stage 1~100**: [[stage-balance]] 기조로 생성한 100개 레벨이 `levels`에 들어 있다(밸류 2^단계 기반,
+> 카운트 cadence·슬랙 `N`·목표 단계 자동 산출). 재생성·검증은 그 문서의 절차를 따른다.
 
 ## 결과창 (`juice.result`)
 | 키 | 값 | 의미 |
