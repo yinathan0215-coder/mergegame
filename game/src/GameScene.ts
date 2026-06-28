@@ -94,6 +94,9 @@ export class GameScene {
   private ended = false; // 세션 종료(결과/클리어/실패 창이 떠 있음)
   private endKind: 'result' | 'clear' | 'fail' | null = null; // 종료 예약(2초 지연 후 창 표시)
   private endAt = 0; // 종료창 등장 예정 시각(performance.now 기준)
+  // Stage 클리어 연출 상태(docs/30-systems/stage-mode §클리어): 목표 행성이 우하단 목표 UI로 포물선
+  // 비행 → 도달 시 머지 버스트(burst) 잠깐 hold → 클리어창. 연출 중엔 물리·발사 정지.
+  private clearFly: { sprite: Container | null; phase: 'fly' | 'burst'; t0: number; from: { x: number; y: number }; to: { x: number; y: number }; r0: number; tier: number } | null = null;
   private maxCombo = 0; // 세션 최대 콤보(Infinite 결과창)
   private sessionPrevBest = 0; // 세션 시작 시점의 최고 점수(NEW RECORD 판정용)
 
@@ -146,7 +149,7 @@ export class GameScene {
         unlockedTier: () => this.unlockedTier,
         terminalMerge: (pa, pb) => this.onTerminalMerge(pa, pb), // 블랙홀끼리 합성 → Infinite 카운트 +20
       },
-      (tier, x, y) => {
+      (tier, x, y, planet) => {
         this.stats.merges++;
         this.stats.maxTier = Math.max(this.stats.maxTier, tier);
         if (tier >= MAX_TIER) this.stats.sunReached = true;
@@ -167,16 +170,16 @@ export class GameScene {
         }
         this.meta.onMerge(this.combo.value, tier === SUN_TIER); // daily missions: merge count / combo peak / sun
         this.maxCombo = Math.max(this.maxCombo, this.combo.value); // session combo peak (Infinite result)
-        // Stage clear: created the target tier (docs/30-systems/stage-mode) — preempts the unlock modal.
-        // An already-cleared stage cannot be re-cleared (no reward/clear window) — it falls through.
-        if (this.modeC.isStage && !this.ended && tier >= this.modeC.targetTier
+        // Stage clear: created the target tier (docs/30-systems/stage-mode) — launches the fly-to-target
+        // animation (which then opens the clear window). Already-cleared stage: no reward → falls through.
+        if (this.modeC.isStage && !this.ended && !this.clearFly && tier >= this.modeC.targetTier
             && !this.meta.isStageCleared(this.modeC.stageIndex)) {
-          this.scheduleEnd('clear');
+          this.startClearFly(tier, x, y, planet);
           return;
         }
         // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock).
-        // Infinite grants +unlockBonusCount count per unlock (docs/30-systems/launch-count).
-        if (tier > this.unlockedTier && !this.paused) {
+        // Infinite only — Stage starts fully unlocked and never shows the modal (docs/30-systems/stage-mode).
+        if (!this.modeC.isStage && tier > this.unlockedTier && !this.paused) {
           this.pendingUnlockTier = tier;
           this.paused = true;
           const bonus = this.modeC.mode === 'Infinite' ? MODES.infinite.unlockBonusCount : 0;
@@ -227,7 +230,7 @@ export class GameScene {
     this.charge = new ChargePopup(() => this.meta.coins, (n) => this.buyCharge(n)); // Infinite 충전 팝업
     this.result = new ResultPopup(() => this.setScene('Title')); // Infinite 결과창 → 탭 → Title
     this.stageClear = new StageClearPopup(
-      () => { this.modeC.nextStage(); this.setScene('PoolInGame'); }, // 다음 스테이지
+      () => this.setScene('PoolInGame'), // 다음 스테이지 — 전진은 클리어 시점에 이미 영속(startSession이 진행도 로드)
       () => this.setScene('Title') // 돌아가기 → Title
     );
     this.stageFail = new StageFailPopup(() => this.setScene('PoolInGame')); // 실패 → 같은 스테이지 재시작
@@ -236,7 +239,7 @@ export class GameScene {
       () => ({ current: this.meta.currentScore, best: this.meta.bestScore, maxTier: this.stats.maxTier }), // Title 현재/최고(영속) + 최대 머지 아이콘
       { coins: () => this.meta.coins, subscribe: (fn) => this.meta.subscribe(fn), open: (k) => this.metaUI.open(k),
         badge: (k) => k === 'dailyMission' ? this.meta.hasClaimableMission() : k === 'attendance' ? this.meta.attendanceCanClaim() : false }, // 코인·팝업·레드닷 훅
-      () => this.modeC.stageIndex + 1 // Play 라벨 "Stage N"
+      () => this.meta.stageProgress + 1 // Play 라벨 "Stage N" — 영속 진행도 기준(클리어 시 전진)
     );
     this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
     this.fgRoot.addChild(this.title.container); // 태양계 공전 + 로비 UI는 contain
@@ -320,7 +323,7 @@ export class GameScene {
   }
 
   private fire(tier: number, vx: number, vy: number): boolean {
-    if (this.scene !== 'PoolInGame' || this.paused || this.ended || this.endKind) return false;
+    if (this.scene !== 'PoolInGame' || this.paused || this.ended || this.endKind || this.clearFly) return false;
     if (!this.modeC.canFire()) return false; // 카운트 소진 → 발사 불가 (docs/30-systems/launch-count)
     const now = performance.now();
     if (now < this.cooldownUntil) return false;
@@ -419,7 +422,11 @@ export class GameScene {
   // mode's rack + queue, and configure the HUD (docs/20-core-loop/game-modes).
   private startSession() {
     for (const p of [...this.planets]) this.removePlanet(p);
-    this.unlockedTier = PROGRESSION.unlockStart;
+    // Stage는 처음부터 전 단계 해금(목표까지 합성이 막히지 않고 해금 모달도 없음, docs/30-systems/tier-unlock);
+    // Infinite는 unlockStart부터 시작해 해금 모달로 한 단계씩 연다.
+    if (this.modeC.isStage) this.modeC.stageIndex = this.meta.stageProgress; // 영속 진행도 = 현재 스테이지
+    this.unlockedTier = this.modeC.isStage ? MAX_TIER : PROGRESSION.unlockStart;
+    this.clearStageFly();
     this.paused = false;
     this.ended = false;
     this.endKind = null;
@@ -480,10 +487,59 @@ export class GameScene {
     return true;
   }
 
+  // Stage clear animation (docs/30-systems/stage-mode §클리어): the just-made target planet is removed
+  // from the board and a render-only sprite arcs to the bottom-right target UI, where it bursts and
+  // vanishes (no real merge); the clear window opens once the animation finishes. Firing stops + the
+  // launcher chamber empties immediately, and board physics freezes while clearFly is set (tick).
+  private startClearFly(tier: number, x: number, y: number, planet: Planet) {
+    if (this.clearFly || this.ended) return;
+    this.removePlanet(planet); // 목표 행성은 보드에서 제거 — 실제 합성이 아니라 연출 스프라이트가 날아간다
+    this.launcher.clearChamber(); // 발사대 비움(추가 발사 정지는 fire()가 clearFly로 차단)
+    const sprite = makePlanetSprite(tier); // scale 1 = 보드 크기(diameter = radius*2)
+    sprite.x = x;
+    sprite.y = y;
+    this.effectLayer.addChild(sprite);
+    this.clearFly = { sprite, phase: 'fly', t0: performance.now(), from: { x, y }, to: this.info.targetPos(), r0: tierData(tier).radius, tier };
+    sound.play('merge', { pitch: 1.5 });
+  }
+
+  // Drive the clear animation each frame; on completion open the clear window (showEnd).
+  private updateClearFly(now: number) {
+    const cf = this.clearFly;
+    if (!cf) return;
+    if (cf.phase === 'fly') {
+      const k = Math.min(1, (now - cf.t0) / 650);
+      const e = k < 0.5 ? 2 * k * k : 1 - ((-2 * k + 2) ** 2) / 2; // easeInOutQuad
+      const endScale = 44 / (cf.r0 * 2); // 목표 UI 행성 크기(44px, GameInfoPanel)
+      if (cf.sprite) {
+        cf.sprite.x = cf.from.x + (cf.to.x - cf.from.x) * e;
+        cf.sprite.y = cf.from.y + (cf.to.y - cf.from.y) * e - 90 * Math.sin(Math.PI * e); // 위로 솟는 포물선
+        cf.sprite.rotation = now * 0.02;
+        cf.sprite.scale.set(1 + (endScale - 1) * e);
+      }
+      if (k >= 1) {
+        this.effects.mergeBurst(cf.to.x, cf.to.y, tierData(cf.tier).colors[0], cf.r0); // 합쳐지는 이펙트
+        sound.play('merge', { pitch: 1.7 });
+        if (cf.sprite) { this.effectLayer.removeChild(cf.sprite); cf.sprite.destroy({ children: true }); cf.sprite = null; }
+        cf.phase = 'burst';
+        cf.t0 = now;
+      }
+    } else if (now - cf.t0 >= 300) { // 버스트가 잠깐 보인 뒤 클리어창
+      this.clearFly = null;
+      this.showEnd('clear');
+    }
+  }
+
+  // Tear down any in-flight clear animation sprite (new session / cleanup).
+  private clearStageFly() {
+    if (this.clearFly?.sprite) { this.effectLayer.removeChild(this.clearFly.sprite); this.clearFly.sprite.destroy({ children: true }); }
+    this.clearFly = null;
+  }
+
   // End-of-session check (docs/30-systems/launch-count). Stage: arm the end window after a delay.
   // Infinite: end only once the count is gone AND every planet has settled (no fixed delay).
   private checkSessionEnd() {
-    if (this.ended || this.endKind || this.paused) return;
+    if (this.ended || this.endKind || this.paused || this.clearFly) return;
     if (this.modeC.count > 0) return;
     if (this.modeC.isStage) {
       this.scheduleEnd('fail');
@@ -515,6 +571,8 @@ export class GameScene {
     } else if (kind === 'clear') {
       this.meta.markStageCleared(this.modeC.stageIndex); // 클리어 기록(재클리어 보상 방지)
       this.meta.addCoins(MODES.stage.clearReward); // +300 코인 (docs/30-systems/stage-mode)
+      this.modeC.nextStage(); // 다음 스테이지로 전진(마지막에서 clamp)
+      this.meta.setStageProgress(this.modeC.stageIndex); // 진행도 영속 — Title·다음 진입이 다음 스테이지
       this.stageClear.open();
     } else if (kind === 'fail') {
       this.stageFail.open();
@@ -586,9 +644,16 @@ export class GameScene {
     }
     if (this.scene !== 'PoolInGame' || this.paused || this.ended) return;
 
+    // Stage 클리어 연출 중: 보드 물리·발사를 멈추고 비행+버스트 연출만 갱신(완료 시 클리어창).
+    if (this.clearFly) {
+      this.updateClearFly(nowMs);
+      this.effects.update(nowMs);
+      return;
+    }
+
     this.acc += this.app.ticker.deltaMS;
     let steps = 0;
-    while (this.acc >= STEP_MS && steps < 5) {
+    while (this.acc >= STEP_MS && steps < 5 && !this.clearFly) { // 연출 시작 시 즉시 중단
       this.physics.update(STEP_MS);
       this.merge.process(performance.now());
       this.containPlanets(); // absolute play-area containment + one-way line (per substep)
@@ -596,7 +661,7 @@ export class GameScene {
       steps++;
     }
     if (this.acc > STEP_MS * 5) this.acc = 0;
-    this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
+    if (!this.clearFly) this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
     if (this.endKind && nowMs >= this.endAt) this.showEnd(this.endKind); // Stage 종료창 지연 등장
 
     for (const p of this.planets) {
@@ -614,7 +679,7 @@ export class GameScene {
         }
       }
     }
-    this.launcher.update();
+    if (!this.clearFly) this.launcher.update(); // 연출 중엔 비운 발사대를 다시 채우지 않음
     this.board.update(nowMs);
     this.hud.update(); // score odometer roll
     this.info.update(nowMs); // 좌하단 위젯/충전 버튼·목표 행성 회전
@@ -677,6 +742,10 @@ export class GameScene {
       gestureHintShown: () => this.gestureHint.container.visible,
       stageCleared: () => this.stageClear.isOpen,
       stageFailed: () => this.stageFail.isOpen,
+      stageNo: () => this.modeC.stageIndex + 1, // 현재 플레이 스테이지 번호
+      stageProgress: () => this.meta.stageProgress, // 영속 진행도(0-based)
+      clearing: () => !!this.clearFly, // Stage 클리어 비행 연출 진행 중
+      launcherLoaded: () => this.launcher.loaded, // 발사대에 대기 행성이 있는가
       comboValue: () => this.combo.value,
       comboBonusAwarded: () => this.lastComboBonus,
       planetCount: () => this.planets.length,

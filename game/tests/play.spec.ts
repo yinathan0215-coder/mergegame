@@ -27,6 +27,10 @@ declare global {
       resultShown: () => boolean;
       stageCleared: () => boolean;
       stageFailed: () => boolean;
+      stageNo: () => number;
+      stageProgress: () => number;
+      clearing: () => boolean;
+      launcherLoaded: () => boolean;
       planetCount: () => number;
       queue: () => number[];
       tiersOnBoard: () => number[];
@@ -533,6 +537,28 @@ test('Stage 클리어: 목표 행성 합성 → +300코인 + 클리어 결과창
   expect(await page.evaluate(() => window.__game.meta().coins)).toBe(coins0 + 300);
 });
 
+test('Stage 모드: 합성 단계 해금 팝업이 뜨지 않는다(언락은 Infinite 전용)', async ({ page }) => {
+  await readyStage(page);
+  expect(await page.evaluate(() => window.__game.unlockedTier())).toBe(11); // Stage는 시작부터 전 단계 해금
+  await page.evaluate(() => { window.__game.clearBoard(); window.__game.spawnPair(3); }); // 화성 쌍 → 금성(4) 생성
+  await page.waitForTimeout(150);
+  expect(await page.evaluate(() => window.__game.unlockPending())).toBe(false); // 해금 모달/일시정지 없음
+});
+
+test('Stage 클리어 연출: 목표 합성 시 발사 정지·발사대 비움 후 클리어창', async ({ page }) => {
+  await readyStage(page);
+  await page.evaluate(() => { window.__game.metaReset(); window.__game.unlockAll(); window.__game.clearBoard(); });
+  const target = await page.evaluate(() => window.__game.targetTier());
+  await page.evaluate((t) => window.__game.spawnPair(t - 1), target); // 목표 생성 → 클리어 비행 연출 시작
+  await page.waitForFunction(() => window.__game.clearing(), null, { timeout: 3000 });
+  // 연출 중: 추가 발사 정지 + 발사대 비움
+  expect(await page.evaluate(() => window.__game.fire(-Math.PI / 2, 0.9))).toBe(false);
+  expect(await page.evaluate(() => window.__game.launcherLoaded())).toBe(false);
+  // 연출 종료 → 클리어창 등장
+  await page.waitForFunction(() => window.__game.stageCleared(), null, { timeout: 3000 });
+  expect(await page.evaluate(() => window.__game.clearing())).toBe(false);
+});
+
 test('Stage 실패: 카운트 0 + 목표 미달 → 실패 결과창', async ({ page }) => {
   await readyStage(page);
   await page.evaluate(() => { window.__game.clearBoard(); window.__game.setCount(0); });
@@ -549,20 +575,17 @@ test('첫 제스처 코치: 게임 진입 시 표시, 첫 발사 후 사라짐',
   expect(await page.evaluate(() => (window.__game as any).gestureHintShown())).toBe(false);
 });
 
-test('이미 클리어한 스테이지는 다시 클리어되지 않는다(보상·클리어창 없음)', async ({ page }) => {
+test('Stage 진행: 클리어 시 다음 스테이지로 전진되고 영속된다', async ({ page }) => {
   await readyStage(page);
   await page.evaluate(() => { window.__game.metaReset(); window.__game.unlockAll(); window.__game.clearBoard(); });
+  expect(await page.evaluate(() => window.__game.stageNo())).toBe(1); // 진행 0 → Stage 1
   const target = await page.evaluate(() => window.__game.targetTier());
-  await page.evaluate((t) => window.__game.spawnPair(t - 1), target); // 1차 클리어
-  await page.waitForFunction(() => window.__game.stageCleared(), null, { timeout: 5000 });
-  const coinsAfter1 = await page.evaluate(() => window.__game.meta().coins);
-  // 같은(이미 클리어한) 스테이지 재진입 → 목표를 다시 만들어도 클리어/보상 없음
-  await page.evaluate(() => window.__game.startGame('Stage'));
-  await page.waitForFunction(() => window.__game.scene() === 'PoolInGame' && !window.__game.transitioning(), null, { timeout: 8000 });
-  expect(await page.evaluate(() => window.__game.stageCleared())).toBe(false); // 재진입 시 클리어창 닫힘
-  await page.evaluate(() => { window.__game.unlockAll(); window.__game.clearBoard(); });
-  await page.evaluate((t) => window.__game.spawnPair(t - 1), target);
-  await page.waitForTimeout(3000); // 2초 지연 + 여유
-  expect(await page.evaluate(() => window.__game.stageCleared())).toBe(false); // 재클리어 없음
-  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(coinsAfter1); // 추가 보상 없음
+  await page.evaluate((t) => window.__game.spawnPair(t - 1), target); // 클리어
+  await page.waitForFunction(() => window.__game.stageCleared(), null, { timeout: 6000 });
+  expect(await page.evaluate(() => window.__game.stageNo())).toBe(2); // 클리어 → Stage 2로 전진
+  expect(await page.evaluate(() => window.__game.stageProgress())).toBe(1);
+  // 영속: 리로드 후에도 Title은 Stage 2(진행도 1)
+  await page.reload();
+  await page.waitForFunction(() => !!window.__game && window.__game.scene() === 'Title', null, { timeout: 15000 });
+  expect(await page.evaluate(() => window.__game.stageProgress())).toBe(1);
 });

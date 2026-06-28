@@ -19,7 +19,7 @@ export interface MergeHost {
 export class MergeSystem {
   private pending: [Body, Body][] = [];
 
-  constructor(private host: MergeHost, private onMerge: (tier: number, x: number, y: number) => void) {}
+  constructor(private host: MergeHost, private onMerge: (tier: number, x: number, y: number, planet: Planet) => void) {}
 
   queuePair(a: Body, b: Body) {
     if (a.label === 'planet' && b.label === 'planet') this.pending.push([a, b]);
@@ -75,7 +75,7 @@ export class MergeSystem {
     const newTier = pa.tier + 1;
     this.host.removePlanet(pa);
     this.host.removePlanet(pb);
-    this.host.spawnPlanet(newTier, mx, my, vx, vy, now);
-    this.onMerge(newTier, mx, my);
+    const np = this.host.spawnPlanet(newTier, mx, my, vx, vy, now);
+    this.onMerge(newTier, mx, my, np);
   }
 }

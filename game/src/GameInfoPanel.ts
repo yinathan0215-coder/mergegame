@@ -110,6 +110,12 @@ export class GameInfoPanel {
     }
   }
 
+  // Design-space centre of the Stage target planet icon (bottom-right) — the Stage-clear fly-to-target
+  // animation lands here (docs/30-systems/stage-mode §클리어). targetWrap sits at (0,0)-relative panel.
+  targetPos(): { x: number; y: number } {
+    return { x: RIGHT_X, y: STRIP_C - 4 };
+  }
+
   update(now: number) {
     this.chargeEarth.rotation = now * 0.001; // 회전하는 지구
     this.targetPlanet.rotation = now * 0.001; // 회전하는 목표 행성

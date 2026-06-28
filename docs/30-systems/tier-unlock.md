@@ -3,7 +3,7 @@ id: systems-tier-unlock
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, unlock, progression, modal, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -22,8 +22,11 @@ sources:
 
 ## Details (decisions)
 
-- **`unlockedTier` (해금 한계):** 합성으로 만들 수 있는 최고 단계. **새 게임 시작값 = 5(지구)**
+- **`unlockedTier` (해금 한계):** 합성으로 만들 수 있는 최고 단계. **Infinite 새 게임 시작값 = 5(지구)**
   (수치 SSoT [[40-balancing/spawn-rack]] `progression`). 매 새 게임마다 시작값으로 초기화된다.
+- **Stage 모드는 해금 연출이 없다:** Stage 세션은 시작값 = **최대 단계(11)** 로 전부 해금된 상태이며,
+  새 단계를 만들어도 **해금 모달을 띄우지 않는다**(일시정지도 없음). 해금 연출(모달·일시정지·`Count +10`)은
+  **Infinite 전용**이다([[30-systems/stage-mode]] §단계 해금 모달 없음).
 - **합성 게이트:** 두 행성(단계 N)의 합성은 **N ≤ `unlockedTier`** 일 때만 일어난다. 즉 아직
   해금되지 않은 단계(= `unlockedTier`보다 높은 단계) 공끼리는 **합성되지 않는다**.
 - **첫 달성 → 모달:** 합성 결과가 `unlockedTier`보다 높은 **새 단계 T**가 생기면(첫 1개는 생성됨),

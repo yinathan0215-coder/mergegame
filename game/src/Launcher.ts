@@ -130,6 +130,18 @@ export class Launcher {
     return this.aiming;
   }
 
+  // True while a planet sits in the chamber (false right after clearChamber() — Stage clear empties it).
+  get loaded(): boolean {
+    return this.chamber.children.length > 0;
+  }
+
+  // Empty the launcher chamber (Stage clear: docs/30-systems/stage-mode §클리어). GameScene skips
+  // update() while the clear animation runs, so the chamber stays empty until the next session.
+  clearChamber() {
+    this.chamber.removeChildren();
+    this.shownTier = -1; // force a re-render when a real tier loads next session
+  }
+
   update() {
     const tier = this.host.currentTier();
     if (tier === this.shownTier) return;
