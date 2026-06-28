@@ -1,39 +1,47 @@
 ---
 id: systems-collision-shape
 note_type: system
-status: draft
+status: design
 domain: systems
 updated: 2026-06-28
 tags: [systems, collision, physics, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
+  - "raw: game/public/assets/planets/"
 ---
 
-# 행성 충돌 형태 (이미지 종속)
+# 행성 충돌 형태 (이미지 알파 종속)
 
-> **준수 기준(방법론):** [[90-methodology/data-driven]] (충돌 형태 = 데이터) · [[90-methodology/ecs-lite]].
+> **준수 기준(방법론):** [[90-methodology/data-driven]] · [[90-methodology/ecs-lite]].
 
 ## Summary
 
-행성의 충돌 범위는 **이미지(스프라이트)의 생김새를 따른다.** 원형 행성은 원으로, 비원형 실루엣을
-가진 행성은 그 형태대로 충돌한다(예: 토성은 띠가 있어 원형이 아니다).
+각 행성은 **투명 PNG**다. 행성의 충돌 범위는 그 PNG에서 **불투명(alpha) 영역의 외곽 그대로**다.
+토성은 띠를 포함한 이미지이므로 **띠까지가 충돌체**가 된다. 화면에 보이는 이미지와 충돌 형태가
+1:1로 같다.
 
 ## Details (decisions)
 
-- **충돌 형태 = 시각 실루엣.** 각 단계의 충돌 바디는 그 행성 스프라이트의 외곽 형태와 일치한다.
-  렌더(스프라이트)와 충돌(물리 바디)이 **같은 형태 정의**를 참조한다.
-- **단계별 형태는 데이터로 둔다.** `balance.json`이 단계별 충돌 형태(원 반지름 / 폴리곤·타원
-  파라미터)를 소유하고, `PhysicsWorld`가 그 데이터로 바디를 만든다. 실루엣 정본은 [[50-art-ux/planet-art]].
+- **충돌 외곽 = 알파 실루엣.** 행성 충돌 바디의 외곽선은 PNG의 불투명 픽셀(alpha ≥ 임계) 영역의
+  외곽 윤곽과 일치한다. 원형에 가까운 행성은 원에 가깝게, 비원형(토성 띠 등)은 그 형태 그대로.
+- **렌더와 충돌은 같은 이미지·같은 스케일.** 충돌 폴리곤은 스프라이트와 동일한 배율
+  (`radius*2 / 소스 불투명 지름`)로 스케일해, 표시 크기와 충돌 크기가 일치한다(스프라이트 배율은
+  `PlanetFactory`).
+- **형태는 데이터로 둔다.** 단계별 충돌 폴리곤(중심 기준 정규화 정점 배열)을 데이터로 두고
+  `PhysicsWorld`가 그 데이터로 바디를 만든다. 알파 임계·정점 단순화 허용오차는 튜닝 값.
 
-## Open questions
+## 구현 힌트 (에이전트)
 
-- 비원형 행성별 **정확한 충돌 형태** 미정: 토성 띠 = 타원인가, 디스크+띠 복합 바디인가, 폭/높이
-  비율은 얼마인가. 다른 단계도 실루엣 기준으로 형태 파라미터를 확정해야 한다(`status: draft`).
-- 충돌 형태가 비원형이면 [[play-area-boundary]] 경계 clamp와 [[merge-rules]] 합성 위치가 현재
-  **반지름** 기준이므로, 외접 반지름 사용 등 처리 방식을 함께 확정한다.
+- **추출(프리로드 1회):** 각 PNG의 알파 채널을 읽어(오프스크린 canvas `getImageData`, 또는 빌드
+  스크립트) **외곽 윤곽(marching squares)** 을 따고, Douglas–Peucker로 단순화한 정점 배열을 만든다.
+  표시 배율로 스케일해 사용한다. 추출은 보드 빌드 전에 끝나야 한다(스폰 시 동기 사용).
+- **물리 바디:** `Matter.Bodies.fromVertices(x, y, [verts], opts)`. 비볼록(토성 띠)은 **poly-decomp**
+  (`Matter.Common.setDecomp(decomp)`)로 볼록 분해한다. 추출 실패 시 원(`Bodies.circle`)으로 폴백.
+- **경계·합성 정합:** [[play-area-boundary]] clamp와 [[merge-rules]] 합성 위치가 반지름 기준이므로,
+  비원형 바디는 그 자리에 **외접 반지름(circumradius = 최대 정점 거리)** 을 쓴다.
 
 ## Relates to
 
-- [[50-art-ux/planet-art]] — 행성별 실루엣(색·패턴) 정본.
+- [[50-art-ux/planet-art]] — 행성 이미지(실루엣) 정본.
 - [[play-area-boundary]] · [[merge-rules]] — 충돌 형태가 영향을 주는 경계·합성.
-- [[40-balancing/index]] — 단계별 반지름·형태 데이터.
+- [[../60-implementation/architecture]] — `PhysicsWorld`(바디)·`PlanetFactory`(스프라이트).
