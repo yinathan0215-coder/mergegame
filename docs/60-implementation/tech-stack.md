@@ -45,6 +45,10 @@ sources:
 
 - 산출물은 `game/`에서 **정적 실행** 가능해야 한다(브라우저로 열기 / 간단 서브).
 - 외부 네트워크 의존 최소화 — 오프라인에서도 Core Loop 플레이 가능.
+- **단일 파일 배포본**: `npm run build:single`은 일반 빌드 산출물(JS 번들 + 행성/UI/배경 PNG)을
+  전부 base64로 인라인해 **자체완결 `dist/galaxy-pinball.html` 한 개**를 만든다. 이 파일은
+  서버 없이 `file://`(더블클릭)로 바로 플레이된다. 일반 `npm run build`는 멀티파일 `dist/`를
+  내며 `npm run preview`·로컬 서브용으로 둔다.
 
 ## 관련
 
