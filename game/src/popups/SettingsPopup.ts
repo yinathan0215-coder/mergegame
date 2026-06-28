@@ -10,6 +10,7 @@ import { sound } from '../SoundManager';
 const BLUE = COLORS.btnBlue;
 const GREY = 0x55617f;
 const ORANGE = 0xf2a13a;
+const RED = 0xd9483b; // 게임 초기화(파괴적 동작) 경고색
 
 interface ChipOpts {
   labelSize?: number;
@@ -48,12 +49,19 @@ export class SettingsPopup extends Popup {
     this.chip(cx, 498, 362, 50, 0xffffff, '구글 로그인', googleIcon(), () => {}, { textColor: 0x222a3a });
     this.chip(cx, 558, 362, 50, 0x1b1f2c, 'Apple 로그인', appleIcon(0xffffff), () => {}, { textColor: 0xffffff });
 
-    // 버전
-    const v = new Text('v1.8.2', { fill: 0x9fb0d8, fontSize: 14, fontFamily: 'Arial, sans-serif', fontWeight: '700' });
-    v.anchor.set(0.5);
-    v.x = cx;
-    v.y = 702;
-    this.body.addChild(v);
+    // 게임 초기화(동작) — 로컬 저장 전체 삭제 후 첫 로딩 화면으로 재시작 (docs/30-systems/settings)
+    this.chip(cx, 660, 362, 52, RED, '게임 초기화', resetIcon(0xffffff), () => this.resetGame());
+  }
+
+  // 로컬 저장소를 전부 비우고 첫 로딩 화면(GALAXY PINBALL 스플래시)으로 재시작한다. 저장을 비운 뒤
+  // 페이지를 새로 로드해 부팅을 처음부터 다시 태운다 → 코인·진행도·기록이 모두 초기화된다.
+  private resetGame() {
+    try {
+      localStorage.clear();
+    } catch {
+      // 저장 접근 불가(시크릿 모드 등)여도 리로드해 메모리 상태를 버린다
+    }
+    location.reload();
   }
 
   // 공통 동작창 진입 시 현재 뮤트 상태로 사운드 버튼을 다시 그린다(외부에서 바뀌었을 수 있음).
@@ -222,6 +230,21 @@ function appleIcon(color: number): Graphics {
   g.endFill();
   g.beginFill(color);
   g.drawEllipse(2, -9, 2, 4); // 잎
+  g.endFill();
+  return g;
+}
+
+function resetIcon(color: number): Graphics {
+  const g = new Graphics();
+  const r = 9;
+  g.lineStyle({ width: 2.6, color, cap: LINE_CAP.ROUND });
+  g.arc(0, 0, r, -Math.PI * 0.35, Math.PI * 1.45); // 원형 화살표(위쪽에 틈)
+  g.lineStyle(0);
+  g.beginFill(color);
+  const a = -Math.PI * 0.35; // 호 시작각 — 여기 화살촉을 둔다
+  const ex = Math.cos(a) * r;
+  const ey = Math.sin(a) * r;
+  g.drawPolygon([ex + 5, ey, ex - 3, ey - 5, ex - 1, ey + 4]); // 작은 삼각 화살촉
   g.endFill();
   return g;
 }
