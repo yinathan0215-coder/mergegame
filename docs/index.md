@@ -40,3 +40,8 @@ updated: 2026-06-28
 각 섹션에 reconcile. 장르 = 물리 드롭/발사 머지(Suika 계열), 스택 = **Vite + TS + PixiJS +
 Matter.js** 확정. 섹션 본문 `status: design`. 다음: phase별 구현 플랜
 ([[60-implementation/plan/index|plan]]) → `game/` 빌드 → Playwright 검증.
+
+2026-06-28 **화면 3분할(씬) 추가** — 게임을 **Loading → Title(로비) → Pool In-Game** 세 씬으로
+나눔. 씬 흐름·전이는 [[20-core-loop/screen-flow]], Title 로비 레이아웃(태양계 공전 배경·최고/현재
+점수·사이드 4버튼·Galaxy/Fantasy 토글·설정·버튼 피드백)은 [[50-art-ux/title-screen]]. 현재
+구현된 보드 화면 = Pool In-Game.

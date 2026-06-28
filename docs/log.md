@@ -12,6 +12,19 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 화면 3분할(씬) 추가: Loading · Title(로비) · Pool In-Game
+why: 사용자 지시 — 현재 구현 화면을 **Pool In-Game**으로 명명하고, **Title(로비)**·**Loading**
+씬을 추가. (1) 신규 [[20-core-loop/screen-flow]]: 세 씬 + 최상위 상태/전이(Loading→Title→
+PoolInGame, EXIT로 복귀, 게임 오버 없어 Result/Restart 없음)를 [[90-methodology/state-machine]]에
+바인딩(감사가 지적한 "흐름 상태머신 부재" 보완). (2) 신규 [[50-art-ux/title-screen]]: 태양계 공전
+배경(Pool 행성 리소스 재사용) + 로비 UI — 순위 위젯 제거 후 그 자리에 👑최고 점수(Play 위)·현재
+세션 점수(Play 아래), 좌(일일 미션·상점)·우(출석 체크[옛 일일 보너스]·행운의 돌림판) 사이드 버튼,
+하단 **Galaxy|Fantasy 알약 토글**(Galaxy 기본 활성, 탭 시 하이라이트 슬라이드 이동, Fantasy는 연결
+모드 없는 시각 자리표시자), 우상단 설정(⚙) 버튼, 하단 4버튼·Arcade·광고 카드는 두지 않음. (3)
+[[50-art-ux/feedback-effects]] §5 신설: 모든 버튼 공통 **프레스 피드백**(`juice.buttonPress`
+downScale0.92·upScale1.04·140ms). 인덱스(20-core-loop·50-art-ux)·MOC 갱신. 설정 내부 항목은
+지시 truncated로 미정(Open question). status: design — 아직 `game/` 미구현.
+
 ## [2026-06-28] manual | inner line 갈색·outline 간격 분리, 발사대/게이지 확대, 발사 생성점=원 밖
 why: 레퍼런스(화면 캡처) 대조로 보드 하단 6건 정정. (1) **inner line 갈색**(#6e4a28). (2) inner line이
 **발사대 원형 공간에 연결**(테이퍼 하단 호 = 발사대 원 반지름). (3) **outline ↔ inner line 간격**:

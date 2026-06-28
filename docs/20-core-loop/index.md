@@ -20,6 +20,7 @@ sources:
 이 섹션은 **카탈로그**다. Core Loop의 상세는 각 자식 페이지에 둔다. status: `design`.
 
 ## 페이지
+- [[screen-flow]] — **앱 레벨 씬 흐름**(Loading→Title→Pool In-Game) + 최상위 상태/전이([[../90-methodology/state-machine]] 바인딩), Galaxy/Fantasy 테마 토글.
 - [[core-loop]] — 8단계 코어 루프, **게임 오버 없음**, 검증축(점수·최고 행성·합성 횟수·태양 달성), MVP 경계(포함/제외).
 - [[play-flow]] — 한 세션 흐름(부팅→초기 랙 표시→루프), 시작 상태(초기 랙) 요약, 온보딩(첫 발사가 학습), 시스템 상세 링크.
 
