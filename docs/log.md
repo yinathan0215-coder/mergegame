@@ -12,6 +12,15 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 공통 버튼 피드백 모듈 + 해금 팝업 전환·행성 이름·풀스크린 딤
+why: 사용자 지시 4건. (1) **공통 버튼 프레스 피드백을 단일 모듈**(`game/src/ui/button.ts`
+`attachButtonFeedback`)로 묶어 Title 로비·HUD·**해금 모달 OK** 버튼이 같은 눌림→탄성 복귀를 쓰게 함
+(rAF 구동 → 모달 일시정지 중에도 동작). (2) **해금 팝업 등장 전환**(딤 차오름+내용 팝/페이드인 220ms).
+(3) **해금 팝업의 행성 위에 영어 이름**(예: Neptune) 표시 — **팝업 한정**(보드 행성엔 미표시),
+SSoT `balance.json` `planets[].en`. (4) **팝업 딤을 화면 전체**로 — 보드(캔버스)는 Pixi 딤, 캔버스 바깥
+레터박스는 캔버스 뒤 DOM 딤으로 채워 여백 제거. docs: [[30-systems/tier-unlock]] 모달 UX ·
+[[50-art-ux/feedback-effects]] §5 공통 모듈. 검증: typecheck·vite build OK · Playwright **24/24**.
+
 ## [2026-06-28] manual | Title 상하 여백 진단(76px) + 은하수만 cover 채움 정본화(태양계·UI는 contain)
 why: 사용자 지시 — Title 상하 여백을 채우되 **은하수 배경(GalaxyBackground=이미지+반짝임)만** Title 한정
 cover로 확장, **태양계·UI는 contain(9:16)** 유지, 기본/레터박스 배경은 단색 outerBg로 환원. headed

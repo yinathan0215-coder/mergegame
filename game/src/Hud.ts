@@ -1,6 +1,7 @@
-import { Container, Graphics, Sprite, Text, type FederatedPointerEvent } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi.js';
 import { HUD, COLORS, JUICE } from './data/config';
 import { ASSETS, ASSET_SIZES } from './assets';
+import { attachButtonFeedback } from './ui/button';
 
 function txt(s: string, size: number, color: number, weight: string): Text {
   return new Text(s, { fill: color, fontSize: size, fontFamily: 'Arial, sans-serif', fontWeight: weight as any });
@@ -39,31 +40,34 @@ export class Hud {
     this.button(layer, HUD.w - 44, 12, 'menu');
   }
 
-  // x,y top-left of a 32×30 rounded shell button. onTap navigates; pointerdown is swallowed so the
-  // tap never reaches the launcher (which would otherwise read it as an aim/fire on the board).
+  // x,y top-left of a 32×30 rounded shell button. Wrapped in a centred container so the shared press
+  // feedback (docs/50-art-ux/feedback-effects §5) scales it in place; the tap is swallowed so it never
+  // reaches the launcher (which would otherwise read it as an aim/fire on the board).
   private button(layer: Container, x: number, y: number, kind: 'exit' | 'menu', onTap?: () => void) {
+    const c = new Container();
+    c.x = x + 16;
+    c.y = y + 15;
+    c.hitArea = new Rectangle(-16, -15, 32, 30);
     const g = new Graphics();
     g.beginFill(COLORS.btnBlue);
-    g.drawRoundedRect(x, y, 32, 30, 8);
+    g.drawRoundedRect(-16, -15, 32, 30, 8);
     g.endFill();
     g.lineStyle(3, 0xffffff, 1);
     if (kind === 'exit') {
-      g.moveTo(x + 23, y + 15);
-      g.lineTo(x + 10, y + 15);
-      g.moveTo(x + 15, y + 10);
-      g.lineTo(x + 10, y + 15);
-      g.lineTo(x + 15, y + 20);
+      g.moveTo(7, 0);
+      g.lineTo(-6, 0);
+      g.moveTo(-1, -5);
+      g.lineTo(-6, 0);
+      g.lineTo(-1, 5);
     } else {
-      for (const dy of [9, 15, 21]) {
-        g.moveTo(x + 8, y + dy);
-        g.lineTo(x + 24, y + dy);
+      for (const dy of [-6, 0, 6]) {
+        g.moveTo(-8, dy);
+        g.lineTo(8, dy);
       }
     }
-    g.eventMode = 'static';
-    g.cursor = 'pointer';
-    g.on('pointerdown', (e: FederatedPointerEvent) => e.stopPropagation());
-    if (onTap) g.on('pointertap', onTap);
-    layer.addChild(g);
+    c.addChild(g);
+    attachButtonFeedback(c, onTap ?? (() => {}));
+    layer.addChild(c);
   }
 
   // crown + best 를 HUD 수평 중앙에 정렬 (best 폭이 바뀌면 재호출).

@@ -1,9 +1,10 @@
-import { Container, Graphics, Rectangle, Sprite, Text, type FederatedPointerEvent } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi.js';
 import { ASSETS, ASSET_SIZES } from './assets';
 import { GalaxyBackground } from './GalaxyBackground';
 import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
-import { COLORS, DESIGN, JUICE } from './data/config';
+import { COLORS, DESIGN } from './data/config';
+import { attachButtonFeedback } from './ui/button';
 
 // Title이 GameScene으로부터 받는 현재 세션 진행 상태(현재 점수 + 최대 머지 등급).
 export interface TitleProgress {
@@ -180,27 +181,13 @@ export class TitleScreen {
     this.currentScore.y = this.currentRowY;
   }
 
+  // Centred button shell; press feedback comes from the shared module (docs/50-art-ux/feedback-effects §5).
   private buttonContainer(cx: number, cy: number, w: number, h: number, onPress: () => void) {
     const c = new Container();
     c.x = cx;
     c.y = cy;
-    c.eventMode = 'static';
-    c.cursor = 'pointer';
     c.hitArea = new Rectangle(-w / 2, -h / 2, w, h);
-    c.on('pointerdown', (e: FederatedPointerEvent) => {
-      e.stopPropagation();
-      c.scale.set(JUICE.buttonPress.downScale);
-    });
-    c.on('pointerup', (e: FederatedPointerEvent) => {
-      e.stopPropagation();
-      c.scale.set(1);
-      onPress();
-    });
-    c.on('pointerupoutside', (e: FederatedPointerEvent) => {
-      e.stopPropagation();
-      c.scale.set(1);
-    });
-    return c;
+    return attachButtonFeedback(c, onPress);
   }
 
   private playButton(cx: number, cy: number) {

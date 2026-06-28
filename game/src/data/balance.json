@@ -80,14 +80,14 @@
   ],
 
   "planets": [
-    { "tier": 1, "name": "수성",   "radius": 18, "score": 0,    "colors": ["#9a9a9a", "#6c6c6c"], "pattern": "crater" },
-    { "tier": 2, "name": "화성",   "radius": 21, "score": 10,   "colors": ["#c1440e", "#7c2a08"], "pattern": "craterDark" },
-    { "tier": 3, "name": "금성",   "radius": 24, "score": 30,   "colors": ["#d9b382", "#bb8d54"], "pattern": "dots" },
-    { "tier": 4, "name": "지구",   "radius": 28, "score": 70,   "colors": ["#2e8b40", "#2f6fb0"], "pattern": "earth" },
-    { "tier": 5, "name": "해왕성", "radius": 32, "score": 150,  "colors": ["#1f3aa0", "#3a5fd0"], "pattern": "waves" },
-    { "tier": 6, "name": "천왕성", "radius": 37, "score": 320,  "colors": ["#a8edf0", "#5ecad0"], "pattern": "thinRingStripes" },
-    { "tier": 7, "name": "토성",   "radius": 43, "score": 700,  "colors": ["#e6c34a", "#b89220"], "pattern": "ring" },
-    { "tier": 8, "name": "목성",   "radius": 50, "score": 1500, "colors": ["#c98a4b", "#83532a"], "pattern": "bigStripes" },
-    { "tier": 9, "name": "태양",   "radius": 58, "score": 3200, "colors": ["#ffd23f", "#ff8a1f"], "pattern": "sun" }
+    { "tier": 1, "name": "수성",   "en": "Mercury", "radius": 18, "score": 0,    "colors": ["#9a9a9a", "#6c6c6c"], "pattern": "crater" },
+    { "tier": 2, "name": "화성",   "en": "Mars",    "radius": 21, "score": 10,   "colors": ["#c1440e", "#7c2a08"], "pattern": "craterDark" },
+    { "tier": 3, "name": "금성",   "en": "Venus",   "radius": 24, "score": 30,   "colors": ["#d9b382", "#bb8d54"], "pattern": "dots" },
+    { "tier": 4, "name": "지구",   "en": "Earth",   "radius": 28, "score": 70,   "colors": ["#2e8b40", "#2f6fb0"], "pattern": "earth" },
+    { "tier": 5, "name": "해왕성", "en": "Neptune", "radius": 32, "score": 150,  "colors": ["#1f3aa0", "#3a5fd0"], "pattern": "waves" },
+    { "tier": 6, "name": "천왕성", "en": "Uranus",  "radius": 37, "score": 320,  "colors": ["#a8edf0", "#5ecad0"], "pattern": "thinRingStripes" },
+    { "tier": 7, "name": "토성",   "en": "Saturn",  "radius": 43, "score": 700,  "colors": ["#e6c34a", "#b89220"], "pattern": "ring" },
+    { "tier": 8, "name": "목성",   "en": "Jupiter", "radius": 50, "score": 1500, "colors": ["#c98a4b", "#83532a"], "pattern": "bigStripes" },
+    { "tier": 9, "name": "태양",   "en": "Sun",     "radius": 58, "score": 3200, "colors": ["#ffd23f", "#ff8a1f"], "pattern": "sun" }
   ]
 }

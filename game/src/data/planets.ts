@@ -17,6 +17,7 @@ export type PatternKind =
 export interface PlanetTier {
   tier: number; // 1..9
   name: string;
+  en: string; // English display name shown above the planet in the unlock popup (30-systems/tier-unlock)
   radius: number; // px (40-balancing §1)
   score: number; // base score when CREATED by merge; 0 for 수성 (never a merge result)
   colors: number[]; // [main, accent] (50-art-ux §4)
@@ -28,6 +29,7 @@ const hex = (s: string): number => parseInt(s.replace('#', ''), 16);
 export const TIERS: PlanetTier[] = balance.planets.map((p) => ({
   tier: p.tier,
   name: p.name,
+  en: p.en,
   radius: p.radius,
   score: p.score,
   colors: p.colors.map(hex),
