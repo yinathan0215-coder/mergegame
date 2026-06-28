@@ -2,12 +2,14 @@ import { Container, Graphics, Text } from 'pixi.js';
 import { DESIGN, LAUNCHER } from './data/config';
 
 // First-launch coach (docs/50-art-ux/input-ux §첫 제스처 코치): on entering Pool In-Game the screen is
-// DIMMED and a 👆 finger repeatedly presses at the launch planet and drags DOWN ("press & pull back to
-// launch"), looping until the player starts aiming (hidden while aiming) and gone for good after the
-// first launch. The dim is NON-interactive — pressing through it reaches the launcher and starts aiming,
-// which hides the coach. Render-only.
+// DIMMED and a 👆 finger repeatedly mimes the full slingshot — PRESS (shrink), drag DOWN, then RELEASE
+// (spring back past 1.0 + lift off) — looping until the player starts aiming (hidden while aiming) and
+// gone for good after the first launch. The dim is NON-interactive — pressing through it reaches the
+// launcher and starts aiming, which hides the coach. Render-only.
 const PERIOD = 1400; // one loop (ms)
 const DRAG = 78; // how far the finger travels downward each loop (px)
+const PRESS_SCALE = 0.78; // finger shrinks while pressed (눌리는 느낌)
+const POP_SCALE = 1.12; // springs back past 1.0 on release (놓는 시늉)
 const DIM_ALPHA = 0.55;
 const DIM_MARGIN = 3000; // oversize so the dim bleeds to the viewport edges under the contain transform
 
@@ -29,7 +31,7 @@ export class FirstGestureHint {
     this.finger = new Text('👆', { fontSize: 46, fontFamily: 'Arial, sans-serif' });
     this.finger.anchor.set(0.5, 0.05);
     this.finger.x = LAUNCHER.x;
-    this.hint = new Text('꾹 눌러 아래로 당기기', {
+    this.hint = new Text('꾹 눌러 아래로 당겨 놓기', {
       fill: 0xffffff, fontSize: 16, fontFamily: 'Arial, sans-serif', fontWeight: '800',
       stroke: 0x0a0a14, strokeThickness: 4,
     });
@@ -50,12 +52,37 @@ export class FirstGestureHint {
     if (on) this.t0 = now;
   }
 
+  // One loop mimes press-drag-release: press-in (fade + shrink) → pull down (held small) → release pop
+  // (spring back past 1.0 + small lift) → lift off (fade away). docs/50-art-ux/input-ux §첫 제스처 코치.
   update(now: number) {
     if (!this.active) return;
     const k = ((now - this.t0) % PERIOD) / PERIOD;
-    const e = 1 - (1 - k) * (1 - k); // ease-out downward drag
-    this.finger.y = LAUNCHER.y + 6 + e * DRAG;
-    // fade in at the start of each loop, fade out at the end (the drag "lifts off")
-    this.finger.alpha = k < 0.12 ? k / 0.12 : k > 0.82 ? Math.max(0, (1 - k) / 0.18) : 1;
+    const topY = LAUNCHER.y + 6;
+    let y: number, scale: number, alpha: number;
+    if (k < 0.12) {
+      const p = k / 0.12; // press in: fade in + shrink to the pressed scale
+      alpha = p;
+      scale = 1 - (1 - PRESS_SCALE) * p;
+      y = topY;
+    } else if (k < 0.6) {
+      const p = (k - 0.12) / 0.48; // pull down while pressed
+      const e = 1 - (1 - p) * (1 - p); // ease-out
+      alpha = 1;
+      scale = PRESS_SCALE;
+      y = topY + e * DRAG;
+    } else if (k < 0.76) {
+      const p = (k - 0.6) / 0.16; // release: spring back past 1.0 + a tiny lift (놓는 시늉)
+      alpha = 1;
+      scale = PRESS_SCALE + (POP_SCALE - PRESS_SCALE) * p;
+      y = topY + DRAG - p * 8;
+    } else {
+      const p = (k - 0.76) / 0.24; // lift off: settle scale + fade away upward
+      alpha = Math.max(0, 1 - p);
+      scale = POP_SCALE + (1 - POP_SCALE) * p;
+      y = topY + DRAG - 8 - p * 18;
+    }
+    this.finger.y = y;
+    this.finger.scale.set(scale);
+    this.finger.alpha = alpha;
   }
 }
