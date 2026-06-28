@@ -12,6 +12,14 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-29] manual | 감사 수정 완료 — 방법론 69.6→100.0 (9/9 만점)
+why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해" 완료. 마지막 라운드: D1 전 UI 색·폰트 SSoT 토큰화
+(balance.json 82색+fontFamily+type 스케일, 사용자 승인 하 WIP와 묶음, `ecfbe7c`) + D2 잔여 메카닉 추출
+(RackBuilder·LaunchController·onTerminalMerge→MergeOutcome). 재감사
+[[70-verification/audits/2026-06-29-0706-methodology-structure-final-100]] **100.0/100**(9차원 만점).
+누적: GameScene god-object 810→481(9모듈 분리), 21 수정 커밋, 전 단계 typecheck+Playwright 80/0, 회귀 0.
+D6·D7·D8·D9·D3·D4·D5·D1·D2 전부 5. 차단·판단 잔여 없음.
+
 ## [2026-06-29] manual | 감사 수정 종결 — SessionController 추출, D2 천장 확정(91.0 유지)
 why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해" — 비차단 잔여였던 D2 세션종료 흐름을 실제 추출
 (SessionController, `ad35999`; phase·setPhase는 GameScene 유지로 D4=5 보존). 재감사
