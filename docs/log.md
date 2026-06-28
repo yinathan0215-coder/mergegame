@@ -12,6 +12,33 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] auto | 코드↔문서 정합 감사 보고서 추가 (53건 확정)
+why: 사용자 지시("구현 여부 + 문서 미반영 + 구현과 다른 내용 + 오분류를 찾아봐"). 2-pass 멀티에이전트
+교차 대조(반증 검증 포함)로 `docs/` vs `game/src/` 불일치 **53건** 확정 → 진단 전용 보고서
+[[70-verification/audits/2026-06-28-2050-docs-code-sync-audit]] 신설, [[70-verification/index]] 감사
+로그에 링크. 핵심: 게임 모드 레이어(설계만 됨, 미구축)·콤보 "제거" ADR 모순·점수 +1/+3 및 영속·
+아키텍처 9모듈 stale. **수정은 이 보고서를 입력으로 하는 별도 단계**(이번 턴은 정본 본문 미수정).
+
+## [2026-06-28] manual | 게임 모드(Infinite/Stage) 구조 설계 — 카운트·충전·블랙홀 보너스·결과창·Stage 데이터
+why: 사용자 지시(docs-write 선행 후 개발) — Pool In-Game에 **두 게임 모드**를 추가. Title 하단
+Galaxy/Fantasy 토글을 **Infinite|Stage 모드 선택**으로 전환, Play 라벨이 모드별(`Game Start`/`Stage N`).
+신규 정본: [[20-core-loop/game-modes]](모드 개요·선택·종료·결과 흐름), [[30-systems/launch-count]]
+(남은 카운트=발사 예산, Infinite=30, 발사 −1, 0이면 발사 차단), [[30-systems/planet-charge]]
+(Infinite 우측 충전 버튼[회전 지구+`Planet Charge`]+공통 팝업: 중앙 회전 지구·우측 `+N`·하단 슬라이더
+0~보유코인 최대치·10당 100코인·기본 +10·코인<100이면 좌측 고정·`충전` 버튼+`[코인] current/needed`),
+[[30-systems/stage-mode]](스테이지 스키마=count·target·rack[위치/종류]·queue[결정적 시퀀스],
+목표 행성 카운트 내 합성=클리어+300코인, 실패→게임 화면 복귀, 레벨 디자인 차후·플레이스홀더 1개),
+[[50-art-ux/result-window]](전환효과 결과창: Infinite 스코어 1→최종 카운트업·NEW RECORD·하단 최대 콤보·
+탭→Title / Stage 클리어 [다음 스테이지]·[돌아가기] / Stage Fail→게임 화면), [[40-balancing/game-modes]]
+(수치 SSoT: balance.json `modes`/`juice.result`). 사용자 확정: 마지막 행성=**블랙홀**(11), Infinite 한정
+블랙홀끼리 합성→둘 다 소멸+카운트 +20(ADR [[30-systems/decisions/2026-06-28-blackhole-infinite-count]],
+[[10-concept/planet-ladder]]·[[30-systems/merge-rules]]의 "블랙홀 합성 없음"을 Infinite 한정 덮어씀);
+결과창 종료=탭→Title; Stage 클리어=[다음 스테이지]+[돌아가기]; Infinite 시작 텍스트="Game Start".
+좌하단 Count+Next 미리보기([[30-systems/launch-queue]] Next 재도입·HUD 위젯), [[50-art-ux/layout]] §2-b
+하단·측면 HUD(모드별) 추가. "게임 오버 없음"을 모드 종료로 정합화([[20-core-loop/core-loop]]·
+[[20-core-loop/play-flow]]·[[20-core-loop/screen-flow]] Result/StageClear/StageFail 상태). 인덱스
+4종·MOC 갱신. 다음: `game/` 구현.
+
 ## [2026-06-28] manual | 사운드 시스템 — 컨셉(docs-write) + SoundManager(절차 합성·동시 제한) + 코어 SFX 연결
 why: 사용자 지시(art처럼 docs-write로 컨셉부터). 신규 정본: [[50-art-ux/sound-design]](효과음/UI 사운드
 컨셉·톤·카탈로그 11종 + **동시재생 제한 UX**: maxVoices 상한·사운드별 throttle·우선순위 선점, 머지=등급↑→
