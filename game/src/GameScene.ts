@@ -94,6 +94,8 @@ export class GameScene {
     this.launcher = new Launcher(this.app.stage, this.aimLayer, this.uiLayer, {
       currentTier: () => this.queue.current(),
       fire: (tier, vx, vy) => this.fire(tier, vx, vy),
+      obstacles: () =>
+        this.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
     });
 
     this.buildInitialRack();

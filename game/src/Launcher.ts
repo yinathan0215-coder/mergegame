@@ -1,10 +1,27 @@
 import { Container, Graphics, type FederatedPointerEvent } from 'pixi.js';
 import { LAUNCHER, LAUNCH, PLAY, GAUGE, TAPER_L, TAPER_R, FAN_HALF, COLORS } from './data/config';
+import { tierData } from './data/planets';
 import { makePlanetSprite } from './PlanetFactory';
+
+// First positive ray–circle intersection distance (ray dir is unit length); null if none ahead.
+function rayCircle(ox: number, oy: number, dx: number, dy: number, cx: number, cy: number, rad: number): number | null {
+  const fx = ox - cx;
+  const fy = oy - cy;
+  const b = 2 * (fx * dx + fy * dy);
+  const c = fx * fx + fy * fy - rad * rad;
+  const disc = b * b - 4 * c;
+  if (disc < 0) return null;
+  const sq = Math.sqrt(disc);
+  const t1 = (-b - sq) / 2;
+  if (t1 > 0.001) return t1;
+  const t2 = (-b + sq) / 2;
+  return t2 > 0.001 ? t2 : null;
+}
 
 export interface LauncherHost {
   currentTier(): number;
   fire(tier: number, vx: number, vy: number): boolean;
+  obstacles(): { x: number; y: number; r: number }[];
 }
 
 // Press-drag-release slingshot at the launcher circle (docs/30-systems/launcher):
@@ -120,21 +137,65 @@ export class Launcher {
     }
   }
 
+  // Predict the shot's flight to the FIRST collision (a board wall OR another ball), inflating
+  // obstacles by the shot ball's radius, and return the hit point + reflected direction (bounce).
+  private predict(dirx: number, diry: number) {
+    const shotR = tierData(this.host.currentTier()).radius;
+    const ox = LAUNCHER.x;
+    const oy = LAUNCHER.y;
+    let bestT = Infinity;
+    let nx = 0;
+    let ny = 0;
+    // other balls — centre-line stops where the two discs would touch
+    for (const o of this.host.obstacles()) {
+      const t = rayCircle(ox, oy, dirx, diry, o.x, o.y, o.r + shotR);
+      if (t !== null && t < bestT) {
+        bestT = t;
+        const l = Math.hypot(ox + dirx * t - o.x, oy + diry * t - o.y) || 1;
+        nx = (ox + dirx * t - o.x) / l;
+        ny = (oy + diry * t - o.y) / l;
+      }
+    }
+    // play-area walls (rect inset by the shot radius): top, left, right
+    const top = PLAY.y + shotR;
+    const left = PLAY.x + shotR;
+    const right = PLAY.x + PLAY.w - shotR;
+    if (diry < -1e-6) {
+      const t = (top - oy) / diry;
+      const hx = ox + dirx * t;
+      if (t > 0 && t < bestT && hx >= left && hx <= right) { bestT = t; nx = 0; ny = 1; }
+    }
+    if (dirx < -1e-6) {
+      const t = (left - ox) / dirx;
+      if (t > 0 && t < bestT && oy + diry * t >= top) { bestT = t; nx = 1; ny = 0; }
+    }
+    if (dirx > 1e-6) {
+      const t = (right - ox) / dirx;
+      if (t > 0 && t < bestT && oy + diry * t >= top) { bestT = t; nx = -1; ny = 0; }
+    }
+    if (!isFinite(bestT)) bestT = PLAY.h;
+    const hx = ox + dirx * bestT;
+    const hy = oy + diry * bestT;
+    const dot = dirx * nx + diry * ny;
+    return { hx, hy, rx: dirx - 2 * dot * nx, ry: diry - 2 * dot * ny };
+  }
+
+  // Aim = predicted trajectory to the first collision (wall or ball) + the bounce angle there.
+  // The line always reaches the collision; power is shown by the gauge, not the line length.
   private redraw() {
     this.aim.clear();
     const shot = this.computeShot();
-    const maxLen = PLAY.h * 0.95;
-    const len = Math.max(28, shot.power * maxLen);
-    let ex = LAUNCHER.x + shot.dirx * len;
-    let ey = LAUNCHER.y + shot.diry * len;
-    ex = Math.max(PLAY.x + 4, Math.min(PLAY.x + PLAY.w - 4, ex));
-    ey = Math.max(PLAY.y + 4, ey);
-    this.aim.lineStyle(4, COLORS.aimLine, 0.45);
+    const t = this.predict(shot.dirx, shot.diry);
+    this.aim.lineStyle(4, COLORS.aimLine, 0.5);
     this.aim.moveTo(LAUNCHER.x, LAUNCHER.y);
-    this.aim.lineTo(ex, ey);
-    this.aim.beginFill(COLORS.aimLine, 0.6);
-    this.aim.drawCircle(ex, ey, 5);
+    this.aim.lineTo(t.hx, t.hy);
+    this.aim.beginFill(COLORS.aimLine, 0.7);
+    this.aim.drawCircle(t.hx, t.hy, 5);
     this.aim.endFill();
+    // collision angle: a short reflected segment past the hit point
+    this.aim.lineStyle(3, COLORS.aimLine, 0.3);
+    this.aim.moveTo(t.hx, t.hy);
+    this.aim.lineTo(t.hx + t.rx * 38, t.hy + t.ry * 38);
     this.drawGauge(shot.power);
   }
 }
