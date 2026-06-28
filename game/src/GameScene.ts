@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
-import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, PROGRESSION, MODES, RESULT } from './data/config';
+import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, PROGRESSION, MODES } from './data/config';
 import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
 import { ModeController } from './modes/ModeController';
 import { GameInfoPanel } from './GameInfoPanel';
@@ -31,6 +31,7 @@ import { exposeDebug } from './debug';
 import { eventLog } from './EventLog';
 import { containPlanets } from './Containment';
 import { PlanetSystem } from './PlanetSystem';
+import { SessionController } from './SessionController';
 import type { Planet } from './Planet';
 
 type SceneState = 'Loading' | 'Title' | 'PoolInGame';
@@ -95,7 +96,7 @@ export class GameScene {
   // playing→clearing→stageClear (clear fly); playing→result (Infinite settle); *→playing on startSession.
   // Every transition routes through setPhase() — the single guarded transition point (audit D4).
   private phase: Phase = 'playing';
-  private endAt = 0; // pendingFail 종료창 등장 예정 시각(performance.now 기준)
+  private session!: SessionController; // session-END flow (checkSessionEnd/scheduleEnd/showEnd) — calls back via host.setPhase
   // Stage 클리어 연출(docs/30-systems/stage-mode §클리어): 목표 행성이 우하단 목표 UI로 포물선 비행 →
   // 도달 시 머지 버스트(burst) 잠깐 hold → 클리어창. 연출 모듈이 스프라이트 수명을 소유; 연출 중 물리·발사
   // 정지는 GameScene phase('clearing')가 담당.
@@ -122,7 +123,7 @@ export class GameScene {
     this.endSkip.drawRect(0, 0, DESIGN.w, DESIGN.h);
     this.endSkip.endFill();
     this.endSkip.eventMode = 'none';
-    this.endSkip.on('pointerdown', (e) => { e.stopPropagation(); if (this.phase === 'pendingFail') this.showEnd('fail'); });
+    this.endSkip.on('pointerdown', (e) => { e.stopPropagation(); if (this.phase === 'pendingFail') this.session.showEnd('fail'); });
     this.fgRoot.addChild(this.endSkip);
     this.app.stage.eventMode = 'static';
 
@@ -170,7 +171,7 @@ export class GameScene {
       clearChamber: () => this.launcher.clearChamber(),
       targetPos: () => this.info.targetPos(),
       burst: (x, y, c, r) => this.effects.mergeBurst(x, y, c, r),
-      onComplete: () => this.showEnd('clear'),
+      onComplete: () => this.session.showEnd('clear'),
     });
 
     this.meta = new MetaStore();
@@ -221,6 +222,23 @@ export class GameScene {
       () => this.setScene('Title') // 돌아가기 → Title
     );
     this.stageFail = new StageFailPopup(() => this.setScene('PoolInGame')); // 실패 → 같은 스테이지 재시작
+    // Session-END flow. Host callbacks keep setPhase the single guarded transition point (audit D4) —
+    // the controller never writes this.phase directly.
+    this.session = new SessionController({
+      modeC: this.modeC,
+      economy: this.economy,
+      planetSys: this.planetSys,
+      result: this.result,
+      stageClear: this.stageClear,
+      stageFail: this.stageFail,
+      host: {
+        phase: () => this.phase,
+        isEnded: () => this.isEnded,
+        setPhase: (t) => this.setPhase(t),
+        endSkipOn: (on) => { this.endSkip.eventMode = on ? 'static' : 'none'; },
+        resultData: () => ({ score: this.score.score, maxCombo: this.maxCombo, prevBest: this.sessionPrevBest }),
+      },
+    });
     this.title = new TitleScreen(
       (mode) => { this.modeC.setMode(mode); sound.play('play'); this.setScene('PoolInGame'); },
       () => ({ current: this.meta.currentScore, best: this.meta.bestScore, maxTier: this.stats.maxTier }), // Title 현재/최고(영속) + 최대 머지 아이콘
@@ -397,6 +415,7 @@ export class GameScene {
     this.hud.setBest(this.meta.bestScore); // 인게임 👑 = 영속 최고 점수(localStorage) 로드
     this.hud.setStageMode(this.modeC.isStage ? this.modeC.stageIndex + 1 : null); // Stage: 점수 대신 'STAGE N'
     this.comboLayer.visible = !this.modeC.isStage; // Stage는 콤보 미표시 (docs/20-core-loop/game-modes)
+    this.session.reset();
     this.endSkip.eventMode = 'none';
     this.queue.reset(this.modeC.isStage ? this.modeC.stageDef.queue : null);
     if (this.modeC.isStage) this.buildStageRack(this.modeC.stageDef.rack);
@@ -432,49 +451,6 @@ export class GameScene {
     sound.play('merge', { pitch: 0.55 });
     eventLog.emit('TERMINAL_MERGE', {});
     return true;
-  }
-
-  // End-of-session check (docs/30-systems/launch-count). Stage: arm the end window after a delay.
-  // Infinite: end only once the count is gone AND every planet has settled (no fixed delay).
-  private checkSessionEnd() {
-    if (this.phase !== 'playing') return;
-    if (this.modeC.count > 0) return;
-    if (this.modeC.isStage) {
-      this.scheduleEnd('fail');
-      return;
-    }
-    if (this.planetSys.planets.some((p) => Math.hypot(p.body.velocity.x, p.body.velocity.y) > 0.6)) return;
-    this.showEnd('result');
-  }
-
-  // Arm the Stage fail window after RESULT.endDelayMs (docs/50-art-ux/result-window); a screen tap skips
-  // the delay (endSkip → showEnd). A target merged during the delay still wins via its own
-  // clearing→stageClear path. Already armed (pendingFail) → don't re-arm.
-  private scheduleEnd(_kind: 'fail') {
-    if (this.isEnded) return;
-    if (this.phase === 'pendingFail') return;
-    this.endAt = performance.now() + RESULT.endDelayMs;
-    this.endSkip.eventMode = 'static'; // 지연 중 화면 탭 → 즉시 종료창(showEnd)
-    this.setPhase('pendingFail');
-  }
-
-  // Show an end window — Stage after the armed delay (tick), Infinite immediately on settle. The kind
-  // ('result'|'clear'|'fail') maps to the first-class end phase (result|stageClear|stageFail).
-  private showEnd(kind: 'result' | 'clear' | 'fail') {
-    if (this.isEnded) return;
-    this.endSkip.eventMode = 'none';
-    if (kind === 'result') {
-      this.setPhase('result');
-      const finalScore = this.score.score;
-      this.result.show(finalScore, this.maxCombo, finalScore > this.sessionPrevBest);
-    } else if (kind === 'clear') {
-      this.setPhase('stageClear');
-      this.economy.awardStageClear(); // 클리어 기록 + 코인 + 다음 스테이지 전진·영속 (economy rules)
-      this.stageClear.open();
-    } else if (kind === 'fail') {
-      this.setPhase('stageFail');
-      this.stageFail.open();
-    }
   }
 
   // Single guarded transition point for the in-session phase machine (audit D4) — every `this.phase`
@@ -537,8 +513,8 @@ export class GameScene {
       steps++;
     }
     if (this.acc > STEP_MS * 5) this.acc = 0;
-    if (!this.isClearing) this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
-    if (this.phase === 'pendingFail' && nowMs >= this.endAt) this.showEnd('fail'); // Stage 종료창 지연 등장
+    if (!this.isClearing) this.session.check(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
+    this.session.tickEnd(nowMs); // Stage 종료창 지연 등장
 
     this.planetSys.syncSprites(nowMs);
     if (!this.isClearing) this.launcher.update(); // 연출 중엔 비운 발사대를 다시 채우지 않음
