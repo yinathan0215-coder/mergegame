@@ -12,6 +12,16 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-29] manual | 감사 0130 수정 라운드 — 방법론 점수 69.6→79.2 (+9.6)
+why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해". [[70-verification/audits/2026-06-29-0130-methodology-structure-audit]]
+워크리스트를 수정 프로세스로 처리, [[70-verification/audits/2026-06-29-0353-methodology-structure-reaudit]]로
+재감사 확인. 6 커밋(typecheck+Playwright 78/0): D9 dead code·D8 입력경계·D6 팝업정지/오도미터(→5),
+GameScene 810→694 분할(debug/Containment), D1 #49a8e6 토큰화, D3 콘솔에러=0·재시작 테스트, D7 이벤트
+카탈로그+로그(→5), D4 phase 상태머신(→4). docs reconcile: architecture(debug·Containment·phase),
+screen-flow(§PoolInGame 내부 상태 phase 전이표), 30-systems/event-catalog 신설. **잔여**: GameScene
+god-object 추가 분할(D2·D5)·색/폰트 SSoT 토큰화(D1, **balance.json 미커밋 WIP 차단**)·prod 빌드 검증(D3)·
+1급 종료상태(D4). balance.json·ModeController의 선행 사용자 WIP는 미수정·미커밋 유지.
+
 ## [2026-06-29] auto | audit 69.6/100 (방법론 구조 재감사 @d55419b)
 why: 사용자 지시("코드가 좀 바뀌었어 → 다시 조사"). `methodology-audit` 스킬 재실행(체크·보고만) →
 [[70-verification/audits/2026-06-29-0130-methodology-structure-audit]]. 직전 2347 감사(@069fa7e) 이후 6개

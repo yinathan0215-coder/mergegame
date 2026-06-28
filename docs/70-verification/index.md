@@ -51,6 +51,10 @@ sources:
   커밋 후). 종합 **69.6/100**(2347과 동점이나 1·2·4·9차원 밴드 내 악화=추세 하방). GameScene **717→810줄**,
   하드코딩 색 141→**176**·`#49a8e6` 중복 8곳, 세션 플래그 `clearFly` 추가(4개 공존). 구조 수정 0건 →
   P1(GameScene 분할·세션 상태화)을 피처보다 먼저.
+- [[70-verification/audits/2026-06-29-0353-methodology-structure-reaudit]] — **수정 후 재감사**(@d959b7a).
+  종합 **79.2/100**(0130 69.6 → **+9.6**). D6·D7·D8·D9=5(만점), D4 3→4(phase 상태머신). 커밋 6건
+  (4148560·d935d2e·773f668·ace0552·77bf044·d959b7a), Playwright 78/0. 잔여 상한: GameScene god-object
+  (D2·D5=3, ~12점)·색/폰트 SSoT island(D1=3, balance.json WIP 차단)·prod 빌드 미검증(D3)·1급 종료상태(D4).
 
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.
