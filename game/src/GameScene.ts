@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
-import { DESIGN, LAUNCHER, LAUNCH, COLORS, STEP_MS, PROGRESSION, MODES } from './data/config';
+import { DESIGN, COLORS, STEP_MS, PROGRESSION, MODES } from './data/config';
 import { tierData, MAX_TIER } from './data/planets';
 import { ModeController } from './modes/ModeController';
 import { GameInfoPanel } from './GameInfoPanel';
@@ -33,6 +33,7 @@ import { containPlanets } from './Containment';
 import { PlanetSystem } from './PlanetSystem';
 import { RackBuilder } from './RackBuilder';
 import { SessionController } from './SessionController';
+import { LaunchController } from './LaunchController';
 
 type SceneState = 'Loading' | 'Title' | 'PoolInGame';
 // In-session phase — the end phase itself carries the kind (result / stageClear / stageFail).
@@ -52,7 +53,7 @@ export class GameScene {
 
   private planetSys: PlanetSystem; // planet entity store + lifecycle + per-frame sprite-sync (ECS-lite)
   private rack: RackBuilder; // session starting-board spawn geometry (extracted from this orchestrator)
-  private cooldownUntil = 0;
+  private launchCtl: LaunchController; // launch execution: cooldown gate + spawn geometry (extracted from this orchestrator, audit D2)
   private acc = 0;
 
   private physics: PhysicsWorld;
@@ -149,6 +150,15 @@ export class GameScene {
       (slots) => { eventLog.emit('QUEUE_CHANGED', {}); this.info.setNext(slots[1] ?? slots[0]); }, // Next 미리보기 갱신(좌하단 HUD)
       () => Math.max(1, Math.min(this.unlockedTier - PROGRESSION.queueBelow, PROGRESSION.queueCap))
     );
+    this.launchCtl = new LaunchController({
+      planets: this.planetSys, queue: this.queue, modeC: this.modeC,
+      host: {
+        canFire: () => this.scene === 'PoolInGame' && this.phase === 'playing',
+        bumpShots: () => { this.stats.shots++; },
+        onFired: () => { this.gestureDone = true; },
+        syncCount: () => this.info.setCount(this.modeC.count),
+      },
+    });
     this.merge = new MergeSystem(
       {
         planetByBody: (b) => this.planetSys.at(b),
@@ -162,7 +172,7 @@ export class GameScene {
     this.physics.onCollision((a, b, impact, cx, cy, bx, by) => this.mergeOutcome.onCollision(a, b, impact, cx, cy, bx, by));
     this.launcher = new Launcher(this.app.stage, this.aimLayer, this.uiLayer, {
       currentTier: () => this.queue.current(),
-      fire: (tier, vx, vy) => this.fire(tier, vx, vy),
+      fire: (tier, vx, vy) => this.launchCtl.fire(tier, vx, vy),
       obstacles: () =>
         this.planetSys.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
       canAim: () => this.scene === 'PoolInGame' && !this.trans && this.phase === 'playing'
@@ -329,32 +339,6 @@ export class GameScene {
         this.trans = null;
       }
     }
-  }
-
-  private fire(tier: number, vx: number, vy: number): boolean {
-    if (this.scene !== 'PoolInGame' || this.phase !== 'playing') return false;
-    if (!this.modeC.canFire()) return false; // 카운트 소진 → 발사 불가 (docs/30-systems/launch-count)
-    const now = performance.now();
-    if (now < this.cooldownUntil) return false;
-    this.cooldownUntil = now + LAUNCH.cooldownMs;
-    // spawn just OUTSIDE the launcher circle, along the fire direction, so the ball never starts
-    // inside the collision pocket (no spin-in-pocket). collidesLauncher=false → it clears cleanly.
-    const r = tierData(tier).radius;
-    const sp = LAUNCHER.r + r + 1;
-    const spd = Math.hypot(vx, vy) || 1;
-    const sx = LAUNCHER.x + (vx / spd) * sp;
-    const sy = LAUNCHER.y + (vy / spd) * sp;
-    // bornAt in the past → a launched ball merges on its FIRST collision (the re-merge delay is
-    // only for freshly MERGED balls — docs/30-systems/merge-rules).
-    this.planetSys.spawn(tier, sx, sy, vx, vy, now - 1000, false);
-    this.queue.shift();
-    this.stats.shots++;
-    this.modeC.consume(); // 카운트 -1 (docs/30-systems/launch-count)
-    this.info.setCount(this.modeC.count);
-    this.gestureDone = true; // 첫 발사 → 손가락 코치 종료(docs/50-art-ux/input-ux)
-    sound.play('launch', { pitch: 0.85 + Math.min(1, Math.hypot(vx, vy) / LAUNCH.vMax) * 0.5 }); // 파워↑ → 피치↑
-    eventLog.emit('FIRE', { tier });
-    return true;
   }
 
   // Start a fresh session of the current mode: clear the board, reset score/combo/count, build the

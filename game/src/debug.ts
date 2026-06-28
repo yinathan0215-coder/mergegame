@@ -59,9 +59,9 @@ export function exposeDebug(g: GameScene): void {
       return { x: PLAY.x, y: PLAY.y, w: PLAY.w, h: floorY - PLAY.y, lineY: floorY };
     },
     fire: (angleRad: number, power: number) => {
-      a.cooldownUntil = 0;
+      a.launchCtl.resetCooldown();
       const speed = Math.max(0, Math.min(power, 1)) * LAUNCH.vMax;
-      return a.fire(a.queue.current(), Math.cos(angleRad) * speed, Math.sin(angleRad) * speed);
+      return a.launchCtl.fire(a.queue.current(), Math.cos(angleRad) * speed, Math.sin(angleRad) * speed);
     },
     clearBoard: () => {
       a.planetSys.clear();
