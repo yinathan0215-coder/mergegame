@@ -12,6 +12,13 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Title 배경 풀블리드 설계: 배경 cover / 전경 contain 2-레이어
+why: 사용자 지시 — Title 태양계 배경은 화면 끝까지 채우되(cover) UI/플레이그라운드는 잘리지 않게
+(contain). 선택 = **전체화면 배경 레이어**. 단일 캔버스를 **뷰포트 크기**로 두고 배경(은하·태양계)=cover
+그룹, 전경(보드·발사대·HUD·로비 UI)=contain 그룹으로 분리(캔버스 1개 유지). [[50-art-ux/layout]] §1 ·
+[[50-art-ux/title-screen]] §1 정본화. 구현(GameScene 캔버스=뷰포트 크기·bg/fg 스케일 그룹 + TitleScreen
+배경/UI 분리)은 동시 진행 세션의 GameScene 재구조화이고 브라우저 시각검증이 필요해, 협의/체크포인트 후 진행.
+
 ## [2026-06-28] manual | 캔버스 cover-fit 되돌림 → contain(인게임/UI 잘림 방지)
 why: 사용자 지시 — 직전 cover-fit이 인게임/UI를 잘라 "UI가 다 짤림"(특히 데스크톱·비-9:16 뷰포트는
 대폭 크롭). 단일 캔버스라 배경만 cover·UI만 contain을 동시에 할 수 없으므로, `fitCanvas`를 cover(max)→
