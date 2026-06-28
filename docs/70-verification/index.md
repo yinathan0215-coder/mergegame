@@ -43,6 +43,10 @@ sources:
 - [[70-verification/audits/2026-06-28-2314-docs-code-sync-audit]] — 코드↔문서 정합 재감사(게임모드
   레이어 구현 후). 확정 32건(doc-ne-code 21·undocumented 8·misclassified 2·orphan-doc 1). 핵심:
   MVP·범위 펜스 stale(사운드·저장·세션종료·모드 구현됨), 공개명 GALAXY PINBALL 미표기, 모듈맵 8개 누락.
+- [[70-verification/audits/2026-06-28-2347-methodology-structure-audit]] — 9기둥+단일책임+karpathy
+  구조 감사(@069fa7e). 종합 **69.6/100**(이전 73→하락). 강점: Acceptance·Fixed Step·Event·Layered(4/5).
+  약점: 단일책임(GameScene 380→717줄 god-object)·State(paused 불리언 공존)·ECS·SSoT(UI색 141 하드코딩)
+  =3/5. P1: GameScene 6모듈 분할·세션 흐름 상태화.
 
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.
