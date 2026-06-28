@@ -12,6 +12,19 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Title 상하 여백 진단(76px) + 은하수만 cover 채움 정본화(태양계·UI는 contain)
+why: 사용자 지시 — Title 상하 여백을 채우되 **은하수 배경(GalaxyBackground=이미지+반짝임)만** Title 한정
+cover로 확장, **태양계·UI는 contain(9:16)** 유지, 기본/레터박스 배경은 단색 outerBg로 환원. headed
+Playwright(390×844)로 **상하 76px 밴드** 확인(캔버스 390×693 중앙). 임시 `#app` galaxy CSS는 환원(은하
+반짝임 효과가 Pixi라 정적 CSS로는 불가). [[50-art-ux/title-screen]] §1 정본화. **구현 보류**: Pixi 은하수가
+레터박스를 채우려면 캔버스가 밴드를 덮어야 하고(=GameScene 캔버스 변경) 그 멀티파일 변경이 **동시 진행
+세션의 GameScene/Launcher/TitleScreen 실시간 편집과 충돌**(이번 턴 Launcher.ts·TitleScreen.ts "modified on
+disk" 충돌)하므로, 해당 세션 정지 후 단일 세션 전용 접근에서 1패스로 구현(스크린샷 검증 가능).
+why: Title 화면의 설정·일일 미션·출석 체크·행운의 돌림판·상점 아이콘을 이모지/절차 그래픽 대신 개별 PNG 리소스로 쓰도록
+[[50-art-ux/title-icons]]를 신설. 기존 `crown.png`/`gold.png`와 같은 캐주얼 모바일 게임 2.5D 스타일을 정본으로 고정하고,
+프롬프트·생성 원본·후처리·최종 경로를 `game/public/assets/prompts/title-icons.md`에 항상 기록하도록 명시.
+Play 버튼은 같은 톤의 입체 CTA(하이라이트·베벨·그림자·흰색 플레이 삼각형)로 정리.
+
 ## [2026-06-28] manual | 콤보 5s/3s + 5단위 마일스톤 보너스(중앙 2줄 "combo M / +N")
 why: 사용자 지시 — 콤보 유지 5초(`holdMs` 4000→5000)·**3초부터 페이드아웃**(`fadeStartMs` 2000→3000).
 **콤보가 5의 배수(5·10·15·20·25…)에 도달할 때마다 큰 보너스 점수**(`콤보값 × bonusPer=400`) 지급 —
