@@ -12,6 +12,16 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Title 로비 UI 정렬(아이콘 카드·중앙 컬럼·토글 슬라이드) + 씬 전이 페이드
+why: 사용자 지시 2건(레퍼런스 이미지). (1) Title 로비 UI를 정본 레이아웃으로: 👑최고점수(Play 위)·
+**게임 시작** 버튼(▶ 아이콘·확대)·🪐현재점수(Play 아래) 중앙 컬럼, 좌·우 **아이콘 타일+라벨 카드** 4개
+(일일 미션·상점·출석 체크·행운의 돌림판), Galaxy|Fantasy **토글 슬라이드 애니메이션**(노브 x lerp, 기능 없음).
+(2) **씬 전이 페이드** — `setScene` 시 블랙 인→씬 교체→아웃(각 200ms, 전환 중 입력 차단).
+[[50-art-ux/title-screen]] §2-3 · [[20-core-loop/screen-flow]] 정본화. 구현: `game/src/TitleScreen.ts`
+(bestRow/currentRow·sideButton 아이콘 카드·playButton 확대·themeToggle 슬라이드) · `game/src/GameScene.ts`
+(fade 오버레이·updateTransition). 본 변경은 type-clean(코드는 동시 진행 세션 파일 → 본 커밋은 docs만; 현재
+tsc는 동시 세션의 MergeSystem in-flight 편집[unlockedTier]으로 일시 실패하나 본 변경과 무관).
+
 ## [2026-06-28] manual | Pool HUD: 머니·랭킹 제거 → 좌상단 뒤로가기(→Title)·우상단 메뉴
 why: 사용자 지시 — Pool In-Game 상단 좌(머니)·우(랭킹) 표시를 제거하고 그 자리에 셸 버튼만. 좌상단
 **뒤로가기 버튼(←)** → 누르면 **Title 화면 복귀**(`GameScene.setScene('Title')` 콜백), 우상단 **메뉴 버튼(≡)**
