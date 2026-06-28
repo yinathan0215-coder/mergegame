@@ -17,6 +17,7 @@ import { UnlockModal } from './UnlockModal';
 import { Combo } from './Combo';
 import { sound } from './SoundManager';
 import { makePlanetSprite } from './PlanetFactory';
+import { ASSETS } from './assets';
 import type { Planet } from './Planet';
 
 type SceneState = 'Title' | 'PoolInGame';
@@ -87,7 +88,13 @@ export class GameScene {
 
     this.physics = new PhysicsWorld();
     this.board = new BoardRenderer(this.boardLayer);
-    this.hud = new Hud(this.uiLayer, () => this.setScene('Title')); // back button → Title
+    this.hud = new Hud(this.uiLayer, () => this.setScene('Title'), [
+      // ≡ dropdown shortcuts — same actions as the Title-lobby buttons (docs/50-art-ux/layout §2-c)
+      { icon: ASSETS.ui.dailyMission, onTap: () => this.metaUI.open('dailyMission') },
+      { icon: ASSETS.ui.checkIn, onTap: () => this.metaUI.open('attendance') },
+      { icon: ASSETS.ui.luckyWheel, onTap: () => this.metaUI.open('wheel') },
+      { icon: ASSETS.ui.settings, onTap: () => {} }, // 설정: mirrors the Title settings button (no dedicated popup yet)
+    ]); // back button → Title
     this.effects = new Effects(this.effectLayer);
     this.combo = new Combo(this.comboLayer);
     this.score = new ScoreSystem((s) => this.hud.setScore(s));
@@ -401,6 +408,8 @@ export class GameScene {
   private exposeDebug() {
     (window as any).__game = {
       scene: () => this.scene,
+      transitioning: () => this.trans !== null, // true while the scene-fade overlay still captures input
+
       fgRect: () => {
         const s = Math.min(this.app.screen.width / DESIGN.w, this.app.screen.height / DESIGN.h);
         return { w: DESIGN.w * s, h: DESIGN.h * s }; // 전경(9:16) 화면 크기
@@ -461,7 +470,15 @@ export class GameScene {
       metaReset: () => this.meta.__reset(),
       metaAddCoins: (n: number) => this.meta.addCoins(n),
       openPopup: (kind: 'dailyMission' | 'attendance' | 'wheel' | 'shop') => this.metaUI.open(kind),
+      openPopupKind: () => this.metaUI.openKind(),
+      // in-game ≡ HUD dropdown (docs/50-art-ux/layout §2-c)
+      hudMenuOpen: () => this.hud.menuIsOpen,
+      hudMenuBurger: () => this.hud.toggleMenu(),
+      hudMenuItemCount: () => this.hud.menuItemCount,
+      hudMenuItem: (i: number) => this.hud.tapMenuItem(i),
+      hudMenuOutside: () => this.hud.closeMenu(),
       claimAttendance: () => this.meta.claimAttendance(),
+      claimMission: (id: string) => this.meta.claimMission(id),
       claimMilestone: (n: number) => this.meta.claimMilestone(n),
       wheelStart: () => this.metaUI.wheel.startSpin(),
       wheelStop: (i: number) => this.metaUI.wheel.stopOn(i),

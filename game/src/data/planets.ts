@@ -4,22 +4,25 @@
 import balance from './balance.json';
 
 export type PatternKind =
+  | 'asteroid'
   | 'crater'
   | 'craterDark'
   | 'dots'
   | 'earth'
   | 'waves'
+  | 'thinRingStripes'
   | 'stripesLight'
   | 'ring'
   | 'bigStripes'
-  | 'sun';
+  | 'sun'
+  | 'blackHole';
 
 export interface PlanetTier {
-  tier: number; // 1..9
+  tier: number;
   name: string;
   en: string; // English display name shown above the planet in the unlock popup (30-systems/tier-unlock)
   radius: number; // px (40-balancing §1)
-  score: number; // base score when CREATED by merge; 0 for 수성 (never a merge result)
+  score: number;
   colors: number[]; // [main, accent] (50-art-ux §4)
   pattern: PatternKind;
 }
@@ -37,14 +40,17 @@ export const TIERS: PlanetTier[] = balance.planets.map((p) => ({
 }));
 
 // Integrity guards — give the balance-tuner immediate feedback on a malformed edit.
-if (TIERS.length !== 9) {
-  throw new Error(`balance.json: expected 9 planet tiers, got ${TIERS.length}`);
+if (TIERS.length !== 11) {
+  throw new Error(`balance.json: expected 11 planet tiers, got ${TIERS.length}`);
 }
 TIERS.forEach((t, i) => {
   if (t.tier !== i + 1) throw new Error(`balance.json: planets[${i}].tier must be ${i + 1}, got ${t.tier}`);
 });
 
-export const MAX_TIER = TIERS.length; // 9 (태양, terminal)
+export const MAX_TIER = TIERS.length;
+
+// Sun tier — target of the "태양 만들기" daily mission (docs/30-systems/daily-missions).
+export const SUN_TIER = TIERS.find((t) => t.en === 'Sun')?.tier ?? MAX_TIER;
 
 export function tierData(tier: number): PlanetTier {
   return TIERS[tier - 1];
@@ -58,5 +64,4 @@ export function randomQueueTier(maxTier: number): number {
   return 1 + Math.floor(Math.random() * m);
 }
 
-// Initial rack composition (§5.1 / 40-balancing §4): 수성4·화성3·금성2·지구1 = 10.
 export const INITIAL_RACK: { tier: number; count: number }[] = balance.rack;

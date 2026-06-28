@@ -182,3 +182,12 @@ export const JUICE = balance.juice; // mergePop / burst / scorePopup / scoreRoll
 export const QUEUE_SIZE = balance.queue.size;
 export const PROGRESSION = balance.progression; // { unlockStart, queueBelow, queueCap }
 export const STEP_MS = 1000 / balance.engine.fixedFps;
+
+// ── Meta layer (Title lobby): coin economy + daily missions + attendance + lucky wheel ───────
+// Rules: docs/30-systems/{meta-economy,daily-missions,attendance,lucky-wheel,shop}. Numbers SSoT
+// = balance.json (mirrored in docs/40-balancing/meta-economy).
+export const ECONOMY = balance.economy; // { startCoins }
+export const MISSIONS = balance.dailyMissions; // { perMission, milestones, list[] }
+export const ATTENDANCE = balance.attendance; // { rewards[7] }
+export const WHEEL = balance.wheel; // { segments[8], cost, decelMs, spinSpeed }
+export const POPUP = balance.juice.popup; // { enterMs, dimAlpha, startScale } — shared open transition

@@ -5,11 +5,20 @@ import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
 import { COLORS, DESIGN } from './data/config';
 import { attachButtonFeedback } from './ui/button';
+import { coinSprite } from './ui/coin';
+import type { PopupKind } from './MetaUI';
 
 // Title이 GameScene으로부터 받는 현재 세션 진행 상태(현재 점수 + 최대 머지 등급).
 export interface TitleProgress {
   current: number; // 진행 중(이어하기) 점수
   maxTier: number; // 현재 세션 최대 머지 행성 등급
+}
+
+// 메타 레이어 훅(코인 지갑 + 팝업 열기) — GameScene이 MetaStore/MetaUI를 주입한다 (docs/30-systems/meta-economy).
+export interface TitleMeta {
+  coins: () => number;
+  subscribe: (fn: () => void) => () => void;
+  open: (kind: PopupKind) => void;
 }
 
 interface Orbit {
@@ -49,7 +58,8 @@ export class TitleScreen {
 
   constructor(
     private onPlay: () => void,
-    private getProgress: () => TitleProgress = () => ({ current: 0, maxTier: 1 })
+    private getProgress: () => TitleProgress = () => ({ current: 0, maxTier: 1 }),
+    private meta?: TitleMeta
   ) {
     this.container.eventMode = 'static';
     this.container.addChild(this.orbitLayer, this.uiLayer); // galaxy는 GameScene이 cover 배경 레이어에 둔다
@@ -111,11 +121,11 @@ export class TitleScreen {
     this.playButton(cx, 426);
     this.currentRow(cx, 512);
 
-    // 좌·우 아이콘 카드 버튼(§2-3)
-    this.sideButton(58, 374, ASSETS.ui.dailyMission, '일일 미션');
-    this.sideButton(58, 480, ASSETS.ui.shop, '상점');
-    this.sideButton(DESIGN.w - 58, 374, ASSETS.ui.checkIn, '출석 체크');
-    this.sideButton(DESIGN.w - 58, 480, ASSETS.ui.luckyWheel, '행운의 돌림판');
+    // 좌·우 아이콘 카드 버튼(§2-3) — 각 팝업을 연다 (docs/30-systems/*, MetaUI)
+    this.sideButton(58, 374, ASSETS.ui.dailyMission, '일일 미션', () => this.meta?.open('dailyMission'));
+    this.sideButton(58, 480, ASSETS.ui.shop, '상점', () => this.meta?.open('shop'));
+    this.sideButton(DESIGN.w - 58, 374, ASSETS.ui.checkIn, '출석 체크', () => this.meta?.open('attendance'));
+    this.sideButton(DESIGN.w - 58, 480, ASSETS.ui.luckyWheel, '행운의 돌림판', () => this.meta?.open('wheel'));
 
     this.themeToggle(cx, 632);
   }
@@ -190,30 +200,15 @@ export class TitleScreen {
   }
 
   private playButton(cx: number, cy: number) {
-    const w = 224;
-    const h = 100;
+    const { w, h } = ASSET_SIZES.playButton;
     const c = this.buttonContainer(cx, cy, w, h, this.onPlay);
-    const shadow = new Graphics();
-    shadow.beginFill(0x07162e, 0.48);
-    shadow.drawRoundedRect(-w / 2 + 4, -h / 2 + 12, w - 8, h - 2, 20);
-    shadow.endFill();
-    c.addChild(shadow);
-    const bg = new Graphics();
-    bg.beginFill(0x1d5c9d);
-    bg.drawRoundedRect(-w / 2, -h / 2 + 9, w, h - 4, 18);
-    bg.endFill();
-    bg.beginFill(0x2f86cf);
-    bg.drawRoundedRect(-w / 2, -h / 2, w, h - 12, 18);
-    bg.endFill();
-    bg.beginFill(0x62c4f1, 0.95); // 상단 광택
-    bg.drawRoundedRect(-w / 2 + 7, -h / 2 + 6, w - 14, h * 0.38, 14);
-    bg.endFill();
-    bg.beginFill(0xf4c44e, 0.5);
-    bg.drawRoundedRect(-w / 2 + 18, h / 2 - 22, w - 36, 10, 5);
-    bg.endFill();
-    bg.lineStyle(2, 0xffffff, 0.35);
-    bg.drawRoundedRect(-w / 2 + 4, -h / 2 + 4, w - 8, h - 18, 15);
-    c.addChild(bg);
+    const normal = Sprite.from(ASSETS.ui.playButton);
+    const pressed = Sprite.from(ASSETS.ui.playButtonPressed);
+    for (const sprite of [normal, pressed]) {
+      sprite.anchor.set(0.5);
+      c.addChild(sprite);
+    }
+    pressed.visible = false;
     const tri = new Graphics();
     tri.beginFill(0xffffff);
     tri.moveTo(-13, -17);
@@ -227,23 +222,32 @@ export class TitleScreen {
     play.anchor.set(0.5);
     play.y = 28;
     c.addChild(play);
+    const setPressed = (isPressed: boolean) => {
+      normal.visible = !isPressed;
+      pressed.visible = isPressed;
+      tri.y = isPressed ? -9 : -14;
+      play.y = isPressed ? 31 : 28;
+    };
+    c.on('pointerdown', () => setPressed(true));
+    c.on('pointerup', () => setPressed(false));
+    c.on('pointerupoutside', () => setPressed(false));
     this.uiLayer.addChild(c);
   }
 
   // 아이콘 타일 + 라벨 카드(레퍼런스 이미지) — docs/50-art-ux/title-screen §2-3
-  private sideButton(cx: number, cy: number, iconAsset: string, label: string) {
-    const c = this.buttonContainer(cx, cy, 84, 100, () => {});
+  private sideButton(cx: number, cy: number, iconAsset: string, label: string, onPress: () => void = () => {}) {
+    const c = this.buttonContainer(cx, cy, 84, 100, onPress);
     const tile = new Graphics();
-    tile.beginFill(0x24407e);
-    tile.drawRoundedRect(-34, -44, 68, 68, 16);
+    tile.beginFill(0x000000, 0.46);
+    tile.drawRoundedRect(-40, -48, 80, 94, 16);
     tile.endFill();
-    tile.lineStyle(2, 0x8aa0df, 0.5);
-    tile.drawRoundedRect(-34, -44, 68, 68, 16);
+    tile.lineStyle(2, 0xffffff, 0.18);
+    tile.drawRoundedRect(-40, -48, 80, 94, 16);
     c.addChild(tile);
     const ic = Sprite.from(iconAsset);
     ic.anchor.set(0.5);
-    ic.scale.set(54 / ASSET_SIZES.uiIcon.w);
-    ic.y = -10;
+    ic.scale.set(50 / ASSET_SIZES.uiIcon.w);
+    ic.y = -14;
     c.addChild(ic);
     const lbl = new Text(label, {
       fill: 0xe7edff,
@@ -256,7 +260,7 @@ export class TitleScreen {
       lineHeight: 14,
     });
     lbl.anchor.set(0.5);
-    lbl.y = 40;
+    lbl.y = 36;
     c.addChild(lbl);
     this.uiLayer.addChild(c);
   }
@@ -264,10 +268,10 @@ export class TitleScreen {
   private iconButton(x: number, y: number, iconAsset: string, onPress: () => void) {
     const c = this.buttonContainer(x + 18, y + 18, 36, 36, onPress);
     const bg = new Graphics();
-    bg.beginFill(COLORS.btnBlue);
+    bg.beginFill(0x000000, 0.46);
     bg.drawRoundedRect(-18, -18, 36, 36, 9);
     bg.endFill();
-    bg.lineStyle(2, 0x8aa0df, 0.45);
+    bg.lineStyle(2, 0xffffff, 0.18);
     bg.drawRoundedRect(-18, -18, 36, 36, 9);
     c.addChild(bg);
     const icon = Sprite.from(iconAsset);
@@ -283,17 +287,19 @@ export class TitleScreen {
     g.drawRoundedRect(x, y, 98, 32, 16);
     g.endFill();
     this.uiLayer.addChild(g);
-    const coin = Sprite.from(ASSETS.ui.gold);
-    coin.anchor.set(0.5);
+    const coin = coinSprite(24); // 공유 코인 선언 참조 (docs/50-art-ux/popup-system 아이콘 규칙)
     coin.x = x + 17;
     coin.y = y + 16;
-    coin.scale.set(24 / ASSET_SIZES.uiIcon.w);
     this.uiLayer.addChild(coin);
-    const t = makeText('50', 16, 0xffffff, '800');
+    // 영속 코인 잔액(시작 0) — MetaStore 구독으로 미션/출석/돌림판 변동을 실시간 반영 (docs/30-systems/meta-economy).
+    const t = makeText(String(this.meta?.coins() ?? 0), 16, 0xffffff, '800');
     t.anchor.set(0.5);
     t.x = x + 57;
     t.y = y + 16;
     this.uiLayer.addChild(t);
+    this.meta?.subscribe(() => {
+      t.text = String(this.meta?.coins() ?? 0);
+    });
   }
 
   private themeToggle(cx: number, cy: number) {

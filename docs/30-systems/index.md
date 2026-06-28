@@ -35,6 +35,18 @@ sources:
 - [[30-systems/collision-shape]] — 행성 충돌 형태: 반지름 **원형 디스크**(이미지가 더 커도 충돌은 원).
 - [[30-systems/tier-unlock]] — 단계 **해금**: 새 단계 첫 합성 시 딤드 모달(회전 행성+OK), OK해야 다음 단계 해금.
 
+### 게임 모드 ([[20-core-loop/game-modes]])
+- [[30-systems/launch-count]] — **남은 카운트**(발사 예산): 모드별 시작값·소비·획득·종료 판정.
+- [[30-systems/planet-charge]] — **행성 충전**(Infinite): 코인으로 카운트 구매(10당 100) 버튼+팝업.
+- [[30-systems/stage-mode]] — **Stage 정의 데이터**(랙·큐·목표·카운트) + 클리어(+300)/실패.
+
+### 메타 (Title 로비 기능)
+- [[30-systems/meta-economy]] — **코인 지갑 + KST 일일 리셋·영속**: 아래 메타 기능들이 공유하는 화폐·저장 토대.
+- [[30-systems/daily-missions]] — **일일 미션**: 8개 미션(7 달성가능+광고 더미) + 누적 보상 바(2/5/8 받기).
+- [[30-systems/attendance]] — **출석 체크**: 7일 주기, KST 일자 1회 청구, 다음 보상 카운트다운.
+- [[30-systems/lucky-wheel]] — **행운의 돌림판**: 8칸(25~200), 120 코인, 정지 후 3초 감속 정착.
+- [[30-systems/shop]] — **상점**: 잠금 상태 표시(구매 없음).
+
 ## 관련
 - [[20-core-loop/index]] — 이 시스템들이 엮이는 코어 루프.
 - [[40-balancing/index]] — 위 규칙들이 참조하는 모든 구체 수치.

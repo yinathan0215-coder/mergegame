@@ -7,6 +7,7 @@ declare global {
   interface Window {
     __game: {
       scene: () => 'Title' | 'PoolInGame';
+      transitioning: () => boolean;
       startGame: () => void;
       showTitle: () => void;
       unlockedTier: () => number;
@@ -27,6 +28,24 @@ declare global {
       comboValue: () => number;
       comboBonusAwarded: () => number;
       unlockAll: () => void;
+      // meta layer (docs/30-systems/meta-economy)
+      meta: () => { coins: number; completed: number; attendanceDay: number };
+      metaMissions: () => { id: string; name: string; type: string; target: number; progress: number; done: boolean }[];
+      metaReset: () => void;
+      metaAddCoins: (n: number) => void;
+      openPopup: (kind: 'dailyMission' | 'attendance' | 'wheel' | 'shop') => void;
+      openPopupKind: () => 'dailyMission' | 'attendance' | 'wheel' | 'shop' | null;
+      hudMenuOpen: () => boolean;
+      hudMenuBurger: () => void;
+      hudMenuItemCount: () => number;
+      hudMenuItem: (i: number) => void;
+      hudMenuOutside: () => void;
+      claimAttendance: () => number;
+      claimMission: (id: string) => boolean;
+      claimMilestone: (n: number) => boolean;
+      wheelStart: () => boolean;
+      wheelStop: (i: number) => void;
+      wheelWin: () => number;
     };
   }
 }
@@ -40,6 +59,8 @@ async function ready(page: Page) {
   await page.waitForFunction(() => window.__game.scene() === 'PoolInGame' && window.__game.planetCount() > 0, null, {
     timeout: 15000,
   });
+  // wait out the scene-fade overlay (still captures pointer input) so real-pointer clicks land
+  await page.waitForFunction(() => !window.__game.transitioning(), null, { timeout: 5000 });
 }
 
 test('초기 상태: 중앙 랙 10 + 발사대(현재 행성), 군더더기 UI 없음', async ({ page }) => {
@@ -212,6 +233,108 @@ test('실드래그 발사(press-drag-release) 동작 + 스크린샷', async ({ p
   await page.waitForTimeout(600);
   expect(await page.evaluate(() => window.__game.stats().shots)).toBeGreaterThan(shots0);
   await page.screenshot({ path: testInfo.outputPath(`play-${testInfo.project.name}.png`) });
+});
+
+test('메타: 코인 0 시작, 미션 달성 후 보상 버튼으로 50 수령', async ({ page }) => {
+  await ready(page);
+  await page.evaluate(() => {
+    window.__game.metaReset();
+    window.__game.unlockAll(); // 해금 모달 포즈 방지
+    window.__game.clearBoard();
+  });
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(0);
+  // 연속 머지로 콤보 피크 ≥5 달성 → 콤보5 미션 완료(달성). 달성만으로는 지급되지 않음(수령식).
+  for (let i = 0; i < 6; i++) {
+    await page.evaluate(() => window.__game.spawnPair(5));
+    await page.waitForTimeout(250);
+  }
+  await page.waitForFunction(() => window.__game.meta().completed >= 1, null, { timeout: 8000 });
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(0); // 아직 미수령
+  // 보상 버튼 수령 → +50, 재수령 불가
+  expect(await page.evaluate(() => window.__game.claimMission('combo5'))).toBe(true);
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(50);
+  expect(await page.evaluate(() => window.__game.claimMission('combo5'))).toBe(false);
+});
+
+test('메타 출석: 받기 시 1일차 100 지급·일차 진행, 하루 1회만', async ({ page }) => {
+  await ready(page);
+  await page.evaluate(() => window.__game.metaReset());
+  expect(await page.evaluate(() => window.__game.meta().attendanceDay)).toBe(1);
+  expect(await page.evaluate(() => window.__game.claimAttendance())).toBe(100); // 1일차 = 100
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(100);
+  expect(await page.evaluate(() => window.__game.meta().attendanceDay)).toBe(2); // 일차 진행
+  expect(await page.evaluate(() => window.__game.claimAttendance())).toBe(0); // 같은 KST 날 재청구 불가
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(100);
+});
+
+test('메타 돌림판: 120 코인 소모 후 결정된 칸(균등 랜덤) 보상 지급', async ({ page }) => {
+  await ready(page);
+  await page.evaluate(() => {
+    window.__game.metaReset();
+    window.__game.metaAddCoins(120);
+    window.__game.openPopup('wheel'); // 보이는 동안만 회전 애니메이션이 돈다
+  });
+  expect(await page.evaluate(() => window.__game.wheelStart())).toBe(true);
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(0); // 120 소모
+  await page.evaluate(() => window.__game.wheelStop(0)); // 0번 칸 = 25 (결정론적)
+  await page.waitForFunction(() => window.__game.wheelWin() > 0, null, { timeout: 6000 });
+  expect(await page.evaluate(() => window.__game.wheelWin())).toBe(25);
+  expect(await page.evaluate(() => window.__game.meta().coins)).toBe(25); // 보상 25 지급
+});
+
+test('인게임 ≡ 메뉴: 햄버거 토글·바깥 탭 닫힘 + 4아이콘이 해당 팝업을 연다(설정=동작 공유)', async ({ page }) => {
+  await ready(page);
+  // 닫힘이 기본. 햄버거(≡)를 누르면 드롭다운이 열리고 아이콘이 4개다.
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
+  await page.evaluate(() => window.__game.hudMenuBurger());
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(true);
+  expect(await page.evaluate(() => window.__game.hudMenuItemCount())).toBe(4);
+  // 햄버거를 다시 누르면 닫힌다.
+  await page.evaluate(() => window.__game.hudMenuBurger());
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
+  // 바깥(다른 화면)을 누르면 닫힌다.
+  await page.evaluate(() => window.__game.hudMenuBurger());
+  await page.evaluate(() => window.__game.hudMenuOutside());
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
+  // 설정(항목 3): Title 설정과 동일 — 전용 팝업이 없으므로 아무 팝업도 열리지 않고 리스트만 닫힌다.
+  await page.evaluate(() => window.__game.hudMenuBurger());
+  await page.evaluate(() => window.__game.hudMenuItem(3));
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
+  expect(await page.evaluate(() => window.__game.openPopupKind())).toBe(null);
+  // 항목 0·1·2 → 일일미션·출석·돌림판 팝업을 열고 리스트는 닫힌다(한 번에 하나).
+  for (const [i, kind] of [[0, 'dailyMission'], [1, 'attendance'], [2, 'wheel']] as const) {
+    await page.evaluate(() => window.__game.hudMenuBurger());
+    await page.evaluate((idx) => window.__game.hudMenuItem(idx), i);
+    expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
+    expect(await page.evaluate(() => window.__game.openPopupKind())).toBe(kind);
+  }
+});
+
+test('인게임 ≡ 메뉴 실포인터: 햄버거 클릭 열기·바깥 클릭 닫기·아이콘 클릭으로 팝업', async ({ page }) => {
+  await ready(page);
+  // 캔버스는 뷰포트 가득, 전경(9:16)은 contain·중앙. 디자인 좌표 → 화면 좌표 변환.
+  const box = (await page.locator('canvas').boundingBox())!;
+  const fg = await page.evaluate(() => window.__game.fgRect());
+  const toScreen = (dx: number, dy: number) => ({
+    x: box.x + (box.width - fg.w) / 2 + (dx / 450) * fg.w,
+    y: box.y + (box.height - fg.h) / 2 + (dy / 800) * fg.h,
+  });
+  const burger = toScreen(450 - 28, 27); // ≡ 버튼 중심
+  const item0 = toScreen(450 - 28, 86 + 20); // 드롭다운 첫 아이콘(일일 미션) 중심
+  const outside = toScreen(225, 430); // 보드 중앙(메뉴 바깥)
+
+  // 햄버거 실클릭 → 드롭다운 열림
+  await page.mouse.click(burger.x, burger.y);
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(true);
+  await page.screenshot({ path: 'C:/Users/USER/AppData/Local/Temp/claude/D--Project-mergegame/eecd4a92-a482-4aab-a182-173df7c72b0b/scratchpad/hud-menu-open.png' });
+  // 바깥(보드) 실클릭 → 닫힘(투명 스크림이 탭을 가로채 닫는다)
+  await page.mouse.click(outside.x, outside.y);
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
+  // 햄버거 → 첫 아이콘 실클릭 → 일일 미션 팝업이 열리고 리스트는 닫힌다
+  await page.mouse.click(burger.x, burger.y);
+  await page.mouse.click(item0.x, item0.y);
+  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
+  expect(await page.evaluate(() => window.__game.openPopupKind())).toBe('dailyMission');
 });
 
 test('절대 영역: 최대 파워 발사·강한 충돌에도 행성이 플레이 영역을 벗어나지 않는다', async ({ page }) => {
