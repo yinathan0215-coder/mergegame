@@ -12,6 +12,11 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] auto | 검증 결과 갱신 — Playwright 22/22(해금 게이트·콤보 카운터 포함)
+why: tier-unlock 해금 게이트 e2e(잠긴 등급 머지 → 일시정지 → OK 해금) + 콤보 카운터 테스트가 더해져
+실플레이 스위트가 16→22 전부 통과. [[70-verification/kpi]]·[[70-verification/index]]의 통과 수와 시나리오
+목록을 현재 검증 상태로 정합화. See [[30-systems/tier-unlock]].
+
 ## [2026-06-28] manual | 콤보 카운터(머지 체인) 추가 — 절대 4s 타이머·2~4s 페이드, 행성 뒤 중앙
 why: 사용자 지시 — 연속 머지를 세는 **시각 콤보 카운터**(점수 배율 아님; 배율 콤보는 ADR로 제거됨).
 **유지 타이머 = 절대 4초**(`juice.combo.holdMs`), 머지마다 0으로 **리셋**; 타이머가 살아 있는 동안 머지 시

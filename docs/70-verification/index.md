@@ -23,7 +23,7 @@ sources:
 
 ## 페이지
 
-- [[70-verification/kpi]] — 검증 결과(2026-06-28, Playwright 14/14) + §14 KPI 8개(핵심 재미 가설 검증).
+- [[70-verification/kpi]] — 검증 결과(2026-06-28, Playwright 22/22) + §14 KPI 8개(핵심 재미 가설 검증).
 - [[70-verification/checklist]] — §15 완료 체크리스트 16개(부정 항목 포함) + 평가자 관점 매핑.
 - [[70-verification/audit-methodology-numbers]] — 방법론·수치 정합 감사(2026-06-28): 수치 SSoT 전부 일치, 방법론 부분 준수, 불일치 3건.
 
