@@ -178,13 +178,35 @@ export class MetaStore {
   }
 
   // ── persistence ────────────────────────────────────────────────────────────
+  // Load + NORMALISE. A save written by an older build can be missing fields (e.g. before per-mission
+  // `claimed` replaced `granted`), so every field is filled from defaults here — a stale save must never
+  // crash missionRows()/claim*(). Coins/progress are preserved; only the shape is repaired.
   private load(): MetaState | null {
+    let p: { coins?: unknown; missions?: Record<string, unknown>; attendance?: Record<string, unknown> };
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      return raw ? (JSON.parse(raw) as MetaState) : null;
+      if (!raw) return null;
+      p = JSON.parse(raw);
     } catch {
-      return null; // private/blocked storage → run from defaults
+      return null; // private/blocked/corrupt storage → run from defaults
     }
+    const m = p.missions ?? {};
+    const a = p.attendance ?? {};
+    return {
+      coins: typeof p.coins === 'number' ? p.coins : ECONOMY.startCoins,
+      missions: {
+        comboPeak: typeof m.comboPeak === 'number' ? m.comboPeak : 0,
+        mergeCount: typeof m.mergeCount === 'number' ? m.mergeCount : 0,
+        sunCount: typeof m.sunCount === 'number' ? m.sunCount : 0,
+        claimed: Array.isArray(m.claimed) ? (m.claimed as string[]) : [],
+        claimedMilestones: Array.isArray(m.claimedMilestones) ? (m.claimedMilestones as number[]) : [],
+        resetDate: typeof m.resetDate === 'string' ? m.resetDate : kstDateStr(Date.now()),
+      },
+      attendance: {
+        day: typeof a.day === 'number' ? a.day : 1,
+        lastClaimDate: typeof a.lastClaimDate === 'string' ? a.lastClaimDate : '',
+      },
+    };
   }
   private save() {
     try {
