@@ -262,7 +262,11 @@ export class GameScene {
             p.body.position.y < LINE_Y + 90,
         })),
       lineY: () => LINE_Y,
-      bounds: () => ({ x: PLAY.x, y: PLAY.y, w: PLAY.w, h: PLAY.h, lineY: LINE_Y }),
+      launcher: () => ({ x: LAUNCHER.x, y: LAUNCHER.y, r: LAUNCHER.r }),
+      bounds: () => {
+        const floorY = GAUGE.cy + GAUGE.r;
+        return { x: PLAY.x, y: PLAY.y, w: PLAY.w, h: floorY - PLAY.y, lineY: floorY };
+      },
       fire: (angleRad: number, power: number) => {
         this.cooldownUntil = 0;
         const speed = Math.max(0, Math.min(power, 1)) * LAUNCH.vMax;
