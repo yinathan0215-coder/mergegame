@@ -2,7 +2,7 @@ import { Container, Graphics, Rectangle, Text } from 'pixi.js';
 import { DESIGN, COLORS } from './data/config';
 import { tierData } from './data/planets';
 import { makePlanetSprite } from './PlanetFactory';
-import { attachButtonFeedback } from './ui/button';
+import { attachButtonFeedback, button3D, BUTTON3D_DY } from './ui/button';
 
 // Dimmed "new planet unlocked" modal (docs/30-systems/tier-unlock): a slowly rotating sprite of the
 // just-unlocked planet + a single OK button over a full-screen dim. The game is paused while it is up;
@@ -46,13 +46,10 @@ export class UnlockModal {
     okBtn.x = DESIGN.w / 2;
     okBtn.y = DESIGN.h * 0.62;
     okBtn.hitArea = new Rectangle(-bw / 2, -bh / 2, bw, bh);
-    const g = new Graphics();
-    g.beginFill(COLORS.btnBlue);
-    g.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, 14);
-    g.endFill();
-    okBtn.addChild(g);
+    okBtn.addChild(button3D(bw, bh, COLORS.btnBlue, 14)); // 입체 버튼 (docs/50-art-ux/popup-system 버튼 규칙)
     const label = new Text('OK', { fill: 0xffffff, fontSize: 26, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
     label.anchor.set(0.5);
+    label.y = BUTTON3D_DY;
     okBtn.addChild(label);
     attachButtonFeedback(okBtn, onOk);
     this.content.addChild(okBtn);

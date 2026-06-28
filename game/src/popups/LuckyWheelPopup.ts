@@ -1,7 +1,7 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
 import { DESIGN, WHEEL } from '../data/config';
 import { Popup } from '../ui/Popup';
-import { attachButtonFeedback } from '../ui/button';
+import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
 import type { MetaStore } from '../MetaStore';
 
@@ -18,9 +18,10 @@ const R = 150; // wheel radius (DESIGN space)
 type Phase = 'idle' | 'spinning' | 'decel';
 
 export class LuckyWheelPopup extends Popup {
+  private static readonly BW = 210;
+  private static readonly BH = 60;
   private wheel = new Container();
   private btn = new Container();
-  private btnLabel!: Text;
   private rot = 0; // current wheel rotation (rad)
   private phase: Phase = 'idle';
   private decelT0 = 0;
@@ -90,31 +91,41 @@ export class LuckyWheelPopup extends Popup {
 
   private buildButton(x: number, y: number) {
     this.btn.x = x; this.btn.y = y;
-    const w = 200, h = 56;
-    const g = new Graphics();
-    g.beginFill(0x49a8e6);
-    g.drawRoundedRect(-w / 2, -h / 2, w, h, 14);
-    g.endFill();
-    this.btn.addChild(g);
-    this.btnLabel = new Text('', { fill: 0xffffff, fontSize: 22, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
-    this.btnLabel.anchor.set(0.5);
-    this.btn.addChild(this.btnLabel);
-    this.btn.hitArea = new Rectangle(-w / 2, -h / 2, w, h);
+    this.btn.hitArea = new Rectangle(-LuckyWheelPopup.BW / 2, -LuckyWheelPopup.BH / 2, LuckyWheelPopup.BW, LuckyWheelPopup.BH);
     attachButtonFeedback(this.btn, () => this.onButton());
     this.body.addChild(this.btn);
-    this.updateButton();
+    this.renderButton();
   }
 
-  private updateButton() {
-    if (this.phase === 'spinning') this.btnLabel.text = '정지';
-    else this.btnLabel.text = `회전  (${WHEEL.cost})`;
+  // Rebuild the button face + content for the current phase (docs/30-systems/lucky-wheel 표시):
+  //   spinning → "정지" only;  idle/decel → [coin] over [cost] stacked on the left + "회전" on the right.
+  //   idle with coins < cost → disabled (greyed) so it reads as "need coins", not broken.
+  private renderButton() {
+    this.btn.removeChildren().forEach((c) => c.destroy({ children: true }));
+    const w = LuckyWheelPopup.BW, h = LuckyWheelPopup.BH, dy = BUTTON3D_DY;
+    if (this.phase === 'spinning') {
+      this.btn.addChild(button3D(w, h, 0xe5483a, 16)); // red stop
+      const t = new Text('정지', { fill: 0xffffff, fontSize: 24, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      t.anchor.set(0.5); t.y = dy;
+      this.btn.addChild(t);
+      return;
+    }
+    const broke = this.store.coins < WHEEL.cost;
+    this.btn.addChild(button3D(w, h, 0x49a8e6, 16, broke));
+    const ink = broke ? 0x9aa6c4 : 0xffffff;
+    const coin = coinSprite(22); coin.x = -52; coin.y = dy - 11; coin.alpha = broke ? 0.6 : 1;
+    const cost = new Text(String(WHEEL.cost), { fill: ink, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    cost.anchor.set(0.5); cost.x = -52; cost.y = dy + 12;
+    const spin = new Text('회전', { fill: ink, fontSize: 24, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    spin.anchor.set(0.5); spin.x = 24; spin.y = dy;
+    this.btn.addChild(coin, cost, spin);
   }
 
   refresh() {
     // reset to idle each open
     this.phase = 'idle';
     this.winText.text = '';
-    this.updateButton();
+    this.renderButton();
   }
 
   private onButton() {
@@ -128,7 +139,7 @@ export class LuckyWheelPopup extends Popup {
     if (!this.store.spendCoins(WHEEL.cost)) return false;
     this.winText.text = '';
     this.phase = 'spinning';
-    this.updateButton();
+    this.renderButton();
     return true;
   }
 
@@ -145,7 +156,7 @@ export class LuckyWheelPopup extends Popup {
     this.decelTo = this.rot + delta + 2 * Math.PI * 4; // +4 full turns for a satisfying slow-down
     this.decelT0 = performance.now();
     this.phase = 'decel';
-    this.updateButton();
+    this.renderButton();
   }
 
   get lastWin(): number { return this._lastWin; }
@@ -166,7 +177,7 @@ export class LuckyWheelPopup extends Popup {
         this._lastWin = win;
         this.store.addCoins(win);
         this.winText.text = `+${win}`;
-        this.updateButton();
+        this.renderButton();
       }
     }
   }

@@ -1,7 +1,7 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
 import { DESIGN } from '../data/config';
 import { Popup } from '../ui/Popup';
-import { attachButtonFeedback } from '../ui/button';
+import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
 import { MetaStore, msUntilNextKstMidnight } from '../MetaStore';
 
@@ -92,14 +92,10 @@ export class AttendancePopup extends Popup {
     if (this.store.attendanceCanClaim()) {
       const c = new Container();
       c.x = DESIGN.w / 2; c.y = y + 6;
-      const w = 180, h = 50;
-      const g = new Graphics();
-      g.beginFill(0x49a8e6);
-      g.drawRoundedRect(-w / 2, -h / 2, w, h, 12);
-      g.endFill();
-      c.addChild(g);
+      const w = 180, h = 52;
+      c.addChild(button3D(w, h, 0x49a8e6, 13));
       const t = new Text('받기', { fill: 0xffffff, fontSize: 22, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
-      t.anchor.set(0.5);
+      t.anchor.set(0.5); t.y = BUTTON3D_DY;
       c.addChild(t);
       c.hitArea = new Rectangle(-w / 2, -h / 2, w, h);
       attachButtonFeedback(c, () => this.store.claimAttendance());

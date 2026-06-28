@@ -1,4 +1,4 @@
-import { Container, type FederatedPointerEvent } from 'pixi.js';
+import { Container, Graphics, type FederatedPointerEvent } from 'pixi.js';
 import { JUICE } from '../data/config';
 import { sound } from '../SoundManager';
 
@@ -47,4 +47,41 @@ export function attachButtonFeedback(target: Container, onTap: () => void): Cont
     settle(); // released off the button → spring back, no action
   });
   return target;
+}
+
+// Multiply a hex colour's channels by `f` (>1 lighten, <1 darken), clamped to [0,255].
+function shade(color: number, f: number): number {
+  const r = Math.min(255, Math.round(((color >> 16) & 0xff) * f));
+  const g = Math.min(255, Math.round(((color >> 8) & 0xff) * f));
+  const b = Math.min(255, Math.round((color & 0xff) * f));
+  return (r << 16) | (g << 8) | b;
+}
+
+// Shared 3D button face (docs/50-art-ux/popup-system 버튼 입체감 규칙): drop shadow + dark bottom edge +
+// body + top gloss + outline, centred on the origin. `disabled` desaturates to a flat grey-blue so an
+// unusable button (e.g. insufficient coins) reads as inactive. Caller adds content (text/icons) on top
+// around y = BUTTON3D_DY (the body sits a few px above centre so the bottom edge shows).
+export const BUTTON3D_DY = -3;
+export function button3D(w: number, h: number, base: number, radius = 14, disabled = false): Graphics {
+  const g = new Graphics();
+  const body = disabled ? 0x39456b : base;
+  const dark = shade(body, 0.72);
+  const light = shade(body, 1.28);
+  const x = -w / 2;
+  const top = -h / 2;
+  g.beginFill(0x06112a, disabled ? 0.28 : 0.45); // drop shadow
+  g.drawRoundedRect(x, top + 7, w, h - 4, radius);
+  g.endFill();
+  g.beginFill(dark); // dark bottom edge (the 3D side)
+  g.drawRoundedRect(x, top + 5, w, h - 5, radius);
+  g.endFill();
+  g.beginFill(body); // body face (sits a few px above → bottom edge shows)
+  g.drawRoundedRect(x, top, w, h - 6, radius);
+  g.endFill();
+  g.beginFill(light, 0.85); // top gloss
+  g.drawRoundedRect(x + 5, top + 4, w - 10, (h - 6) * 0.42, Math.max(4, radius - 5));
+  g.endFill();
+  g.lineStyle(2, 0xffffff, disabled ? 0.15 : 0.32); // outline
+  g.drawRoundedRect(x, top, w, h - 6, radius);
+  return g;
 }

@@ -1,7 +1,7 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
 import { DESIGN, MISSIONS } from '../data/config';
 import { Popup } from '../ui/Popup';
-import { attachButtonFeedback } from '../ui/button';
+import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
 import type { MetaStore } from '../MetaStore';
 
@@ -83,14 +83,10 @@ export class DailyMissionPopup extends Popup {
       return c;
     }
     const reachable = done >= threshold;
-    const w = 50, h = 26;
-    const g = new Graphics();
-    g.beginFill(reachable ? 0x49a8e6 : 0x33405e);
-    g.drawRoundedRect(-w / 2, -h / 2, w, h, 7);
-    g.endFill();
-    c.addChild(g);
+    const w = 52, h = 28;
+    c.addChild(button3D(w, h, 0x49a8e6, 8, !reachable));
     const t = new Text('받기', { fill: reachable ? 0xffffff : 0x6c7aa0, fontSize: 14, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
-    t.anchor.set(0.5);
+    t.anchor.set(0.5); t.y = BUTTON3D_DY;
     c.addChild(t);
     if (reachable) {
       c.hitArea = new Rectangle(-w / 2, -h / 2, w, h);
@@ -160,27 +156,22 @@ export class DailyMissionPopup extends Popup {
       return c;
     }
     const claimable = m.done; // done & unclaimed
-    const w = 78, h = 48;
-    const g = new Graphics();
-    g.beginFill(claimable ? 0x2faa48 : 0x33405e); // 초록(수령 가능) / 회색(미달성)
-    g.drawRoundedRect(-w / 2, -h / 2, w, h, 10);
-    g.endFill();
-    g.lineStyle(2, claimable ? 0x9fe6b0 : 0x8aa0df, claimable ? 0.85 : 0.3);
-    g.drawRoundedRect(-w / 2, -h / 2, w, h, 10);
-    c.addChild(g);
+    const w = 78, h = 50;
+    c.addChild(button3D(w, h, 0x2faa48, 10, !claimable)); // 초록(수령 가능) / 회색 비활성(미달성)
+    const dy = BUTTON3D_DY;
     // 위 줄: [코인 아이콘][보상 숫자]
     const coin = coinSprite(18);
-    const num = new Text(String(MISSIONS.perMission), { fill: 0xffffff, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const num = new Text(String(MISSIONS.perMission), { fill: claimable ? 0xffffff : 0xaab4cc, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
     num.anchor.set(0, 0.5);
     const gap = 2;
     const groupW = 18 + gap + num.width;
-    coin.x = -groupW / 2 + 9; coin.y = -9;
-    num.x = coin.x + 9 + gap; num.y = -9;
+    coin.x = -groupW / 2 + 9; coin.y = dy - 10; coin.alpha = claimable ? 1 : 0.6;
+    num.x = coin.x + 9 + gap; num.y = dy - 10;
     c.addChild(coin, num);
     // 아래 줄: 보상
     const label = new Text('보상', { fill: claimable ? 0xffffff : 0xaab4cc, fontSize: 14, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
     label.anchor.set(0.5);
-    label.y = 12;
+    label.y = dy + 13;
     c.addChild(label);
     if (claimable) {
       c.hitArea = new Rectangle(-w / 2, -h / 2, w, h);

@@ -58,6 +58,12 @@ sources:
 코인 스프라이트는 헬퍼 `coinSprite()`(`raw: game/src/ui/coin.ts`). 같은 아이콘을 쓰는 곳마다 그래픽을
 **개별적으로 재정의하지 않고** 그 선언을 호출해 **항상 동일한 리소스**를 참조한다(메타 UI 전역 규칙).
 
+### 버튼 입체감 규칙
+액션 버튼(인게임 해금 OK, 돌림판 회전/정지, 메타 받기/보상 등)은 **미세한 입체감**을 갖는다 —
+**드롭 섀도 + 하단 어두운 엣지 + 상단 광택 + 외곽선**. 단일 선언 헬퍼 `button3D()`(`raw: game/src/ui/button.ts`)로
+그려 모든 버튼이 같은 입체 톤을 쓴다(개별 평면 사각 금지). 비활성(예: 코인 부족) 버튼은 채도를 낮춘 회색조로
+표시해 "사용 가능/불가"를 즉시 구분시킨다.
+
 ## Relates to
 - [[../30-systems/daily-missions]] · [[../30-systems/attendance]] · [[../30-systems/lucky-wheel]] · [[../30-systems/shop]] — 이 틀을 쓰는 창들
 - [[../30-systems/tier-unlock]] · `raw: game/src/UnlockModal.ts` — 동일 진입 연출의 출처
