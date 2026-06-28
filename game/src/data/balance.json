@@ -68,7 +68,7 @@
     "buttonPress": { "downScale": 0.92, "upScale": 1.04, "ms": 140 },
     "combo": { "labelSize": 24, "numberSize": 72, "color": "#ffffff", "alpha": 0.22, "cyFrac": 0.46, "gap": 6, "holdMs": 5000, "fadeStartMs": 3000, "step": 5, "bonusPer": 400, "bonusFontSize": 40, "bonusLabelSize": 22, "bonusMs": 1800, "bonusRise": 56, "bonusColor": "#ffd23f" },
     "popup": { "enterMs": 220, "dimAlpha": 0.72, "startScale": 0.85 },
-    "result": { "countUpMs": 1500 }
+    "result": { "countUpMs": 1500, "endDelayMs": 2000 }
   },
 
   "queue": { "size": 2, "candidates": [1, 2, 3, 4, 5] },
@@ -88,6 +88,7 @@
     "infinite": {
       "startCount": 30,
       "blackHoleBonusCount": 20,
+      "unlockBonusCount": 5,
       "charge": { "coinPer10": 100, "stepPlanets": 10, "defaultPlanets": 10 }
     },
     "stage": {

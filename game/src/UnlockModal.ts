@@ -4,33 +4,33 @@ import { tierData } from './data/planets';
 import { makePlanetSprite } from './PlanetFactory';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from './ui/button';
 
-// Dimmed "new planet unlocked" modal (docs/30-systems/tier-unlock): a slowly rotating sprite of the
-// just-unlocked planet + a single OK button over a full-screen dim. The game is paused while it is up;
-// OK closes it and unlocks the next tier. Render/UI only.
+// Dimmed "new planet unlocked" modal (docs/30-systems/tier-unlock): top title "PLANET UNLOCK", a slowly
+// rotating sprite of the just-unlocked planet, the planet's English name BELOW it, and (Infinite only) a
+// "Count +N" line below the name, over a single OK button. The game is paused while it is up; OK closes
+// it and unlocks the next tier. Render/UI only.
 //
-// The modal lives in GameScene's CONTAIN layer (fgRoot), exactly like the meta popups (docs/50-art-ux/
-// popup-system). Content therefore renders at the contain scale = normal size on every aspect ratio. The
-// dim is drawn far past the DESIGN rect so that, under the contain transform, it still bleeds over the
-// letterbox and covers the whole viewport. (A cover-scaled layer would instead oversize the CONTENT on
-// wide/web 16:9 viewports, blowing the modal up — which is why it is NOT used.)
-const ENTER_MS = 220; // entrance transition (dim fills + content pops/fades in)
+// The modal lives in GameScene's CONTAIN layer (fgRoot), like the meta popups (docs/50-art-ux/popup-system):
+// content renders at normal size on every aspect ratio; the dim is drawn far past DESIGN so it covers the
+// whole viewport (letterbox included) under the contain transform.
+const ENTER_MS = 220;
 const DIM_ALPHA = 0.72;
-const DIM_MARGIN = 3000; // dim oversize past DESIGN so contain-fit still covers the full viewport
+const DIM_MARGIN = 3000;
+const PLANET_Y = DESIGN.h * 0.42;
+const PLANET_SCALE = 1.5;
 
 export class UnlockModal {
   readonly container = new Container();
   private dim = new Graphics();
-  private content = new Container(); // rotating planet + name + OK button — scales/fades in together
+  private content = new Container(); // title + rotating planet + name + bonus + OK — scales/fades in together
   private planet?: Container;
-  private nameText: Text; // English name of the unlocked planet (upright, above the rotating planet)
+  private nameText: Text; // English name of the unlocked planet (below the planet)
+  private bonusText: Text; // "Count +N" — Infinite only (below the name)
   private t0 = 0;
   private entering = false;
 
   constructor(onOk: () => void) {
     this.container.visible = false;
 
-    // dim (Pixi) — alpha animated via this.dim.alpha; swallows board pointer input while up. Oversized
-    // past DESIGN so that, under the contain transform, it bleeds over the letterbox to cover the viewport.
     const M = DIM_MARGIN;
     this.dim.beginFill(0x000000, 1);
     this.dim.drawRect(-M, -M, DESIGN.w + 2 * M, DESIGN.h + 2 * M);
@@ -39,19 +39,28 @@ export class UnlockModal {
     this.dim.on('pointerdown', (e) => e.stopPropagation());
     this.container.addChild(this.dim);
 
-    // content scales around the screen centre (pivot = centre)
     this.content.pivot.set(DESIGN.w / 2, DESIGN.h / 2);
     this.content.position.set(DESIGN.w / 2, DESIGN.h / 2);
     this.container.addChild(this.content);
 
-    // OK button — a centred container so the press feedback scales it in place
+    // top title — English "PLANET UNLOCK" (docs/30-systems/tier-unlock 모달 UX)
+    const title = new Text('PLANET UNLOCK', {
+      fill: 0xffffff, fontSize: 28, fontFamily: 'Arial, sans-serif', fontWeight: '800',
+      stroke: 0x0a0a14, strokeThickness: 5,
+    });
+    title.anchor.set(0.5);
+    title.x = DESIGN.w / 2;
+    title.y = DESIGN.h * 0.24;
+    this.content.addChild(title);
+
+    // OK button
     const bw = 150;
     const bh = 52;
     const okBtn = new Container();
     okBtn.x = DESIGN.w / 2;
-    okBtn.y = DESIGN.h * 0.62;
+    okBtn.y = DESIGN.h * 0.7;
     okBtn.hitArea = new Rectangle(-bw / 2, -bh / 2, bw, bh);
-    okBtn.addChild(button3D(bw, bh, COLORS.btnBlue, 14)); // 입체 버튼 (docs/50-art-ux/popup-system 버튼 규칙)
+    okBtn.addChild(button3D(bw, bh, COLORS.btnBlue, 14));
     const label = new Text('OK', { fill: 0xffffff, fontSize: 26, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
     label.anchor.set(0.5);
     label.y = BUTTON3D_DY;
@@ -59,29 +68,39 @@ export class UnlockModal {
     attachButtonFeedback(okBtn, onOk);
     this.content.addChild(okBtn);
 
-    // unlocked planet's English name — upright, set per-tier in show()
+    // planet English name — below the planet (upright), set per-tier in show()
     this.nameText = new Text('', {
-      fill: 0xffffff,
-      fontSize: 28,
-      fontFamily: 'Arial, sans-serif',
-      fontWeight: '800',
-      stroke: 0x0a0a14,
-      strokeThickness: 4,
+      fill: 0xffffff, fontSize: 28, fontFamily: 'Arial, sans-serif', fontWeight: '800',
+      stroke: 0x0a0a14, strokeThickness: 4,
     });
     this.nameText.anchor.set(0.5);
     this.content.addChild(this.nameText);
+
+    // "Count +N" — emphasised, Infinite only (below the name, above OK)
+    this.bonusText = new Text('', { fill: 0xffd23f, fontSize: 24, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.bonusText.anchor.set(0.5);
+    this.bonusText.visible = false;
+    this.content.addChild(this.bonusText);
   }
 
-  show(tier: number) {
+  // countBonus > 0 (Infinite) → show "Count +N" and the count was granted by the caller.
+  show(tier: number, countBonus = 0) {
     if (this.planet) this.planet.destroy({ children: true });
     this.planet = makePlanetSprite(tier);
     this.planet.x = DESIGN.w / 2;
-    this.planet.y = DESIGN.h * 0.4;
-    this.planet.scale.set(1.7);
-    this.content.addChildAt(this.planet, 0); // behind the OK button
+    this.planet.y = PLANET_Y;
+    this.planet.scale.set(PLANET_SCALE);
+    this.content.addChildAt(this.planet, 0); // behind the texts/button
+    const nameY = PLANET_Y + tierData(tier).radius * PLANET_SCALE + 24; // below the (1.5×) planet
     this.nameText.text = tierData(tier).en;
     this.nameText.x = DESIGN.w / 2;
-    this.nameText.y = DESIGN.h * 0.4 - tierData(tier).radius * 1.7 - 18; // above the (1.7×) planet
+    this.nameText.y = nameY;
+    this.bonusText.visible = countBonus > 0;
+    if (countBonus > 0) {
+      this.bonusText.text = `Count +${countBonus}`;
+      this.bonusText.x = DESIGN.w / 2;
+      this.bonusText.y = nameY + 32;
+    }
     this.container.visible = true;
     this.t0 = performance.now();
     this.entering = true;
@@ -92,7 +111,6 @@ export class UnlockModal {
     this.entering = false;
   }
 
-  // Drive the entrance transition + spin the unlocked planet (called every tick, even while paused).
   update() {
     if (!this.container.visible) return;
     if (this.entering) {

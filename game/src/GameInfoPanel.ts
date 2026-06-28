@@ -1,21 +1,26 @@
 import { Container, Rectangle, Text } from 'pixi.js';
 import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
+import { LAUNCHER, INNER_INSET } from './data/config';
 import { button3D, attachButtonFeedback, BUTTON3D_DY } from './ui/button';
 import type { GameMode } from './modes/ModeController';
 
-// In-game HUD widgets in a BOTTOM STRIP below the board/launcher (docs/50-art-ux/layout §2-b ·
-// 30-systems/launch-count) — kept under the playground so nothing covers the play area:
-//   • bottom-left  — remaining COUNT + NEXT planet preview, laid out SIDE BY SIDE, vertically
-//                    centred on the right-hand button
-//   • bottom-right — Infinite: "Planet Charge" button (rotating Earth) opening the charge popup
-//                    Stage: the target planet (name + rotating planet image)
+// In-game HUD widgets sitting on a strip whose BOTTOM aligns with the board outline's bottom edge
+// (docs/50-art-ux/layout §2-b · 30-systems/launch-count) — under the playground so nothing covers it:
+//   • bottom-left  — COUNT and NEXT as two SIDE-BY-SIDE centred columns (title over value),
+//                    vertically centred on the right-hand button
+//   • bottom-right — Infinite: "Planet Charge" button (rotating Earth); Stage: target planet
 // Lives on GameScene's uiLayer (visible only in PoolInGame). Planets here rotate every frame.
-const STRIP_Y = 752; // bottom-strip vertical centre (DESIGN h=800, board/launcher end ~688)
+const BOARD_BOTTOM = LAUNCHER.y + LAUNCHER.r + INNER_INSET; // gold shield outline bottom (~696)
+const BTN_H = 72;
+const STRIP_C = BOARD_BOTTOM; // widget VERTICAL CENTRE sits on the board outline end (유아이 중앙 = 보드 끝)
+const COUNT_X = 66;
+const NEXT_X = 152;
+const RIGHT_X = 388;
 
-function cap(s: string, x: number, y: number, anchorX = 0): Text {
+function cap(s: string, x: number, y: number): Text {
   const t = new Text(s, { fill: 0x9fb0d8, fontSize: 12, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
-  t.anchor.set(anchorX, 0.5);
+  t.anchor.set(0.5);
   t.x = x;
   t.y = y;
   return t;
@@ -24,7 +29,7 @@ function cap(s: string, x: number, y: number, anchorX = 0): Text {
 export class GameInfoPanel {
   readonly container = new Container();
   private countText: Text;
-  private nextWrap = new Container(); // NEXT planet mini-sprite
+  private nextWrap = new Container(); // NEXT planet mini-sprite (centred)
   private chargeBtn = new Container(); // Infinite only
   private chargeEarth: Container;
   private targetWrap = new Container(); // Stage only
@@ -33,21 +38,23 @@ export class GameInfoPanel {
   private targetPlanet = new Container();
 
   constructor(layer: Container, onCharge: () => void) {
-    // ── bottom-left: COUNT + NEXT, side by side, centred on STRIP_Y ──
-    this.container.addChild(cap('COUNT', 22, STRIP_Y - 15));
+    // ── bottom-left: COUNT + NEXT — two centred columns (title over value), side by side ──
     this.countText = new Text('0', { fill: 0xffffff, fontSize: 28, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
-    this.countText.anchor.set(0, 0.5);
-    this.countText.x = 22;
-    this.countText.y = STRIP_Y + 8;
-    this.nextWrap.x = 142;
-    this.nextWrap.y = STRIP_Y + 6;
-    this.container.addChild(this.countText, cap('NEXT', 108, STRIP_Y - 15), this.nextWrap);
+    this.countText.anchor.set(0.5);
+    this.countText.x = COUNT_X;
+    this.countText.y = STRIP_C + 11;
+    this.nextWrap.x = NEXT_X;
+    this.nextWrap.y = STRIP_C + 11;
+    this.container.addChild(
+      cap('COUNT', COUNT_X, STRIP_C - 15), this.countText,
+      cap('NEXT', NEXT_X, STRIP_C - 15), this.nextWrap,
+    );
 
     // ── Infinite: Planet Charge button (bottom-right) ──
-    this.chargeBtn.x = 388;
-    this.chargeBtn.y = STRIP_Y;
-    this.chargeBtn.hitArea = new Rectangle(-56, -36, 112, 72);
-    this.chargeBtn.addChild(button3D(112, 72, 0x49a8e6));
+    this.chargeBtn.x = RIGHT_X;
+    this.chargeBtn.y = STRIP_C;
+    this.chargeBtn.hitArea = new Rectangle(-56, -BTN_H / 2, 112, BTN_H);
+    this.chargeBtn.addChild(button3D(112, BTN_H, 0x49a8e6));
     this.chargeEarth = makePlanetSprite(5); // 회전하는 지구 아이콘
     this.chargeEarth.scale.set(40 / (tierData(5).radius * 2));
     this.chargeEarth.x = -34;
@@ -63,14 +70,14 @@ export class GameInfoPanel {
     this.container.addChild(this.chargeBtn);
 
     // ── Stage: target planet (bottom-right, same slot as charge) ──
-    this.targetWrap.x = 388;
-    this.targetWrap.y = STRIP_Y - 2;
-    this.targetCap = cap('TARGET', 388, STRIP_Y - 40, 0.5);
+    this.targetWrap.x = RIGHT_X;
+    this.targetWrap.y = STRIP_C - 4;
+    this.targetCap = cap('TARGET', RIGHT_X, STRIP_C - 34);
     this.container.addChild(this.targetCap);
     this.targetWrap.addChild(this.targetPlanet);
     this.targetName = new Text('', { fill: 0xffe28a, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
     this.targetName.anchor.set(0.5);
-    this.targetName.y = 30;
+    this.targetName.y = 28;
     this.targetWrap.addChild(this.targetName);
     this.container.addChild(this.targetWrap);
 

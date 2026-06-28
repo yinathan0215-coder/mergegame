@@ -12,6 +12,24 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Stage 밸런싱 기조 정본화 — 밸류(2^단계) 기반 스테이지 설계 기준
+why: 사용자 지시(밸런싱 기준을 문서로 먼저). 신규 정본 [[40-balancing/stage-balance]]: 행성 **밸류=2^단계**
+(소행성2…지구32…블랙홀2048, 인게임 점수와 별개·합성은 밸류 보존), **렉/큐/최대/목표 밸류**로 균형 —
+기조 `최대 밸류 > 목표 밸류`(매우 어려움=등호). 큐는 지구(32) 상한(긴 스테이지 큐 최대 960), 랙은 등급
+무제한+모양, 렉:큐≈5:5. 길이=카운트(짧15·중20·김30), **김=스테이지 번호 10의 배수**·짧=3·5·8의 배수.
+난이도=슬랙 `N`(렉밸류+큐밸류(첫 count−N발)>목표밸류), `N=max(0,10−⌊stage/10⌋)`(처음 10→스테이지100에서 0).
+[[30-systems/stage-mode]]의 "레벨 디자인 차후" 공백을 채움. 결정 확정: 사용자 AskUserQuestion — 밸류=2^단계
+(금성=16, '금성=8'은 화성 착오 정정), 긴 스테이지=10단위. 인덱스([[40-balancing/index]])·stage-mode Relates 갱신.
+why: 사용자 지시 4건. (1) 인게임 하단 위젯을 보드아웃라인 끝(발사대 아래)에 맞춰 위로 올리고
+Count/Next를 각각 제목+값 **중앙정렬 세로 컬럼**으로 두 컬럼 **나란히**, 우측 버튼과 수직 중앙 정렬
+([[50-art-ux/layout]] §2-b, `GameInfoPanel`). (2) 종료창 **2초 지연**: Infinite 카운트 소진 2초 뒤 결과,
+Stage 목표 달성/소진 2초 뒤 클리어/실패([[20-core-loop/game-modes]]·[[30-systems/launch-count]]·
+[[50-art-ux/result-window]], `juice.result.endDelayMs=2000`). (3) **Infinite 해금 보너스**: 넵튠(6)+
+해금 팝업마다 **카운트 +5**(`modes.infinite.unlockBonusCount=5`). (4) **해금 팝업 레이아웃**: 상단 영문
+`PLANET UNLOCK`, 행성 이름을 **행성 하단**으로, 이름 밑 **`Count +5`** 강조(Infinite 한정), OK 위
+([[30-systems/tier-unlock]], `UnlockModal`). 구현: `GameInfoPanel`·`UnlockModal`·`GameScene`(scheduleEnd/
+showEnd 지연·해금 시 +5·모달 show(tier,bonus))·`balance.json`. 검증: tsc·vite build·Playwright.
+
 ## [2026-06-28] manual | 게임 모드 main 반영 + HUD 하단 정렬 + Stage Title(점수 UI→Stage 정보)
 why: 사용자 지시 — (1) feat/game-modes를 main에 반영(동시 세션 중단 후 인플라이트 작업 일괄
 커밋 → cherry-pick, TitleScreen 충돌 1건 해결[playLabel 유지 + main의 위치 튜닝 y=14]).

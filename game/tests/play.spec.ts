@@ -459,11 +459,20 @@ test('카운트: 발사마다 1 감소, 0이면 발사 불가', async ({ page })
   expect(await page.evaluate(() => window.__game.fire(-Math.PI / 2, 0.9))).toBe(false);
 });
 
-test('Infinite 종료: 카운트 0 + 모든 행성 정지 → 결과창', async ({ page }) => {
+test('Infinite 종료: 카운트 0 → 2초 뒤 결과창', async ({ page }) => {
   await ready(page);
   await page.evaluate(() => { window.__game.clearBoard(); window.__game.setCount(0); });
   await page.waitForFunction(() => window.__game.resultShown(), null, { timeout: 5000 });
   expect(await page.evaluate(() => window.__game.resultShown())).toBe(true);
+});
+
+test('Infinite 해금 보너스: 새 단계 해금 팝업 시 카운트 +5', async ({ page }) => {
+  await ready(page); // Infinite, count 30
+  await page.evaluate(() => window.__game.clearBoard());
+  const c0 = await page.evaluate(() => window.__game.count());
+  await page.evaluate(() => window.__game.spawnPair(5)); // 지구+지구 → 넵튠(6) → 첫 해금 팝업
+  await page.waitForFunction(() => window.__game.unlockPending(), null, { timeout: 5000 });
+  expect(await page.evaluate(() => window.__game.count())).toBe(c0 + 5); // 해금 시 +5 (Infinite)
 });
 
 test('행성 충전: 코인으로 카운트 구매(10당 100), 잔액 부족 시 실패', async ({ page }) => {

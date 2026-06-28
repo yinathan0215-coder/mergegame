@@ -26,6 +26,7 @@ sources:
 |---|---|---|
 | `startCount` | **30** | 세션 시작 카운트(발사 예산) |
 | `blackHoleBonusCount` | **20** | 블랙홀끼리 합성 시 추가 카운트(둘 다 소멸) |
+| `unlockBonusCount` | **5** | 새 단계 해금 팝업(넵튠 6단계+)마다 추가 카운트 |
 | `charge.coinPer10` | **100** | 카운트 10개당 코인 단가 |
 | `charge.stepPlanets` | **10** | 충전 단위(슬라이더는 10 단위로만 선택) |
 | `charge.defaultPlanets` | **10** | 충전 팝업 기본 선택값(+10) |
@@ -54,6 +55,7 @@ sources:
 | 키 | 값 | 의미 |
 |---|---|---|
 | `countUpMs` | **1500** | Infinite 결과창 스코어 1→최종 카운트업 지속(ms) |
+| `endDelayMs` | **2000** | 종료 조건 충족 후 결과/클리어/실패 창 등장까지 지연(ms) |
 
 ## Relates to
 - [[../20-core-loop/game-modes]] · [[../30-systems/launch-count]] · [[../30-systems/planet-charge]] · [[../30-systems/stage-mode]] — 규칙
