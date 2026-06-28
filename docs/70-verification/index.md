@@ -59,6 +59,10 @@ sources:
   종합 **84.2/100**(0353 79.2 → **+5**, 누적 69.6→84.2 **+14.6**). GameScene 810→617, 5모듈 추출
   (debug·Containment·StageClearFx·MergeOutcome·Economy) → D2·D5 3→4(god-object 해소). Playwright 78/0.
   잔여: D1=3(SSoT 토큰화, balance.json WIP 차단)·D2/D3/D4/D5 4→5 폴리시(SessionController·prod 스모크·1급 종료상태).
+- [[70-verification/audits/2026-06-29-0459-methodology-structure-reaudit3]] — **수정 완료 재감사**(@0f12f5f).
+  종합 **89.0/100**(0436 84.2 → +4.8, 누적 69.6→89.0 **+19.4**). D3(prod 빌드 스모크)·D4(1급 종료상태+가드
+  setPhase) → 5 ⇒ **6차원 만점**. Playwright 80/0, 회귀 0. 잔여: **D1=3 차단**(balance.json WIP)·D2·D5=4
+  (과분할 회피 판단). 11 수정 커밋(4148560…0f12f5f).
 
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.

@@ -12,6 +12,13 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-29] manual | 감사 수정 완료 — 방법론 69.6→89.0 (+19.4)
+why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해" 최종. D3 prod 빌드 스모크(`3d304de`)·D4 1급 종료상태+
+가드 setPhase(`0f12f5f`)로 D3·D4 → 5. 재감사 [[70-verification/audits/2026-06-29-0459-methodology-structure-reaudit3]]
+**89.0/100**(6차원 만점, Playwright 80/0, 회귀 0). 누적: GameScene 810→617(5모듈 분리), 11 수정 커밋.
+**잔여**: D1=3 SSoT 토큰화는 사용자 balance.json 미커밋 WIP 차단(해소 시 진행 가능); D2·D5=4는 과분할 회피
+판단(SessionController/렌더 시스템 추가 분리는 프로토타입 과스펙). balance.json·ModeController 사용자 WIP 미수정 유지.
+
 ## [2026-06-29] manual | 감사 수정 라운드 2 — GameScene 분해, 방법론 79.2→84.2
 why: 사용자 지시 "감사 보고서의 문제점을 전부 수정해" 계속. GameScene god-object 분해로 D2·D5 3→4.
 3 커밋(typecheck+Playwright 78/0): StageClearFx(클리어 연출, `1cb74c2`)·MergeOutcome(머지 보상+충돌 점수,
