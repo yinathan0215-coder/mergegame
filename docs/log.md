@@ -12,6 +12,20 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Title 은하수 2-레이어 구현 — cover로 상하 여백 채움(태양계·UI는 contain), 검증 완료
+why: 사용자 지시(동시 세션 정지 후 단독 구현). 근본 원인 = 고정 9:16 캔버스 + contain → Pixi 은하수가
+레터박스(캔버스 밖)를 못 칠함. 해소: 캔버스를 **뷰포트 크기**(`resizeTo: window`)로 바꾸고 배경/전경
+2-레이어 분리 — **은하수(GalaxyBackground=이미지+반짝임)만 `bgRoot`(cover, `max` 스케일)** 로 뷰포트 가득
+(상하 여백 0), **태양계 공전·로비 UI·보드·HUD는 `fgRoot`(contain 9:16, `min` 스케일·중앙)** 로 잘림 없음.
+씬 전이 `fade`도 뷰포트 전체. 입력은 `Launcher`가 `fgRoot.toLocal(e.global)`로 전경 디자인 좌표 변환.
+`GameScene.layout()`이 resize마다 fg/bg 스케일+중앙·hitArea·fade 갱신. `TitleScreen.galaxy` 공개(컨테이너에서
+분리)·Title 한정 visible. [[50-art-ux/title-screen]] §1·[[50-art-ux/layout]] §1 설계와 일치. 검증: tsc·vite
+build OK · headed Playwright(390×844) **밴드 top/bottom=0**(캔버스=뷰포트, fg=390×693 9:16) 스크린샷 확인 ·
+Playwright **24/24**(전경 9:16 비율 테스트 fgRect로 정정, 드래그 발사로 launcher 좌표 변환 검증 포함).
+
+## [2026-06-28] manual | 행성 사다리 11단계화 — 소행성 선행·블랙홀 최종·큐 최대 지구
+why: 사용자 지시 — 수성 전 단계에 **소행성**을 추가하고 태양 다음 단계에 **블랙홀**을 추가해 총 11단계로 확장. 최종 단계는 태양이 아니라 블랙홀이며, 태양+태양은 블랙홀을 만든다. 기존 `queueCap=5`는 숫자를 유지하되 새 사다리 기준 **지구**가 되도록 정본화했고, 초기 랙/시작 큐 후보도 새 낮은 단계(소행성·수성·화성·금성) 기준으로 재정렬. docs: [[10-concept/planet-ladder]] · [[40-balancing/planet-stats]] · [[50-art-ux/planet-art]] · [[30-systems/launch-queue]].
+
 ## [2026-06-28] manual | 공통 버튼 피드백 모듈 + 해금 팝업 전환·행성 이름·풀스크린 딤
 why: 사용자 지시 4건. (1) **공통 버튼 프레스 피드백을 단일 모듈**(`game/src/ui/button.ts`
 `attachButtonFeedback`)로 묶어 Title 로비·HUD·**해금 모달 OK** 버튼이 같은 눌림→탄성 복귀를 쓰게 함

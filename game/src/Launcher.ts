@@ -56,7 +56,8 @@ export class Launcher {
     stage: Container,
     aimLayer: Container,
     chamberLayer: Container,
-    private host: LauncherHost
+    private host: LauncherHost,
+    private coordRoot: Container // 입력(e.global)을 전경(디자인 좌표) 공간으로 변환 (2-레이어 fit)
   ) {
     this.gauge = new Graphics();
     aimLayer.addChild(this.gauge);
@@ -72,15 +73,17 @@ export class Launcher {
 
   private onDown = (e: FederatedPointerEvent) => {
     this.aiming = true;
-    this.curX = e.global.x;
-    this.curY = e.global.y;
+    const p = this.coordRoot.toLocal(e.global); // 뷰포트 좌표 → 전경(디자인) 좌표
+    this.curX = p.x;
+    this.curY = p.y;
     this.redraw();
   };
 
   private onMove = (e: FederatedPointerEvent) => {
     if (!this.aiming) return;
-    this.curX = e.global.x;
-    this.curY = e.global.y;
+    const p = this.coordRoot.toLocal(e.global);
+    this.curX = p.x;
+    this.curY = p.y;
     this.redraw();
   };
 

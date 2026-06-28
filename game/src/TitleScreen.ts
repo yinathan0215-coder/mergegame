@@ -33,8 +33,8 @@ function makeText(value: string, size: number, color = 0xffffff, weight: '400' |
 const ORBIT_CY = DESIGN.h * 0.3; // 태양계 중점 y — 태양이 게임 시작 버튼보다 위에 보이도록 상단 배치
 
 export class TitleScreen {
-  readonly container = new Container();
-  private galaxy = new GalaxyBackground({ x: 0, y: 0, width: DESIGN.w, height: DESIGN.h, seed: 4242, count: 76 });
+  readonly container = new Container(); // 태양계 공전 + 로비 UI (contain 9:16)
+  readonly galaxy = new GalaxyBackground({ x: 0, y: 0, width: DESIGN.w, height: DESIGN.h, seed: 4242, count: 76 }); // 은하수 배경 (cover, GameScene이 배경 레이어로 둠)
   private orbitLayer = new Container();
   private uiLayer = new Container();
   private orbits: Orbit[] = [];
@@ -52,7 +52,7 @@ export class TitleScreen {
     private getProgress: () => TitleProgress = () => ({ current: 0, maxTier: 1 })
   ) {
     this.container.eventMode = 'static';
-    this.container.addChild(this.galaxy, this.orbitLayer, this.uiLayer);
+    this.container.addChild(this.orbitLayer, this.uiLayer); // galaxy는 GameScene이 cover 배경 레이어에 둔다
     this.buildOrbitBackground();
     this.buildUi();
   }
@@ -67,8 +67,7 @@ export class TitleScreen {
     const ryMax = DESIGN.h * 0.56; // 가장 바깥 궤도의 세로 반경 ≈ 화면 절반 이상 → 상하 꽉 참
     const frac = [0.2, 0.31, 0.43, 0.55, 0.68, 0.8, 0.9, 1.0];
     const radii = frac.map((f) => (ryMax * f) / ECC);
-    // 실제 태양계 거리 순(안쪽→바깥): 수성(=moon,1)·금성(3)·지구(4)·화성(2)·목성(8)·토성(7)·천왕성(6)·해왕성(5)
-    const order = [1, 3, 4, 2, 8, 7, 6, 5];
+    const solarOrbitTiers = [2, 4, 5, 3, 9, 8, 7, 6];
 
     const rings = new Graphics();
     rings.lineStyle(1, 0x8aa0df, 0.12);
@@ -76,8 +75,8 @@ export class TitleScreen {
     rings.zIndex = -1000; // 궤도선은 항상 맨 뒤
     this.orbitLayer.addChild(rings);
 
-    // 태양(9단계) — 중앙. 행성과 같은 y-깊이 트랙(zIndex = y)에 두어 앞/뒤 가림이 적용된다.
-    this.sun = makePlanetSprite(9);
+    const sunTier = 10;
+    this.sun = makePlanetSprite(sunTier);
     this.sun.x = cx;
     this.sun.y = cy;
     this.sun.scale.set(1.2); // 확대
@@ -87,7 +86,7 @@ export class TitleScreen {
     // 행성 8종을 태양계 거리 순으로 공전 — 안쪽이 더 빠르고 방향이 교차한다.
     for (let i = 0; i < 8; i++) {
       const rx = radii[i];
-      const sprite = makePlanetSprite(order[i]);
+      const sprite = makePlanetSprite(solarOrbitTiers[i]);
       sprite.scale.set(0.9); // 확대
       this.orbitLayer.addChild(sprite);
       this.orbits.push({
@@ -104,7 +103,7 @@ export class TitleScreen {
   private buildUi() {
     const cx = DESIGN.w / 2;
     this.moneyPill(18, 18);
-    this.iconButton(DESIGN.w - 54, 18, 'gear', () => {});
+    this.iconButton(DESIGN.w - 54, 18, ASSETS.ui.settings, () => {});
 
     // 중앙 컬럼(docs/50-art-ux/title-screen §2-2): 👑최고점수(Play 위)·Play·🪐현재점수(Play 아래)
     this.centerPanel(cx); // 최고 점수+게임 시작을 감싸는 검은 반투명 박스
@@ -113,10 +112,10 @@ export class TitleScreen {
     this.currentRow(cx, 512);
 
     // 좌·우 아이콘 카드 버튼(§2-3)
-    this.sideButton(58, 374, '📋', '일일 미션');
-    this.sideButton(58, 480, '🛒', '상점');
-    this.sideButton(DESIGN.w - 58, 374, '📅', '출석 체크');
-    this.sideButton(DESIGN.w - 58, 480, '🎡', '행운의 돌림판');
+    this.sideButton(58, 374, ASSETS.ui.dailyMission, '일일 미션');
+    this.sideButton(58, 480, ASSETS.ui.shop, '상점');
+    this.sideButton(DESIGN.w - 58, 374, ASSETS.ui.checkIn, '출석 체크');
+    this.sideButton(DESIGN.w - 58, 480, ASSETS.ui.luckyWheel, '행운의 돌림판');
 
     this.themeToggle(cx, 632);
   }
@@ -194,13 +193,26 @@ export class TitleScreen {
     const w = 224;
     const h = 100;
     const c = this.buttonContainer(cx, cy, w, h, this.onPlay);
+    const shadow = new Graphics();
+    shadow.beginFill(0x07162e, 0.48);
+    shadow.drawRoundedRect(-w / 2 + 4, -h / 2 + 12, w - 8, h - 2, 20);
+    shadow.endFill();
+    c.addChild(shadow);
     const bg = new Graphics();
+    bg.beginFill(0x1d5c9d);
+    bg.drawRoundedRect(-w / 2, -h / 2 + 9, w, h - 4, 18);
+    bg.endFill();
     bg.beginFill(0x2f86cf);
-    bg.drawRoundedRect(-w / 2, -h / 2, w, h, 18);
+    bg.drawRoundedRect(-w / 2, -h / 2, w, h - 12, 18);
     bg.endFill();
-    bg.beginFill(0x57b2ec); // 상단 광택
-    bg.drawRoundedRect(-w / 2 + 5, -h / 2 + 5, w - 10, h * 0.42, 14);
+    bg.beginFill(0x62c4f1, 0.95); // 상단 광택
+    bg.drawRoundedRect(-w / 2 + 7, -h / 2 + 6, w - 14, h * 0.38, 14);
     bg.endFill();
+    bg.beginFill(0xf4c44e, 0.5);
+    bg.drawRoundedRect(-w / 2 + 18, h / 2 - 22, w - 36, 10, 5);
+    bg.endFill();
+    bg.lineStyle(2, 0xffffff, 0.35);
+    bg.drawRoundedRect(-w / 2 + 4, -h / 2 + 4, w - 8, h - 18, 15);
     c.addChild(bg);
     const tri = new Graphics();
     tri.beginFill(0xffffff);
@@ -219,7 +231,7 @@ export class TitleScreen {
   }
 
   // 아이콘 타일 + 라벨 카드(레퍼런스 이미지) — docs/50-art-ux/title-screen §2-3
-  private sideButton(cx: number, cy: number, icon: string, label: string) {
+  private sideButton(cx: number, cy: number, iconAsset: string, label: string) {
     const c = this.buttonContainer(cx, cy, 84, 100, () => {});
     const tile = new Graphics();
     tile.beginFill(0x24407e);
@@ -228,8 +240,9 @@ export class TitleScreen {
     tile.lineStyle(2, 0x8aa0df, 0.5);
     tile.drawRoundedRect(-34, -44, 68, 68, 16);
     c.addChild(tile);
-    const ic = makeText(icon, 32);
+    const ic = Sprite.from(iconAsset);
     ic.anchor.set(0.5);
+    ic.scale.set(54 / ASSET_SIZES.uiIcon.w);
     ic.y = -10;
     c.addChild(ic);
     const lbl = new Text(label, {
@@ -248,20 +261,19 @@ export class TitleScreen {
     this.uiLayer.addChild(c);
   }
 
-  private iconButton(x: number, y: number, kind: 'gear', onPress: () => void) {
+  private iconButton(x: number, y: number, iconAsset: string, onPress: () => void) {
     const c = this.buttonContainer(x + 18, y + 18, 36, 36, onPress);
     const bg = new Graphics();
     bg.beginFill(COLORS.btnBlue);
     bg.drawRoundedRect(-18, -18, 36, 36, 9);
     bg.endFill();
-    bg.lineStyle(3, 0xffffff, 0.95);
-    bg.drawCircle(0, 0, kind === 'gear' ? 8 : 7);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      bg.moveTo(Math.cos(a) * 12, Math.sin(a) * 12);
-      bg.lineTo(Math.cos(a) * 15, Math.sin(a) * 15);
-    }
+    bg.lineStyle(2, 0x8aa0df, 0.45);
+    bg.drawRoundedRect(-18, -18, 36, 36, 9);
     c.addChild(bg);
+    const icon = Sprite.from(iconAsset);
+    icon.anchor.set(0.5);
+    icon.scale.set(34 / ASSET_SIZES.uiIcon.w);
+    c.addChild(icon);
     this.uiLayer.addChild(c);
   }
 

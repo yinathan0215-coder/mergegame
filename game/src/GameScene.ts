@@ -58,15 +58,16 @@ export class GameScene {
   private pendingUnlockTier = 0;
   private paused = false; // true while the unlock modal is up (game frozen)
   private lastComboBonus = 0; // most recent awarded combo milestone bonus (verification hook)
-  private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위)
+  private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위, 뷰포트 전체)
   private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
+  private bgRoot = new Container(); // 은하수 배경 — cover로 뷰포트 가득(Title 한정)
+  private fgRoot = new Container(); // 태양계·로비 UI·보드·HUD — contain(9:16, 잘림 없음)
 
   stats = { shots: 0, merges: 0, maxTier: 1, sunReached: false };
 
   constructor(mount: HTMLElement) {
     this.app = new Application({
-      width: DESIGN.w,
-      height: DESIGN.h,
+      resizeTo: window, // 캔버스를 뷰포트 크기로 — 배경(cover)은 가득, 전경(contain)은 9:16 중앙
       backgroundColor: COLORS.outerBg,
       antialias: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2),
@@ -74,9 +75,9 @@ export class GameScene {
     });
     mount.appendChild(this.app.view as unknown as HTMLCanvasElement);
     this.gameLayer.addChild(this.boardLayer, this.comboLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
-    this.app.stage.addChild(this.gameLayer);
+    this.app.stage.addChild(this.bgRoot, this.fgRoot); // 배경(cover) 뒤 · 전경(contain) 앞
+    this.fgRoot.addChild(this.gameLayer);
     this.app.stage.eventMode = 'static';
-    this.app.stage.hitArea = new Rectangle(0, 0, DESIGN.w, DESIGN.h);
 
     this.physics = new PhysicsWorld();
     this.board = new BoardRenderer(this.boardLayer);
@@ -138,27 +139,25 @@ export class GameScene {
       fire: (tier, vx, vy) => this.fire(tier, vx, vy),
       obstacles: () =>
         this.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
-    });
+    }, this.fgRoot);
 
     this.buildInitialRack();
     this.title = new TitleScreen(
       () => this.setScene('PoolInGame'),
       () => ({ current: this.score.score, maxTier: this.stats.maxTier }) // Title 현재 점수·최대 머지 아이콘
     );
-    this.app.stage.addChild(this.title.container);
-    this.fade.beginFill(0x0a0e1a);
-    this.fade.drawRect(0, 0, DESIGN.w, DESIGN.h);
-    this.fade.endFill();
+    this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
+    this.fgRoot.addChild(this.title.container); // 태양계 공전 + 로비 UI는 contain
     this.fade.alpha = 0;
     this.fade.eventMode = 'none';
     this.unlockModal = new UnlockModal(() => this.onUnlockOk());
-    this.app.stage.addChild(this.unlockModal.container);
-    this.app.stage.addChild(this.fade); // 씬 전이 페이드(최상위)
+    this.fgRoot.addChild(this.unlockModal.container); // 모달은 contain(9:16)
+    this.app.stage.addChild(this.fade); // 씬 전이 페이드(최상위, 뷰포트 전체) — 크기는 layout()
     this.setScene('Title');
     this.app.ticker.add(() => this.tick());
 
-    this.fitCanvas();
-    window.addEventListener('resize', () => this.fitCanvas());
+    this.layout();
+    this.app.renderer.on('resize', () => this.layout());
     this.exposeDebug();
   }
 
@@ -176,6 +175,7 @@ export class GameScene {
     this.scene = scene;
     this.gameLayer.visible = scene === 'PoolInGame';
     this.title.container.visible = scene === 'Title';
+    this.title.galaxy.visible = scene === 'Title'; // 은하수 배경은 Title 한정
     if (scene === 'Title') this.title.refresh(); // 최대 머지 아이콘 + 현재 점수 갱신
     if (scene === 'PoolInGame') {
       this.acc = 0;
@@ -267,14 +267,11 @@ export class GameScene {
     if (i >= 0) this.planets.splice(i, 1);
   }
 
-  // 초기 랙: INVERTED triangle (▽) — wide top (수성×4) narrowing to 지구×1 at the bottom.
   private buildInitialRack() {
     const cx = PLAY.x + PLAY.w / 2;
     const cy = PLAY.y + PLAY.h * 0.36;
     const spacing = 58;
     const rowGap = 56;
-    // Each row = `count` copies of `tier`. INITIAL_RACK order (수성→지구) gives rows
-    // [[1,1,1,1],[2,2,2],[3,3],[4]] = inverted triangle (docs/40-balancing/spawn-rack).
     const rows = INITIAL_RACK.map(({ tier, count }) => Array<number>(count).fill(tier));
     const born = performance.now() - 1000;
     rows.forEach((row, ri) => {
@@ -363,17 +360,31 @@ export class GameScene {
     this.effects.update(nowMs); // bursts + floating popups
   }
 
-  private fitCanvas() {
-    const cv = this.app.view as unknown as HTMLCanvasElement;
-    const scale = Math.min(window.innerWidth / DESIGN.w, window.innerHeight / DESIGN.h); // contain-fit (9:16 전체 보존, 잘림 없음)
-    cv.style.width = Math.round(DESIGN.w * scale) + 'px';
-    cv.style.height = Math.round(DESIGN.h * scale) + 'px';
+  // 2-레이어 fit: 배경(은하수)=cover로 뷰포트 가득, 전경(태양계·UI·보드)=contain(9:16) 중앙, fade=뷰포트 전체.
+  private layout() {
+    const vw = this.app.screen.width;
+    const vh = this.app.screen.height;
+    const sFg = Math.min(vw / DESIGN.w, vh / DESIGN.h);
+    this.fgRoot.scale.set(sFg);
+    this.fgRoot.position.set((vw - DESIGN.w * sFg) / 2, (vh - DESIGN.h * sFg) / 2);
+    const sBg = Math.max(vw / DESIGN.w, vh / DESIGN.h);
+    this.bgRoot.scale.set(sBg);
+    this.bgRoot.position.set((vw - DESIGN.w * sBg) / 2, (vh - DESIGN.h * sBg) / 2);
+    this.app.stage.hitArea = new Rectangle(0, 0, vw, vh);
+    this.fade.clear();
+    this.fade.beginFill(0x0a0e1a);
+    this.fade.drawRect(0, 0, vw, vh);
+    this.fade.endFill();
   }
 
   // Verification hooks (Playwright). Not part of the player-facing game.
   private exposeDebug() {
     (window as any).__game = {
       scene: () => this.scene,
+      fgRect: () => {
+        const s = Math.min(this.app.screen.width / DESIGN.w, this.app.screen.height / DESIGN.h);
+        return { w: DESIGN.w * s, h: DESIGN.h * s }; // 전경(9:16) 화면 크기
+      },
       startGame: () => this.setScene('PoolInGame'),
       showTitle: () => this.setScene('Title'),
       unlockedTier: () => this.unlockedTier,
