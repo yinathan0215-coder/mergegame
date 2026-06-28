@@ -12,6 +12,22 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 사운드 시스템 — 컨셉(docs-write) + SoundManager(절차 합성·동시 제한) + 코어 SFX 연결
+why: 사용자 지시(art처럼 docs-write로 컨셉부터). 신규 정본: [[50-art-ux/sound-design]](효과음/UI 사운드
+컨셉·톤·카탈로그 11종 + **동시재생 제한 UX**: maxVoices 상한·사운드별 throttle·우선순위 선점, 머지=등급↑→
+피치↑, 뮤트/자동재생 해제) · [[60-implementation/sound-manager]](Web Audio 절차 합성 스펙). 구현: 신규
+`game/src/SoundManager.ts`(오실레이터/노이즈+게인 엔벨로프, **maxVoices=6 동시 보이스 상한 + id별 throttleMs +
+우선순위 선점/생략**으로 충돌 폭주 시 wall/ballHit 솎임, 첫 pointerdown에 AudioContext resume, `ppm.muted`
+localStorage). 연결: `ui/button.ts`(모든 버튼 `uiPress`), `GameScene`(merge 등급→pitch·comboMilestone·unlock·
+launch 파워→pitch·wall/ballHit). 수치 SSoT `balance.json`(`sound`, 코드 DEFAULTS 폴백). BGM은 범위 밖.
+인덱스(50-art-ux·60-implementation) 갱신. 검증: tsc·vite build OK · Playwright 통과(사운드=부수효과).
+
+## [2026-06-28] manual | Title 버튼 외형 재정의: 검은 반투명 아이콘 버튼 + Play 기본/눌림 PNG
+why: 사용자 지시 — 설정·일일 미션·출석 체크·행운의 돌림판·상점처럼 이미지가 들어간 버튼 외형은
+**검은색 반투명 라운드 사각형**으로 통일. 게임 시작 버튼 몸체는 코드 드로잉이 아니라 `$imagegen`으로 뽑은
+`play-button.png`(기본)와 `play-button-pressed.png`(눌림) 2상태 PNG를 사용하도록 [[50-art-ux/title-icons]]와
+[[50-art-ux/title-screen]] 갱신. 프롬프트·원본·후처리는 `game/public/assets/prompts/title-icons.md`에 기록.
+
 ## [2026-06-28] manual | 해금 소개 팝업 첫 등장 = 해왕성(Neptune) 명시·검증
 why: 사용자 점검 지시 — 행성 사다리(11종)·기본 큐 변경 후 해금 소개 팝업이 **해왕성부터** 떠야 함을
 확인. `progression.unlockStart=5`(지구) → 지구끼리 합성해 6단계 해왕성이 처음 생성될 때

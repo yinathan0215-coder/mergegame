@@ -1,7 +1,9 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
 import { Body } from 'matter-js';
 import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS, SCORING, PROGRESSION } from './data/config';
-import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
+import { tierData, MAX_TIER, INITIAL_RACK, SUN_TIER } from './data/planets';
+import { MetaStore } from './MetaStore';
+import { MetaUI } from './MetaUI';
 import { PhysicsWorld } from './PhysicsWorld';
 import { BoardRenderer } from './BoardRenderer';
 import { TitleScreen } from './TitleScreen';
@@ -13,6 +15,7 @@ import { MergeSystem } from './MergeSystem';
 import { Effects } from './Effects';
 import { UnlockModal } from './UnlockModal';
 import { Combo } from './Combo';
+import { sound } from './SoundManager';
 import { makePlanetSprite } from './PlanetFactory';
 import type { Planet } from './Planet';
 
@@ -52,6 +55,8 @@ export class GameScene {
   private combo: Combo;
   private board: BoardRenderer;
   private title: TitleScreen;
+  private meta: MetaStore; // coin wallet + daily mission/attendance state (docs/30-systems/meta-economy)
+  private metaUI: MetaUI; // Title-lobby popups (missions/attendance/wheel/shop)
   private scene: SceneState = 'Title';
   private unlockModal!: UnlockModal;
   private unlockedTier = PROGRESSION.unlockStart; // highest tier merges may create (docs/30-systems/tier-unlock)
@@ -105,17 +110,21 @@ export class GameScene {
         const d = tierData(tier);
         this.effects.mergeBurst(x, y, d.colors[0], d.radius); // 발산 버스트
         this.effects.scorePopup(pts, x, y); // +N at the merge location
+        sound.play('merge', { pitch: 1 + (tier - 1) * 0.05 }); // 생성 등급↑ → 피치↑ (docs/50-art-ux/sound-design)
         const comboBonus = this.combo.onMerge(performance.now()); // chain counter; returns milestone bonus
         if (comboBonus > 0) {
           this.score.addBonus(comboBonus); // combo 5/10/15… milestone → large bonus score
           this.effects.comboBonus(comboBonus, this.combo.value); // "+N(combo M)" at screen centre
           this.lastComboBonus = comboBonus;
+          sound.play('comboMilestone');
         }
+        this.meta.onMerge(this.combo.value, tier === SUN_TIER); // daily missions: merge count / combo peak / sun
         // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock)
         if (tier > this.unlockedTier && !this.paused) {
           this.pendingUnlockTier = tier;
           this.paused = true;
           this.unlockModal.show(tier);
+          sound.play('unlock');
         }
       }
     );
@@ -127,11 +136,13 @@ export class GameScene {
         if (impact >= SCORING.minImpact) {
           this.score.onBallHit(); // 행성–행성 충돌 +3
           this.effects.hitBurst(cx, cy, bx, by);
+          sound.play('ballHit'); // 다발 충돌은 throttle로 솎임 (docs/50-art-ux/sound-design)
         }
       } else if (aP || bP) {
         if (impact >= SCORING.minImpact) {
           this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1
           this.effects.hitBurst(cx, cy, bx, by);
+          sound.play('wall');
         }
       }
     });
@@ -142,13 +153,17 @@ export class GameScene {
         this.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
     }, this.fgRoot);
 
+    this.meta = new MetaStore();
+    this.metaUI = new MetaUI(this.meta);
     this.buildInitialRack();
     this.title = new TitleScreen(
-      () => this.setScene('PoolInGame'),
-      () => ({ current: this.score.score, maxTier: this.stats.maxTier }) // Title 현재 점수·최대 머지 아이콘
+      () => { sound.play('play'); this.setScene('PoolInGame'); },
+      () => ({ current: this.score.score, maxTier: this.stats.maxTier }), // Title 현재 점수·최대 머지 아이콘
+      { coins: () => this.meta.coins, subscribe: (fn) => this.meta.subscribe(fn), open: (k) => this.metaUI.open(k) } // 코인·팝업 훅
     );
     this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
     this.fgRoot.addChild(this.title.container); // 태양계 공전 + 로비 UI는 contain
+    this.fgRoot.addChild(this.metaUI.layer);    // 메타 팝업(딤은 oversized로 뷰포트 전체를 덮음) — title 위
     this.fade.alpha = 0;
     this.fade.eventMode = 'none';
     this.unlockModal = new UnlockModal(() => this.onUnlockOk());
@@ -230,6 +245,7 @@ export class GameScene {
     this.spawnPlanet(tier, sx, sy, vx, vy, now - 1000, false);
     this.queue.shift();
     this.stats.shots++;
+    sound.play('launch', { pitch: 0.85 + Math.min(1, Math.hypot(vx, vy) / LAUNCH.vMax) * 0.5 }); // 파워↑ → 피치↑
     return true;
   }
 
@@ -324,6 +340,7 @@ export class GameScene {
   private tick() {
     const nowMs = performance.now();
     this.title.update(nowMs);
+    this.metaUI.update(nowMs); // meta popups (transition + wheel spin + attendance countdown) run on Title too
     this.updateTransition(nowMs);
     this.unlockModal.update();
     if (this.scene !== 'PoolInGame' || this.paused) return;
@@ -438,6 +455,17 @@ export class GameScene {
         this.spawnPlanet(tier, cx - r - 1, cy, 5, 0, now, true);
         this.spawnPlanet(tier, cx + r + 1, cy, -5, 0, now, true);
       },
+      // meta layer (coin wallet + missions + attendance + wheel) — docs/30-systems/meta-economy
+      meta: () => ({ coins: this.meta.coins, completed: this.meta.completedCount(), attendanceDay: this.meta.attendanceDay }),
+      metaMissions: () => this.meta.missionRows(),
+      metaReset: () => this.meta.__reset(),
+      metaAddCoins: (n: number) => this.meta.addCoins(n),
+      openPopup: (kind: 'dailyMission' | 'attendance' | 'wheel' | 'shop') => this.metaUI.open(kind),
+      claimAttendance: () => this.meta.claimAttendance(),
+      claimMilestone: (n: number) => this.meta.claimMilestone(n),
+      wheelStart: () => this.metaUI.wheel.startSpin(),
+      wheelStop: (i: number) => this.metaUI.wheel.stopOn(i),
+      wheelWin: () => this.metaUI.wheel.lastWin,
     };
   }
 }

@@ -1,5 +1,6 @@
 import { Container, type FederatedPointerEvent } from 'pixi.js';
 import { JUICE } from '../data/config';
+import { sound } from '../SoundManager';
 
 // Common pressable-button feedback (docs/50-art-ux/feedback-effects §5). Every tappable control —
 // Title lobby buttons, HUD corner buttons, the unlock-modal OK — runs through this one helper so the
@@ -32,6 +33,7 @@ export function attachButtonFeedback(target: Container, onTap: () => void): Cont
 
   target.on('pointerdown', (e: FederatedPointerEvent) => {
     e.stopPropagation(); // swallow so the tap never reaches the board/launcher behind it
+    sound.play('uiPress'); // common UI press SFX (docs/50-art-ux/sound-design)
     cancelAnimationFrame(raf);
     target.scale.set(downScale);
   });

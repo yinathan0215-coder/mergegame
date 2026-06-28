@@ -66,7 +66,8 @@
     "scorePopup": { "ms": 950, "rise": 46, "color": "#ffe28a", "fontSize": 22 },
     "scoreRoll": { "lerp": 0.18 },
     "buttonPress": { "downScale": 0.92, "upScale": 1.04, "ms": 140 },
-    "combo": { "labelSize": 24, "numberSize": 72, "color": "#ffffff", "alpha": 0.22, "cyFrac": 0.46, "gap": 6, "holdMs": 5000, "fadeStartMs": 3000, "step": 5, "bonusPer": 400, "bonusFontSize": 40, "bonusLabelSize": 22, "bonusMs": 1800, "bonusRise": 56, "bonusColor": "#ffd23f" }
+    "combo": { "labelSize": 24, "numberSize": 72, "color": "#ffffff", "alpha": 0.22, "cyFrac": 0.46, "gap": 6, "holdMs": 5000, "fadeStartMs": 3000, "step": 5, "bonusPer": 400, "bonusFontSize": 40, "bonusLabelSize": 22, "bonusMs": 1800, "bonusRise": 56, "bonusColor": "#ffd23f" },
+    "popup": { "enterMs": 220, "dimAlpha": 0.72, "startScale": 0.85 }
   },
 
   "queue": { "size": 1, "candidates": [1, 2, 3, 4, 5] },
@@ -79,15 +80,61 @@
     { "tier": 4, "count": 1 }
   ],
 
+  "economy": { "startCoins": 0 },
+
+  "sound": {
+    "master": 0.5,
+    "maxVoices": 6,
+    "sounds": {
+      "uiPress": { "type": "triangle", "freq": 420, "freq2": 540, "dur": 0.07, "gain": 0.18, "throttleMs": 40, "priority": 3 },
+      "toggle": { "type": "square", "freq": 300, "freq2": 380, "dur": 0.05, "gain": 0.12, "throttleMs": 40, "priority": 3 },
+      "play": { "type": "sawtooth", "freq": 300, "freq2": 720, "dur": 0.22, "gain": 0.2, "throttleMs": 120, "priority": 6 },
+      "popupOpen": { "type": "sine", "freq": 520, "freq2": 880, "dur": 0.18, "gain": 0.18, "throttleMs": 100, "priority": 6 },
+      "popupClose": { "type": "sine", "freq": 720, "freq2": 400, "dur": 0.1, "gain": 0.13, "throttleMs": 80, "priority": 4 },
+      "launch": { "type": "sawtooth", "freq": 220, "freq2": 540, "dur": 0.14, "gain": 0.17, "throttleMs": 50, "priority": 4 },
+      "wall": { "type": "noise", "freq": 1200, "dur": 0.05, "gain": 0.09, "throttleMs": 70, "priority": 1 },
+      "ballHit": { "type": "noise", "freq": 760, "dur": 0.06, "gain": 0.12, "throttleMs": 55, "priority": 1 },
+      "merge": { "type": "triangle", "freq": 440, "freq2": 660, "dur": 0.16, "gain": 0.22, "throttleMs": 25, "priority": 5 },
+      "comboMilestone": { "type": "square", "freq": 660, "freq2": 1320, "dur": 0.3, "gain": 0.2, "throttleMs": 150, "priority": 6 },
+      "unlock": { "type": "sine", "freq": 523, "freq2": 1046, "dur": 0.4, "gain": 0.24, "throttleMs": 200, "priority": 7 }
+    }
+  },
+
+  "dailyMissions": {
+    "perMission": 50,
+    "milestones": { "2": 50, "5": 100, "8": 200 },
+    "list": [
+      { "id": "combo5",   "type": "comboPeak",  "target": 5,   "name": "콤보 최대치 5" },
+      { "id": "combo15",  "type": "comboPeak",  "target": 15,  "name": "콤보 최대치 15" },
+      { "id": "combo30",  "type": "comboPeak",  "target": 30,  "name": "콤보 최대치 30" },
+      { "id": "merge100", "type": "mergeCount", "target": 100, "name": "행성 병합 100" },
+      { "id": "merge200", "type": "mergeCount", "target": 200, "name": "행성 병합 200" },
+      { "id": "merge300", "type": "mergeCount", "target": 300, "name": "행성 병합 300" },
+      { "id": "sun",      "type": "sunCount",   "target": 1,   "name": "태양 만들기" },
+      { "id": "ad",       "type": "dummy",      "target": 3,   "name": "광고 보기" }
+    ]
+  },
+
+  "attendance": { "rewards": [100, 150, 200, 250, 300, 350, 400] },
+
+  "wheel": {
+    "segments": [25, 50, 75, 100, 125, 150, 175, 200],
+    "cost": 120,
+    "decelMs": 3000,
+    "spinSpeed": 0.02
+  },
+
   "planets": [
-    { "tier": 1, "name": "수성",   "en": "Mercury", "radius": 18, "score": 0,    "colors": ["#9a9a9a", "#6c6c6c"], "pattern": "crater" },
-    { "tier": 2, "name": "화성",   "en": "Mars",    "radius": 21, "score": 10,   "colors": ["#c1440e", "#7c2a08"], "pattern": "craterDark" },
-    { "tier": 3, "name": "금성",   "en": "Venus",   "radius": 24, "score": 30,   "colors": ["#d9b382", "#bb8d54"], "pattern": "dots" },
-    { "tier": 4, "name": "지구",   "en": "Earth",   "radius": 28, "score": 70,   "colors": ["#2e8b40", "#2f6fb0"], "pattern": "earth" },
-    { "tier": 5, "name": "해왕성", "en": "Neptune", "radius": 32, "score": 150,  "colors": ["#1f3aa0", "#3a5fd0"], "pattern": "waves" },
-    { "tier": 6, "name": "천왕성", "en": "Uranus",  "radius": 37, "score": 320,  "colors": ["#a8edf0", "#5ecad0"], "pattern": "thinRingStripes" },
-    { "tier": 7, "name": "토성",   "en": "Saturn",  "radius": 43, "score": 700,  "colors": ["#e6c34a", "#b89220"], "pattern": "ring" },
-    { "tier": 8, "name": "목성",   "en": "Jupiter", "radius": 50, "score": 1500, "colors": ["#c98a4b", "#83532a"], "pattern": "bigStripes" },
-    { "tier": 9, "name": "태양",   "en": "Sun",     "radius": 58, "score": 3200, "colors": ["#ffd23f", "#ff8a1f"], "pattern": "sun" }
+    { "tier": 1,  "name": "소행성", "en": "Asteroid",   "radius": 15, "score": 0,     "colors": ["#9c8870", "#5f5042"], "pattern": "asteroid" },
+    { "tier": 2,  "name": "수성",   "en": "Mercury",    "radius": 18, "score": 10,    "colors": ["#9a9a9a", "#6c6c6c"], "pattern": "crater" },
+    { "tier": 3,  "name": "화성",   "en": "Mars",       "radius": 21, "score": 30,    "colors": ["#c1440e", "#7c2a08"], "pattern": "craterDark" },
+    { "tier": 4,  "name": "금성",   "en": "Venus",      "radius": 24, "score": 70,    "colors": ["#d9b382", "#bb8d54"], "pattern": "dots" },
+    { "tier": 5,  "name": "지구",   "en": "Earth",      "radius": 28, "score": 150,   "colors": ["#2e8b40", "#2f6fb0"], "pattern": "earth" },
+    { "tier": 6,  "name": "해왕성", "en": "Neptune",    "radius": 32, "score": 320,   "colors": ["#1f3aa0", "#3a5fd0"], "pattern": "waves" },
+    { "tier": 7,  "name": "천왕성", "en": "Uranus",     "radius": 37, "score": 700,   "colors": ["#a8edf0", "#5ecad0"], "pattern": "thinRingStripes" },
+    { "tier": 8,  "name": "토성",   "en": "Saturn",     "radius": 43, "score": 1500,  "colors": ["#e6c34a", "#b89220"], "pattern": "ring" },
+    { "tier": 9,  "name": "목성",   "en": "Jupiter",    "radius": 50, "score": 3200,  "colors": ["#c98a4b", "#83532a"], "pattern": "bigStripes" },
+    { "tier": 10, "name": "태양",   "en": "Sun",        "radius": 58, "score": 7000,  "colors": ["#ffd23f", "#ff8a1f"], "pattern": "sun" },
+    { "tier": 11, "name": "블랙홀", "en": "Black Hole", "radius": 67, "score": 15000, "colors": ["#111126", "#6b45d8"], "pattern": "blackHole" }
   ]
 }
