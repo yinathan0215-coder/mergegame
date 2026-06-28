@@ -3,7 +3,6 @@ import {
   DESIGN,
   PLAY,
   GAUGE,
-  LAUNCHER,
   OUTLINE_W,
   PG_BAND,
   INNER_LINE_W,
@@ -44,7 +43,9 @@ function strokePoly(g: Graphics, pts: Pt[], width: number, color: number, alpha 
 }
 
 // Layered board (docs/50-art-ux/screen-structure): 1 bg color → 2 gold outline → 3 bg-color band
-// → 4 inner line (brown) → 5 bg image (clipped inside the inner line) → 6 launcher seat.
+// → 4 inner line (brown, caps over the launcher top) → 5 bg image (clipped inside the inner line).
+// The launcher circle sits OUTSIDE the inner line in the band: its disc IS the bg-color band, its
+// only rim is the inner line's upper cap, and the gauge (Launcher) rings its lower half on top.
 // Collision (PhysicsWorld) follows the inner line + launcher circle; the gold outline is visual only.
 export class BoardRenderer {
   readonly imageLayer = new Container();
@@ -99,13 +100,5 @@ export class BoardRenderer {
     img.addChild(mask);
     background.mask = mask;
     layer.addChild(img);
-
-    // 6. launcher SEAT — dark circle + gold rim = the launcher collision circle.
-    const seat = new Graphics();
-    seat.beginFill(COLORS.pocket, 1);
-    seat.lineStyle(3, COLORS.launcherRim, 0.95);
-    seat.drawCircle(LAUNCHER.x, LAUNCHER.y, LAUNCHER.r);
-    seat.endFill();
-    layer.addChild(seat);
   }
 }

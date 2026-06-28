@@ -12,6 +12,19 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 발사대=inner line 바깥(띠 위), 균일 간격, 게이지 하단 반원
+why: 레퍼런스 대조로 보드 하단 6건 추가 정정. (1) **outline↔inner line 간격 균일화** — 테이퍼 구간 간격이
+사각형보다 좁던 문제를, inner line을 outline의 **균일 내향 오프셋**(`offsetInward`, 와인딩 기반 법선)으로
+계산해 모든 변에서 같게 함. (2) inner line 색 = 발사대 외곽선(rim) 색 일치(둘 다 갈색). (3) **힘 게이지 =
+발사대 하단 반원(약 180°)** — 기존 ~210°에서 축소. (4) **발사대 rim은 play(배경 이미지) 쪽 윗호에만**:
+inner line이 발사대 **윗호로 캡**(테이퍼가 발사대 원 위쪽에 연결)되어 그 갈색 캡이 곧 rim이고, outline 쪽
+아랫호엔 선이 없음. (5) **발사대 채움색 = background color**(띠 색과 동일)로 띠에 녹아듦. (6) 결과적으로
+**발사대 원이 inner line 바깥·outline 안쪽 띠 위에 얹힌** 모양. config: `shieldPath`가 하단 호 인덱스를
+반환 → `boardOutline`(골드, 하단 호) / `innerOutline`(offsetInward 후 하단 호를 **발사대 윗호로 치환**)
+분리, TAPER_L/R 제거. BoardRenderer: 발사대 seat(어두운 포켓) 제거 — 발사대=띠+inner line 캡+게이지+행성.
+Launcher: 게이지 하단 반원. docs: [[50-art-ux/screen-structure]] [[30-systems/play-area-boundary]] 정본화.
+검증: typecheck·vite build OK · Playwright **18/18** · headed idle/drag 스크린샷으로 6건 시각 확인.
+
 ## [2026-06-28] manual | Title 미정 3건 확정 + docs-write "open question 금지(ask & resolve)" 정책
 why: 사용자 지시 — GDD 페이지에 **미해결 open question을 남기지 않는다**. 발생 시 `AskUserQuestion`으로
 물어 **확정 결과를 본문에 반영**한다. (1) 직전 턴이 남긴 open question 3건을 사용자 확정으로 닫음:
