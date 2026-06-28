@@ -41,10 +41,16 @@ sources:
 - 경계 판정은 로컬 표시용이며(클라이언트 시계 신뢰), 서버 검증은 프로토타입 범위 밖.
 
 ### 영속 (`localStorage`)
-- 단일 키에 JSON으로 저장: `{ coins, missions{progress, claimedMilestones, lastResetDate},
-  attendance{day, lastClaimDate} }`.
-- `MetaStore`는 생성 시 로드하고, 모든 변이 직후 저장한다. 저장 실패(시크릿 모드 등)는 무시하고
-  메모리 상태로 계속한다(프로토타입).
+- 단일 키에 JSON으로 저장: `{ coins, missions, attendance, records }`.
+- `MetaStore`는 생성 시 로드하고 **정규화**(누락 필드를 기본값으로 채움 — 구버전 저장이 새 스키마에서
+  크래시하지 않도록)한 뒤, 변이 직후 저장한다. 저장 실패(시크릿 모드 등)는 무시하고 메모리 상태로 계속한다.
+
+### 게임 레코드 (점수 영속)
+코인·미션처럼 **게임 점수 레코드도 영속**된다([[../50-art-ux/title-screen]] 👑최고/🪐현재 점수의 SSoT).
+- `records.best` = **역대 최고 점수**. 현재 점수가 갱신될 때 `best = max(best, current)`로 올린다.
+- `records.current` = **현재(이어하기) 점수** — 마지막으로 보고된 점수.
+- GameScene이 점수 변경 콜백에서 `setScore(current)`로 보고한다. Title 진입 시 `getProgress()`가
+  `records`에서 최고·현재 점수를 읽어 표시한다. 저장은 최고 갱신 즉시 + 그 외 짧은 간격으로 스로틀.
 
 ### 게임플레이 → 미션 보고
 - Pool In-Game의 머지 콜백([[../60-implementation/architecture]] `GameScene`)이 `MetaStore`에

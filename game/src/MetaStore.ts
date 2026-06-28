@@ -43,6 +43,10 @@ interface MetaState {
     day: number; // next day to claim, 1..7
     lastClaimDate: string; // KST day of the last claim ('' = never)
   };
+  records: {
+    best: number; // all-time high score (👑)
+    current: number; // current/resume score (🪐)
+  };
 }
 
 function freshMissions(date: string): MetaState['missions'] {
@@ -59,6 +63,7 @@ export class MetaStore {
       coins: ECONOMY.startCoins,
       missions: freshMissions(today),
       attendance: { day: 1, lastClaimDate: '' },
+      records: { best: 0, current: 0 },
     };
     this.rollover(today);
   }
@@ -87,6 +92,29 @@ export class MetaStore {
     this.s.coins -= n;
     this.changed();
     return true;
+  }
+
+  // ── game records (score) ─────────────────────────────────────────────────────
+  // Persisted high/current score (docs/30-systems/meta-economy "게임 레코드"). Reported from GameScene's
+  // score callback. Saved immediately on a new best, else throttled (~0.5s) — score changes too often to
+  // write every +1. No listener notify (the coin pill / popups don't depend on the score).
+  private recordSaveAt = 0;
+  setScore(current: number) {
+    const r = this.s.records;
+    r.current = current;
+    const newBest = current > r.best;
+    if (newBest) r.best = current;
+    const now = Date.now();
+    if (newBest || now - this.recordSaveAt > 500) {
+      this.recordSaveAt = now;
+      this.save();
+    }
+  }
+  get bestScore(): number {
+    return this.s.records.best;
+  }
+  get currentScore(): number {
+    return this.s.records.current;
   }
 
   // ── daily missions ─────────────────────────────────────────────────────────
@@ -182,7 +210,7 @@ export class MetaStore {
   // `claimed` replaced `granted`), so every field is filled from defaults here — a stale save must never
   // crash missionRows()/claim*(). Coins/progress are preserved; only the shape is repaired.
   private load(): MetaState | null {
-    let p: { coins?: unknown; missions?: Record<string, unknown>; attendance?: Record<string, unknown> };
+    let p: { coins?: unknown; missions?: Record<string, unknown>; attendance?: Record<string, unknown>; records?: Record<string, unknown> };
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
@@ -192,6 +220,7 @@ export class MetaStore {
     }
     const m = p.missions ?? {};
     const a = p.attendance ?? {};
+    const r = p.records ?? {};
     return {
       coins: typeof p.coins === 'number' ? p.coins : ECONOMY.startCoins,
       missions: {
@@ -206,6 +235,10 @@ export class MetaStore {
         day: typeof a.day === 'number' ? a.day : 1,
         lastClaimDate: typeof a.lastClaimDate === 'string' ? a.lastClaimDate : '',
       },
+      records: {
+        best: typeof r.best === 'number' ? r.best : 0,
+        current: typeof r.current === 'number' ? r.current : 0,
+      },
     };
   }
   private save() {
@@ -219,7 +252,12 @@ export class MetaStore {
   /** Test/verification hook only. */
   __reset() {
     localStorage.removeItem(SAVE_KEY);
-    this.s = { coins: ECONOMY.startCoins, missions: freshMissions(kstDateStr(Date.now())), attendance: { day: 1, lastClaimDate: '' } };
+    this.s = {
+      coins: ECONOMY.startCoins,
+      missions: freshMissions(kstDateStr(Date.now())),
+      attendance: { day: 1, lastClaimDate: '' },
+      records: { best: 0, current: 0 },
+    };
     this.changed();
   }
 }

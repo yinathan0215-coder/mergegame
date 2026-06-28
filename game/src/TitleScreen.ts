@@ -1,4 +1,4 @@
-import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import { ASSETS, ASSET_SIZES } from './assets';
 import { GalaxyBackground } from './GalaxyBackground';
 import { makePlanetSprite } from './PlanetFactory';
@@ -6,11 +6,13 @@ import { tierData } from './data/planets';
 import { COLORS, DESIGN } from './data/config';
 import { attachButtonFeedback } from './ui/button';
 import { coinSprite } from './ui/coin';
+import { sound } from './SoundManager';
 import type { PopupKind } from './MetaUI';
 
-// Title이 GameScene으로부터 받는 현재 세션 진행 상태(현재 점수 + 최대 머지 등급).
+// Title이 GameScene으로부터 받는 진행 상태(현재/최고 점수 + 최대 머지 등급). 점수는 영속 레코드(docs/30-systems/meta-economy).
 export interface TitleProgress {
-  current: number; // 진행 중(이어하기) 점수
+  current: number; // 현재(이어하기) 점수 — 영속
+  best: number; // 역대 최고 점수 — 영속
   maxTier: number; // 현재 세션 최대 머지 행성 등급
 }
 
@@ -55,10 +57,14 @@ export class TitleScreen {
   private currentScore!: Text;
   private currentRowCx = 0;
   private currentRowY = 0;
+  private bestText!: Text; // 👑 최고 점수(영속) — refresh마다 갱신
+  private bestCrown!: Sprite;
+  private bestRowCx = 0;
+  private bestRowY = 0;
 
   constructor(
     private onPlay: () => void,
-    private getProgress: () => TitleProgress = () => ({ current: 0, maxTier: 1 }),
+    private getProgress: () => TitleProgress = () => ({ current: 0, best: 0, maxTier: 1 }),
     private meta?: TitleMeta
   ) {
     this.container.eventMode = 'static';
@@ -113,7 +119,7 @@ export class TitleScreen {
   private buildUi() {
     const cx = DESIGN.w / 2;
     this.moneyPill(18, 18);
-    this.iconButton(DESIGN.w - 54, 18, ASSETS.ui.settings, () => {});
+    this.iconButton(DESIGN.w - 54, 18, ASSETS.ui.settings, () => this.meta?.open('settings'));
 
     // 중앙 컬럼(docs/50-art-ux/title-screen §2-2): 👑최고점수(Play 위)·Play·🪐현재점수(Play 아래)
     this.centerPanel(cx); // 최고 점수+게임 시작을 감싸는 검은 반투명 박스
@@ -139,20 +145,28 @@ export class TitleScreen {
     this.uiLayer.addChild(g);
   }
 
-  // 👑 + 최고 점수 — Play 위, 중앙 정렬
+  // 👑 + 최고 점수(영속) — Play 위, 중앙 정렬. 값은 refresh()마다 layoutBestRow로 갱신.
   private bestRow(cx: number, y: number) {
-    const crown = Sprite.from(ASSETS.ui.crown);
-    crown.anchor.set(0.5);
-    crown.scale.set(30 / ASSET_SIZES.uiIcon.w);
-    const best = makeText('0', 26, 0xf2d071, '800');
-    best.anchor.set(0, 0.5);
+    this.bestRowCx = cx;
+    this.bestRowY = y;
+    this.bestCrown = Sprite.from(ASSETS.ui.crown);
+    this.bestCrown.anchor.set(0.5);
+    this.bestCrown.scale.set(30 / ASSET_SIZES.uiIcon.w);
+    this.bestText = makeText('0', 26, 0xf2d071, '800');
+    this.bestText.anchor.set(0, 0.5);
+    this.uiLayer.addChild(this.bestCrown, this.bestText);
+    this.layoutBestRow();
+  }
+
+  // 최고 점수 텍스트 갱신 + 왕관/숫자 중앙 정렬(텍스트 폭이 바뀌므로 재정렬).
+  private layoutBestRow() {
+    this.bestText.text = this.getProgress().best.toLocaleString();
     const gap = 8;
-    const total = 30 + gap + best.width;
-    crown.x = cx - total / 2 + 15;
-    crown.y = y;
-    best.x = cx - total / 2 + 30 + gap;
-    best.y = y;
-    this.uiLayer.addChild(crown, best);
+    const total = 30 + gap + this.bestText.width;
+    this.bestCrown.x = this.bestRowCx - total / 2 + 15;
+    this.bestCrown.y = this.bestRowY;
+    this.bestText.x = this.bestRowCx - total / 2 + 30 + gap;
+    this.bestText.y = this.bestRowY;
   }
 
   // 🪐 + 현재(이어하기) 점수 — Play 아래, 중앙 정렬. 아이콘 = 현재 세션 **최대 머지 행성**(docs §2-2).
@@ -175,6 +189,7 @@ export class TitleScreen {
 
   // Title 진입(부팅·Pool→Title 복귀) 시 GameScene이 호출 — 현재 점수 + 최대 머지 아이콘 갱신.
   refresh() {
+    this.layoutBestRow(); // 👑 최고 점수(영속) 갱신
     this.currentScore.text = this.getProgress().current.toLocaleString();
     if (this.currentIcon) {
       this.uiLayer.removeChild(this.currentIcon);
@@ -202,36 +217,50 @@ export class TitleScreen {
   private playButton(cx: number, cy: number) {
     const { w, h } = ASSET_SIZES.playButton;
     const c = this.buttonContainer(cx, cy, w, h, this.onPlay);
-    const normal = Sprite.from(ASSETS.ui.playButton);
-    const pressed = Sprite.from(ASSETS.ui.playButtonPressed);
-    for (const sprite of [normal, pressed]) {
-      sprite.anchor.set(0.5);
-      c.addChild(sprite);
-    }
-    pressed.visible = false;
+    this.addNineSliceBody(c, ASSETS.ui.playButton, w, h);
     const tri = new Graphics();
     tri.beginFill(0xffffff);
-    tri.moveTo(-13, -17);
-    tri.lineTo(17, 0);
-    tri.lineTo(-13, 17);
+    tri.moveTo(-14, -18);
+    tri.lineTo(18, 0);
+    tri.lineTo(-14, 18);
     tri.closePath();
     tri.endFill();
-    tri.y = -14;
+    tri.y = -11;
     c.addChild(tri);
     const play = makeText('게임 시작', 22, 0xffffff, '800');
     play.anchor.set(0.5);
-    play.y = 28;
+    play.y = 25;
     c.addChild(play);
-    const setPressed = (isPressed: boolean) => {
-      normal.visible = !isPressed;
-      pressed.visible = isPressed;
-      tri.y = isPressed ? -9 : -14;
-      play.y = isPressed ? 31 : 28;
-    };
-    c.on('pointerdown', () => setPressed(true));
-    c.on('pointerup', () => setPressed(false));
-    c.on('pointerupoutside', () => setPressed(false));
     this.uiLayer.addChild(c);
+  }
+
+  private addNineSliceBody(c: Container, asset: string, w: number, h: number) {
+    const texture = Texture.from(asset);
+    const sourceW = ASSET_SIZES.playButtonSource.w;
+    const sourceH = ASSET_SIZES.playButtonSource.h;
+    const left = 42;
+    const right = 42;
+    const top = 34;
+    const bottom = 34;
+    const srcX = [0, left, sourceW - right];
+    const srcY = [0, top, sourceH - bottom];
+    const srcW = [left, sourceW - left - right, right];
+    const srcH = [top, sourceH - top - bottom, bottom];
+    const dstX = [-w / 2, -w / 2 + left, w / 2 - right];
+    const dstY = [-h / 2, -h / 2 + top, h / 2 - bottom];
+    const dstW = [left, w - left - right, right];
+    const dstH = [top, h - top - bottom, bottom];
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        const frame = new Rectangle(srcX[col], srcY[row], srcW[col], srcH[row]);
+        const sprite = new Sprite(new Texture(texture.baseTexture, frame));
+        sprite.x = dstX[col];
+        sprite.y = dstY[row];
+        sprite.width = dstW[col];
+        sprite.height = dstH[row];
+        c.addChild(sprite);
+      }
+    }
   }
 
   // 아이콘 타일 + 라벨 카드(레퍼런스 이미지) — docs/50-art-ux/title-screen §2-3
@@ -239,15 +268,15 @@ export class TitleScreen {
     const c = this.buttonContainer(cx, cy, 84, 100, onPress);
     const tile = new Graphics();
     tile.beginFill(0x000000, 0.46);
-    tile.drawRoundedRect(-40, -48, 80, 94, 16);
+    tile.drawRoundedRect(-34, -44, 68, 68, 16);
     tile.endFill();
     tile.lineStyle(2, 0xffffff, 0.18);
-    tile.drawRoundedRect(-40, -48, 80, 94, 16);
+    tile.drawRoundedRect(-34, -44, 68, 68, 16);
     c.addChild(tile);
     const ic = Sprite.from(iconAsset);
     ic.anchor.set(0.5);
-    ic.scale.set(50 / ASSET_SIZES.uiIcon.w);
-    ic.y = -14;
+    ic.scale.set(52 / ASSET_SIZES.uiIcon.w);
+    ic.y = -10;
     c.addChild(ic);
     const lbl = new Text(label, {
       fill: 0xe7edff,
@@ -260,7 +289,7 @@ export class TitleScreen {
       lineHeight: 14,
     });
     lbl.anchor.set(0.5);
-    lbl.y = 36;
+    lbl.y = 40;
     c.addChild(lbl);
     this.uiLayer.addChild(c);
   }
@@ -306,6 +335,7 @@ export class TitleScreen {
     const c = this.buttonContainer(cx, cy, 204, 42, () => {
       this.toggleGalaxy = !this.toggleGalaxy;
       this.knobTargetX = this.toggleGalaxy ? -48 : 48; // 슬라이드 목표 (기능 없음, 시각 전환만)
+      sound.play('toggle'); // Galaxy/Fantasy 전환 효과음 (docs/50-art-ux/sound-design)
     });
     const bg = new Graphics();
     bg.beginFill(0x10182e, 0.92);

@@ -72,8 +72,7 @@ export class GameScene {
   private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위, 뷰포트 전체)
   private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
   private bgRoot = new Container(); // 은하수 배경 — cover로 뷰포트 가득(Title 한정)
-  private fgRoot = new Container(); // 태양계·로비 UI·보드·HUD — contain(9:16, 잘림 없음)
-  private popupRoot = new Container(); // 인게임/로비 팝업 — cover로 딤이 뷰포트 전체(상하 여백 포함)를 덮음
+  private fgRoot = new Container(); // 태양계·로비 UI·보드·HUD·모든 팝업 — contain(9:16, 잘림 없음)
 
   stats = { shots: 0, merges: 0, maxTier: 1, sunReached: false };
 
@@ -87,7 +86,7 @@ export class GameScene {
     });
     mount.appendChild(this.app.view as unknown as HTMLCanvasElement);
     this.gameLayer.addChild(this.boardLayer, this.comboLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
-    this.app.stage.addChild(this.bgRoot, this.fgRoot, this.popupRoot); // 배경(cover)·전경(contain)·팝업(cover)
+    this.app.stage.addChild(this.bgRoot, this.fgRoot); // 배경(cover)·전경+팝업(contain)
     this.fgRoot.addChild(this.gameLayer);
     this.app.stage.eventMode = 'static';
 
@@ -102,7 +101,7 @@ export class GameScene {
     ]); // back button → Title
     this.effects = new Effects(this.effectLayer);
     this.combo = new Combo(this.comboLayer);
-    this.score = new ScoreSystem((s) => this.hud.setScore(s));
+    this.score = new ScoreSystem((s) => { this.hud.setScore(s); this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드
     this.queue = new QueueSystem(
       () => {}, // launcher shows the current planet; next is random-refilled
       () => Math.max(1, Math.min(this.unlockedTier - PROGRESSION.queueBelow, PROGRESSION.queueCap))
@@ -170,7 +169,7 @@ export class GameScene {
     this.buildInitialRack();
     this.title = new TitleScreen(
       () => { sound.play('play'); this.setScene('PoolInGame'); },
-      () => ({ current: this.score.score, maxTier: this.stats.maxTier }), // Title 현재 점수·최대 머지 아이콘
+      () => ({ current: this.meta.currentScore, best: this.meta.bestScore, maxTier: this.stats.maxTier }), // Title 현재/최고(영속) + 최대 머지 아이콘
       { coins: () => this.meta.coins, subscribe: (fn) => this.meta.subscribe(fn), open: (k) => this.metaUI.open(k) } // 코인·팝업 훅
     );
     this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
@@ -180,7 +179,7 @@ export class GameScene {
     this.fade.alpha = 0;
     this.fade.eventMode = 'none';
     this.unlockModal = new UnlockModal(() => this.onUnlockOk());
-    this.popupRoot.addChild(this.unlockModal.container); // 모달 딤은 cover 팝업 레이어(뷰포트 전체)
+    this.fgRoot.addChild(this.unlockModal.container); // 해금 모달 = contain 레이어 + 오버사이즈 딤(메타 팝업과 동일, docs/50-art-ux/popup-system)
     this.app.stage.addChild(this.fade); // 씬 전이 페이드(최상위, 뷰포트 전체) — 크기는 layout()
     // 부팅: Loading 씬으로 즉시 진입(페이드 없음) → 최소 LOAD_MIN_MS 후 Title로 전이(tick에서 판정)
     this.loadT0 = performance.now();
@@ -190,7 +189,7 @@ export class GameScene {
 
     this.layout();
     this.app.renderer.on('resize', () => this.layout());
-    this.exposeDebug();
+    if (import.meta.env.DEV) this.exposeDebug(); // 디버그 API(window.__game)는 dev에서만 — 프로덕션 빌드에선 제거
   }
 
   private setScene(scene: SceneState) {
@@ -408,11 +407,9 @@ export class GameScene {
     const sFg = Math.min(vw / DESIGN.w, vh / DESIGN.h);
     this.fgRoot.scale.set(sFg);
     this.fgRoot.position.set((vw - DESIGN.w * sFg) / 2, (vh - DESIGN.h * sFg) / 2);
-    const sBg = Math.max(vw / DESIGN.w, vh / DESIGN.h);
-    this.bgRoot.scale.set(sBg);
-    this.bgRoot.position.set((vw - DESIGN.w * sBg) / 2, (vh - DESIGN.h * sBg) / 2);
-    this.popupRoot.scale.set(sBg); // 팝업 딤도 cover로 뷰포트 전체(상하 여백까지)
-    this.popupRoot.position.set((vw - DESIGN.w * sBg) / 2, (vh - DESIGN.h * sBg) / 2);
+    this.bgRoot.scale.set(1);
+    this.bgRoot.position.set(0, 0);
+    this.title.galaxy.resize(vw, vh);
     this.app.stage.hitArea = new Rectangle(0, 0, vw, vh);
     this.fade.clear();
     this.fade.beginFill(0x0a0e1a);
@@ -436,6 +433,7 @@ export class GameScene {
       loadingActive: () => this.scene === 'Loading',
       unlockedTier: () => this.unlockedTier,
       unlockPending: () => this.paused,
+      unlockModalScale: () => (this.unlockModal.container.parent as any)?.scale?.x ?? 0, // parent layer scale (contain sFg, not cover) — docs/50-art-ux/popup-system
       okUnlock: () => this.onUnlockOk(),
       unlockAll: () => {
         this.unlockedTier = MAX_TIER;
@@ -483,7 +481,7 @@ export class GameScene {
         this.spawnPlanet(tier, cx + r + 1, cy, -5, 0, now, true);
       },
       // meta layer (coin wallet + missions + attendance + wheel) — docs/30-systems/meta-economy
-      meta: () => ({ coins: this.meta.coins, completed: this.meta.completedCount(), attendanceDay: this.meta.attendanceDay }),
+      meta: () => ({ coins: this.meta.coins, completed: this.meta.completedCount(), attendanceDay: this.meta.attendanceDay, best: this.meta.bestScore, current: this.meta.currentScore }),
       metaMissions: () => this.meta.missionRows(),
       metaReset: () => this.meta.__reset(),
       metaAddCoins: (n: number) => this.meta.addCoins(n),
