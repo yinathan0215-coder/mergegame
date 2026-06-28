@@ -50,7 +50,7 @@ declare global {
       metaReset: () => void;
       metaAddCoins: (n: number) => void;
       openPopup: (kind: 'dailyMission' | 'attendance' | 'wheel' | 'shop') => void;
-      openPopupKind: () => 'dailyMission' | 'attendance' | 'wheel' | 'shop' | null;
+      openPopupKind: () => 'dailyMission' | 'attendance' | 'wheel' | 'shop' | 'settings' | null;
       hudMenuOpen: () => boolean;
       hudMenuBurger: () => void;
       hudMenuItemCount: () => number;
@@ -380,13 +380,9 @@ test('인게임 ≡ 메뉴: 햄버거 토글·바깥 탭 닫힘 + 4아이콘이 
   await page.evaluate(() => window.__game.hudMenuBurger());
   await page.evaluate(() => window.__game.hudMenuOutside());
   expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
-  // 설정(항목 3): Title 설정과 동일 — 전용 팝업이 없으므로 아무 팝업도 열리지 않고 리스트만 닫힌다.
-  await page.evaluate(() => window.__game.hudMenuBurger());
-  await page.evaluate(() => window.__game.hudMenuItem(3));
-  expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
-  expect(await page.evaluate(() => window.__game.openPopupKind())).toBe(null);
-  // 항목 0·1·2 → 일일미션·출석·돌림판 팝업을 열고 리스트는 닫힌다(한 번에 하나).
-  for (const [i, kind] of [[0, 'dailyMission'], [1, 'attendance'], [2, 'wheel']] as const) {
+  // 항목 0·1·2·3 → 일일미션·출석·돌림판·설정 팝업을 열고 리스트는 닫힌다(한 번에 하나).
+  // 설정(항목 3)은 Title 설정 기어와 동일한 설정 팝업을 연다 (docs/50-art-ux/layout §2-c).
+  for (const [i, kind] of [[0, 'dailyMission'], [1, 'attendance'], [2, 'wheel'], [3, 'settings']] as const) {
     await page.evaluate(() => window.__game.hudMenuBurger());
     await page.evaluate((idx) => window.__game.hudMenuItem(idx), i);
     expect(await page.evaluate(() => window.__game.hudMenuOpen())).toBe(false);
@@ -573,6 +569,41 @@ test('첫 제스처 코치: 게임 진입 시 표시, 첫 발사 후 사라짐',
   await page.evaluate(() => window.__game.fire(-Math.PI / 2, 0.9)); // 첫 발사
   await page.waitForTimeout(80);
   expect(await page.evaluate(() => (window.__game as any).gestureHintShown())).toBe(false);
+});
+
+test('콘솔/런타임 에러 없음: 대표 세션을 플레이해도 pageerror·console.error가 0건', async ({ page }) => {
+  const errors: string[] = [];
+  // 리스너는 네비게이션 전에 등록 — 부팅 중 발생하는 에러도 빠짐없이 포착한다.
+  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+  page.on('console', (m) => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
+  await ready(page); // seedSave → goto → Title → startGame('Infinite') → PoolInGame
+  // 대표 세션: 실제 발사 몇 발 + 강제 머지로 합성·점수·콤보 경로를 태우고 정착시킨다.
+  for (let i = 0; i < 4; i++) {
+    const ang = -Math.PI / 2 + (i - 1.5) * 0.14;
+    await page.evaluate((a) => window.__game.fire(a, 0.95), ang);
+    await page.waitForTimeout(300);
+  }
+  await page.evaluate(() => window.__game.spawnPair(5)); // 동급 강제 충돌 → 합성
+  await page.waitForTimeout(1200); // 물리·연출 정착
+  expect(errors, errors.join('\n')).toEqual([]);
+});
+
+test('재시작: 세션 종료 후 리로드 없이 새 세션으로 재진입(카운트·랙이 신선)', async ({ page }) => {
+  await ready(page); // Infinite 진입(count 50)
+  // 세션 종료: 보드를 비우고 카운트 0 → Infinite 결과창
+  await page.evaluate(() => { window.__game.clearBoard(); window.__game.setCount(0); });
+  await page.waitForFunction(() => window.__game.resultShown(), null, { timeout: 5000 });
+  // 리로드 없이 재시작: Title 경유 → Infinite 재진입(startSession이 새 세션을 구성)
+  await page.evaluate(() => window.__game.showTitle());
+  await page.waitForFunction(() => window.__game.scene() === 'Title' && !window.__game.transitioning(), null, { timeout: 5000 });
+  await page.evaluate(() => window.__game.startGame('Infinite'));
+  await page.waitForFunction(() => window.__game.scene() === 'PoolInGame' && window.__game.planetCount() > 0, null, { timeout: 15000 });
+  await page.waitForFunction(() => !window.__game.transitioning(), null, { timeout: 5000 });
+  // 새 세션: 결과창 닫힘 + 카운트 풀(50) 복귀 + 신선한 랙(10)
+  expect(await page.evaluate(() => window.__game.scene())).toBe('PoolInGame');
+  expect(await page.evaluate(() => window.__game.resultShown())).toBe(false);
+  expect(await page.evaluate(() => window.__game.count())).toBe(50);
+  expect(await page.evaluate(() => window.__game.planetCount())).toBe(10);
 });
 
 test('Stage 진행: 클리어 시 다음 스테이지로 전진되고 영속된다', async ({ page }) => {
