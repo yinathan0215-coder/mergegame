@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
-import { DESIGN, WHEEL, COLORS } from '../data/config';
+import { DESIGN, WHEEL, COLORS, FONT, TYPE } from '../data/config';
 import { Popup } from '../ui/Popup';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
@@ -12,7 +12,7 @@ import type { MetaStore } from '../MetaStore';
 const SEG = WHEEL.segments as number[];
 const N = SEG.length;
 const SEG_ANG = (2 * Math.PI) / N;
-const SEG_FILL = [0xe23b2e, 0xf0a93f, 0x3fc6d4, 0xe87fae, 0xf0c93f, 0xe23b2e, 0x3fc6d4, 0xe87fae];
+const SEG_FILL = [COLORS.wheelRed, COLORS.wheelOrange, COLORS.wheelCyan, COLORS.wheelPink, COLORS.wheelYellow, COLORS.wheelRed, COLORS.wheelCyan, COLORS.wheelPink];
 const R = 150; // wheel radius (DESIGN space)
 
 type Phase = 'idle' | 'spinning' | 'decel';
@@ -52,17 +52,17 @@ export class LuckyWheelPopup extends Popup {
 
     // fixed top pointer (arrow pointing down into the wheel)
     const ptr = new Graphics();
-    ptr.beginFill(0x2a1530);
+    ptr.beginFill(COLORS.wheelPtr);
     ptr.moveTo(cx - 16, cy - R - 6); ptr.lineTo(cx + 16, cy - R - 6); ptr.lineTo(cx, cy - R + 22); ptr.closePath();
     ptr.endFill();
     this.body.addChild(ptr);
     // hub
     const hub = new Graphics();
-    hub.beginFill(0x7a3b12); hub.drawCircle(cx, cy, 26); hub.endFill();
-    hub.beginFill(0xe0a23a); hub.drawCircle(cx, cy, 18); hub.endFill();
+    hub.beginFill(COLORS.wheelHubBrown); hub.drawCircle(cx, cy, 26); hub.endFill();
+    hub.beginFill(COLORS.wheelHubGold); hub.drawCircle(cx, cy, 18); hub.endFill();
     this.body.addChild(hub);
 
-    this.winText = new Text('', { fill: 0xffe28a, fontSize: 24, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.winText = new Text('', { fill: COLORS.goldText, fontSize: TYPE.s24, fontFamily: FONT, fontWeight: '800' });
     this.winText.anchor.set(0.5);
     this.winText.x = cx; this.winText.y = cy + R + 36;
     this.body.addChild(this.winText);
@@ -72,8 +72,8 @@ export class LuckyWheelPopup extends Popup {
 
   private drawWheel() {
     const g = new Graphics();
-    g.lineStyle(6, 0xe0a23a);
-    g.beginFill(0x7a3b12); g.drawCircle(0, 0, R + 8); g.endFill(); // rim
+    g.lineStyle(6, COLORS.wheelHubGold);
+    g.beginFill(COLORS.wheelHubBrown); g.drawCircle(0, 0, R + 8); g.endFill(); // rim
     for (let i = 0; i < N; i++) {
       const a0 = i * SEG_ANG - Math.PI / 2 - SEG_ANG / 2; // segment i centred at the top when rot lands on it
       g.lineStyle(0);
@@ -91,7 +91,7 @@ export class LuckyWheelPopup extends Popup {
       coin.y = Math.sin(a) * R * 0.46;
       coin.rotation = a + Math.PI / 2;
       this.wheel.addChild(coin);
-      const t = new Text(String(SEG[i]), { fill: 0xffffff, fontSize: 22, fontFamily: 'Arial, sans-serif', fontWeight: '800', stroke: 0x5a2a00, strokeThickness: 3 });
+      const t = new Text(String(SEG[i]), { fill: COLORS.white, fontSize: TYPE.s22, fontFamily: FONT, fontWeight: '800', stroke: COLORS.wheelTextStroke, strokeThickness: 3 });
       t.anchor.set(0.5);
       t.x = Math.cos(a) * R * 0.74;
       t.y = Math.sin(a) * R * 0.74;
@@ -115,19 +115,19 @@ export class LuckyWheelPopup extends Popup {
     this.btn.removeChildren().forEach((c) => c.destroy({ children: true }));
     const w = LuckyWheelPopup.BW, h = LuckyWheelPopup.BH, dy = BUTTON3D_DY;
     if (this.phase === 'spinning') {
-      this.btn.addChild(button3D(w, h, 0xe5483a, 16)); // red stop
-      const t = new Text('정지', { fill: 0xffffff, fontSize: 24, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      this.btn.addChild(button3D(w, h, COLORS.stopRed, 16)); // red stop
+      const t = new Text('정지', { fill: COLORS.white, fontSize: TYPE.s24, fontFamily: FONT, fontWeight: '800' });
       t.anchor.set(0.5); t.y = dy;
       this.btn.addChild(t);
       return;
     }
     const broke = this.store.coins < WHEEL.cost;
     this.btn.addChild(button3D(w, h, COLORS.btnBlue, 16, broke));
-    const ink = broke ? 0x9aa6c4 : 0xffffff;
+    const ink = broke ? COLORS.btnBrokeGrey : COLORS.white;
     const coin = coinSprite(22); coin.x = -52; coin.y = dy - 11; coin.alpha = broke ? 0.6 : 1;
-    const cost = new Text(String(WHEEL.cost), { fill: ink, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const cost = new Text(String(WHEEL.cost), { fill: ink, fontSize: TYPE.s15, fontFamily: FONT, fontWeight: '800' });
     cost.anchor.set(0.5); cost.x = -52; cost.y = dy + 12;
-    const spin = new Text('회전', { fill: ink, fontSize: 24, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const spin = new Text('회전', { fill: ink, fontSize: TYPE.s24, fontFamily: FONT, fontWeight: '800' });
     spin.anchor.set(0.5); spin.x = 24; spin.y = dy;
     this.btn.addChild(coin, cost, spin);
   }

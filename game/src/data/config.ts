@@ -173,6 +173,10 @@ export const COLORS = Object.fromEntries(
   Object.entries(balance.colors).map(([k, v]) => [k, parseInt((v as string).slice(1), 16)])
 ) as Record<string, number>;
 
+// ── Typography: single font family + named size scale (SSoT = balance.json) ──
+export const FONT = balance.fontFamily as string;
+export const TYPE = balance.type as Record<string, number>;
+
 // ── Behaviour groups (verbatim from JSON) ───────────────────────────────────
 export const LAUNCH = balance.launch;
 export const PHYSICS = balance.physics;

@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import { ASSETS, ASSET_SIZES } from './assets';
+import { COLORS } from './data/config';
 
 interface GalaxyBackgroundOptions {
   x: number;
@@ -64,7 +65,7 @@ export class GalaxyBackground extends Container {
       speed: 0.0012 + random() * 0.0018,
       alpha: 0.18 + random() * 0.3,
       cross: i % 7 === 0,
-      color: random() > 0.72 ? 0xf4c84d : 0x8fa7e8,
+      color: random() > 0.72 ? COLORS.starBright : COLORS.starDim,
     }));
   }
 

@@ -1,5 +1,5 @@
 import { Container, Graphics, type FederatedPointerEvent } from 'pixi.js';
-import { JUICE } from '../data/config';
+import { JUICE, COLORS } from '../data/config';
 import { sound } from '../SoundManager';
 
 // Common pressable-button feedback (docs/50-art-ux/feedback-effects §5). Every tappable control —
@@ -62,10 +62,10 @@ export function attachButtonFeedback(target: Container, onTap: () => void): Cont
 // §2-3 · layout §2-c). Caller positions it at a button's top-right and toggles `.visible`.
 export function redDot(): Graphics {
   const g = new Graphics();
-  g.beginFill(0xffffff);
+  g.beginFill(COLORS.white);
   g.drawCircle(0, 0, 8);
   g.endFill();
-  g.beginFill(0xe53935);
+  g.beginFill(COLORS.redDot);
   g.drawCircle(0, 0, 6);
   g.endFill();
   return g;
@@ -86,12 +86,12 @@ function shade(color: number, f: number): number {
 export const BUTTON3D_DY = -3;
 export function button3D(w: number, h: number, base: number, radius = 14, disabled = false): Graphics {
   const g = new Graphics();
-  const body = disabled ? 0x39456b : base;
+  const body = disabled ? COLORS.btnDisabled : base;
   const dark = shade(body, 0.72);
   const light = shade(body, 1.28);
   const x = -w / 2;
   const top = -h / 2;
-  g.beginFill(0x06112a, disabled ? 0.28 : 0.45); // drop shadow
+  g.beginFill(COLORS.btnShadow, disabled ? 0.28 : 0.45); // drop shadow
   g.drawRoundedRect(x, top + 7, w, h - 4, radius);
   g.endFill();
   g.beginFill(dark); // dark bottom edge (the 3D side)
@@ -103,7 +103,7 @@ export function button3D(w: number, h: number, base: number, radius = 14, disabl
   g.beginFill(light, 0.85); // top gloss
   g.drawRoundedRect(x + 5, top + 4, w - 10, (h - 6) * 0.42, Math.max(4, radius - 5));
   g.endFill();
-  g.lineStyle(2, 0xffffff, disabled ? 0.15 : 0.32); // outline
+  g.lineStyle(2, COLORS.white, disabled ? 0.15 : 0.32); // outline
   g.drawRoundedRect(x, top, w, h - 6, radius);
   return g;
 }

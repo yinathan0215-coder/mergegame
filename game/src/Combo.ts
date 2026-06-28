@@ -1,5 +1,5 @@
 import { Container, Text } from 'pixi.js';
-import { PLAY, JUICE } from './data/config';
+import { PLAY, JUICE, FONT } from './data/config';
 
 const C = JUICE.combo;
 
@@ -21,7 +21,7 @@ export class Combo {
     const cy = PLAY.y + PLAY.h * C.cyFrac;
     const color = parseInt(C.color.slice(1), 16);
     const mk = (s: string, size: number, anchorY: number, y: number): Text => {
-      const t = new Text(s, { fill: color, fontSize: size, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const t = new Text(s, { fill: color, fontSize: size, fontFamily: FONT, fontWeight: '800' });
       t.anchor.set(0.5, anchorY);
       t.x = cx;
       t.y = y;

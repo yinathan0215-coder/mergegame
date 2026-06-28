@@ -1,10 +1,10 @@
 import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi.js';
-import { HUD, COLORS, JUICE } from './data/config';
+import { HUD, COLORS, JUICE, FONT } from './data/config';
 import { ASSETS, ASSET_SIZES } from './assets';
 import { attachButtonFeedback, redDot } from './ui/button';
 
 function txt(s: string, size: number, color: number, weight: string): Text {
-  return new Text(s, { fill: color, fontSize: size, fontFamily: 'Arial, sans-serif', fontWeight: weight as any });
+  return new Text(s, { fill: color, fontSize: size, fontFamily: FONT, fontWeight: weight as any });
 }
 
 // One in-game dropdown shortcut: an icon that runs the same action as a Title-lobby button
@@ -43,7 +43,7 @@ export class Hud {
     this.crown.anchor.set(0.5);
     this.crown.scale.set(28 / ASSET_SIZES.uiIcon.w);
     layer.addChild(this.crown);
-    this.bestText = txt('0', 17, 0xcccccc, '700');
+    this.bestText = txt('0', 17, COLORS.textGrey, '700');
     this.bestText.anchor.set(0, 0.5);
     layer.addChild(this.bestText);
     this.centerBest(); // crown + best 를 cx 기준 수평 중앙 정렬
@@ -111,10 +111,10 @@ export class Hud {
 
     // ONE shared dimmed box wrapping the whole list (docs/50-art-ux/layout §2-c · button-system)
     const panel = new Graphics();
-    panel.beginFill(0x000000, 0.46);
+    panel.beginFill(COLORS.black, 0.46);
     panel.drawRoundedRect(cx - panelW / 2, topY, panelW, panelH, 12);
     panel.endFill();
-    panel.lineStyle(2, 0xffffff, 0.18);
+    panel.lineStyle(2, COLORS.white, 0.18);
     panel.drawRoundedRect(cx - panelW / 2, topY, panelW, panelH, 12);
     panel.eventMode = 'static';
     panel.on('pointerdown', (e) => e.stopPropagation()); // taps between icons don't fall through to close

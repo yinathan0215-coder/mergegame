@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite, Text } from 'pixi.js';
-import { COLORS, JUICE, WHEEL } from '../data/config';
+import { COLORS, JUICE, WHEEL, FONT, TYPE } from '../data/config';
 import { coinSprite } from './coin';
 import type { MetaStore } from '../MetaStore';
 
@@ -63,7 +63,7 @@ export class CoinPill extends Container {
     this.addChild(coin);
 
     this.shown = store.coins;
-    this.label = new Text(String(this.shown), { fill: 0xffffff, fontSize: 16, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.label = new Text(String(this.shown), { fill: COLORS.white, fontSize: TYPE.s16, fontFamily: FONT, fontWeight: '800' });
     this.label.anchor.set(0.5);
     this.label.x = X0 + 57; this.label.y = Y0 + 16;
     this.addChild(this.label);

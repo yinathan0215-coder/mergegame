@@ -9,7 +9,7 @@ export type GameMode = 'Infinite' | 'Stage';
 export interface StageDef {
   count: number;
   target: number; // tier to create for clear
-  rack: { tier: number; x: number; y: number }[];
+  rack: { tier: number; count: number }[]; // composition (tier -> how many); laid out by GameScene.buildStageRack
   queue: number[];
 }
 

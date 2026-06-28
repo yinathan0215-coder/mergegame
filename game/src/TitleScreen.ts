@@ -3,7 +3,7 @@ import { ASSETS, ASSET_SIZES } from './assets';
 import { GalaxyBackground } from './GalaxyBackground';
 import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
-import { DESIGN } from './data/config';
+import { DESIGN, COLORS, FONT, TYPE } from './data/config';
 import { attachButtonFeedback, redDot } from './ui/button';
 import { sound } from './SoundManager';
 import type { PopupKind } from './MetaUI';
@@ -33,11 +33,11 @@ interface Orbit {
   spin: number; // 자전 각속도 (rad/ms)
 }
 
-function makeText(value: string, size: number, color = 0xffffff, weight: '400' | '700' | '800' = '700') {
+function makeText(value: string, size: number, color = COLORS.white, weight: '400' | '700' | '800' = '700') {
   return new Text(value, {
     fill: color,
     fontSize: size,
-    fontFamily: 'Arial, sans-serif',
+    fontFamily: FONT,
     fontWeight: weight,
   });
 }
@@ -45,8 +45,8 @@ function makeText(value: string, size: number, color = 0xffffff, weight: '400' |
 const ORBIT_CY = DESIGN.h * 0.3; // 태양계 중점 y — 태양이 게임 시작 버튼보다 위에 보이도록 상단 배치
 // 하이라이트 캡슐 색 — Stage=파랑(기본·좌측), Infinite=보라(우측) (docs/50-art-ux/title-screen §2-4)
 const TOGGLE_ACTIVE_COLOR: Record<GameMode, number> = {
-  Stage: 0x1f8efa,
-  Infinite: 0x4e1da9,
+  Stage: COLORS.stageAccent,
+  Infinite: COLORS.infiniteAccent,
 };
 
 export class TitleScreen {
@@ -97,7 +97,7 @@ export class TitleScreen {
     const solarOrbitTiers = [2, 4, 5, 3, 9, 8, 7, 6];
 
     const rings = new Graphics();
-    rings.lineStyle(1, 0x8aa0df, 0.12);
+    rings.lineStyle(1, COLORS.panelBorder, 0.12);
     for (const rx of radii) rings.drawEllipse(cx, cy, rx, rx * ECC);
     rings.zIndex = -1000; // 궤도선은 항상 맨 뒤
     this.orbitLayer.addChild(rings);
@@ -151,7 +151,7 @@ export class TitleScreen {
   // 최고 점수 + 게임 시작 버튼을 감싸는 검은 반투명 사각 박스 (docs §2-2)
   private centerPanel(cx: number) {
     const g = new Graphics();
-    g.beginFill(0x000000, 0.4);
+    g.beginFill(COLORS.black, 0.4);
     g.drawRoundedRect(cx - 126, 326, 252, 162, 20);
     g.endFill();
     this.uiLayer.addChild(g);
@@ -164,11 +164,11 @@ export class TitleScreen {
     this.bestCrown = Sprite.from(ASSETS.ui.crown);
     this.bestCrown.anchor.set(0.5);
     this.bestCrown.scale.set(30 / ASSET_SIZES.uiIcon.w);
-    this.bestText = makeText('0', 26, 0xf2d071, '800');
+    this.bestText = makeText('0', 26, COLORS.bestGold, '800');
     this.bestText.anchor.set(0, 0.5);
     this.uiLayer.addChild(this.bestCrown, this.bestText);
     // Stage 모드 전용: 최고 점수 영역에 'Stage N'을 대신 표시(평소 숨김, applyModeUi가 토글)
-    this.stageInfo = makeText('Stage 1', 28, 0xffe28a, '800');
+    this.stageInfo = makeText('Stage 1', 28, COLORS.goldText, '800');
     this.stageInfo.anchor.set(0.5);
     this.stageInfo.x = cx;
     this.stageInfo.y = y;
@@ -192,7 +192,7 @@ export class TitleScreen {
   private currentRow(cx: number, y: number) {
     this.currentRowCx = cx;
     this.currentRowY = y;
-    this.currentScore = makeText('0', 24, 0xdde7ff, '800');
+    this.currentScore = makeText('0', 24, COLORS.textBlue, '800');
     this.currentScore.anchor.set(0, 0.5);
     this.uiLayer.addChild(this.currentScore);
     this.refresh();
@@ -242,7 +242,7 @@ export class TitleScreen {
     c.addChild(this.playButtonBody);
     this.renderPlayButtonBody();
     const tri = new Graphics();
-    tri.beginFill(0xffffff);
+    tri.beginFill(COLORS.white);
     tri.moveTo(-13, -16);
     tri.lineTo(17, 0);
     tri.lineTo(-13, 16);
@@ -250,7 +250,7 @@ export class TitleScreen {
     tri.endFill();
     tri.y = -18;
     c.addChild(tri);
-    this.playLabel = makeText('Game Start', 22, 0xffffff, '800');
+    this.playLabel = makeText('Game Start', 22, COLORS.white, '800');
     this.playLabel.anchor.set(0.5);
     this.playLabel.y = 14;
     c.addChild(this.playLabel);
@@ -317,10 +317,10 @@ export class TitleScreen {
   private sideButton(cx: number, cy: number, iconAsset: string, label: string, onPress: () => void = () => {}, badgeKind?: PopupKind) {
     const c = this.buttonContainer(cx, cy, 84, 100, onPress);
     const tile = new Graphics();
-    tile.beginFill(0x000000, 0.46);
+    tile.beginFill(COLORS.black, 0.46);
     tile.drawRoundedRect(-34, -44, 68, 68, 16);
     tile.endFill();
-    tile.lineStyle(2, 0xffffff, 0.18);
+    tile.lineStyle(2, COLORS.white, 0.18);
     tile.drawRoundedRect(-34, -44, 68, 68, 16);
     c.addChild(tile);
     const ic = Sprite.from(iconAsset);
@@ -329,10 +329,10 @@ export class TitleScreen {
     ic.y = -10;
     c.addChild(ic);
     const lbl = new Text(label, {
-      fill: 0xe7edff,
-      fontSize: 12,
+      fill: COLORS.textBright,
+      fontSize: TYPE.s12,
       fontWeight: '800',
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: FONT,
       align: 'center',
       wordWrap: true,
       wordWrapWidth: 84,
@@ -358,10 +358,10 @@ export class TitleScreen {
   private iconButton(x: number, y: number, iconAsset: string, onPress: () => void) {
     const c = this.buttonContainer(x + 18, y + 18, 36, 36, onPress);
     const bg = new Graphics();
-    bg.beginFill(0x000000, 0.46);
+    bg.beginFill(COLORS.black, 0.46);
     bg.drawRoundedRect(-18, -18, 36, 36, 9);
     bg.endFill();
-    bg.lineStyle(2, 0xffffff, 0.18);
+    bg.lineStyle(2, COLORS.white, 0.18);
     bg.drawRoundedRect(-18, -18, 36, 36, 9);
     c.addChild(bg);
     const icon = Sprite.from(iconAsset);
@@ -380,21 +380,21 @@ export class TitleScreen {
       sound.play('toggle'); // 모드 전환 효과음 (docs/50-art-ux/sound-design)
     });
     const bg = new Graphics();
-    bg.beginFill(0x10182e, 0.92);
+    bg.beginFill(COLORS.gaugeTrack, 0.92);
     bg.drawRoundedRect(-102, -21, 204, 42, 21);
     bg.endFill();
-    bg.lineStyle(2, 0x8aa0df, 0.45);
+    bg.lineStyle(2, COLORS.panelBorder, 0.45);
     bg.drawRoundedRect(-102, -21, 204, 42, 21);
     this.renderToggleKnob();
     this.toggleKnob.x = -48;
     c.addChild(bg, this.toggleKnob);
     for (const [label, x] of [['Stage', -51], ['Infinite', 51]] as const) {
-      const t = makeText(label, 15, 0xffffff, '800');
+      const t = makeText(label, 15, COLORS.white, '800');
       t.anchor.set(0.5);
       t.x = x;
       c.addChild(t);
     }
-    const modeLabel = makeText('Mode', 13, 0xdde7ff, '800');
+    const modeLabel = makeText('Mode', 13, COLORS.textBlue, '800');
     modeLabel.anchor.set(0.5);
     modeLabel.y = -35;
     c.addChild(modeLabel);

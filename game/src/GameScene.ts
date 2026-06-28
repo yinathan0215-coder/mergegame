@@ -473,7 +473,7 @@ export class GameScene {
     this.title.galaxy.resize(vw, vh);
     this.app.stage.hitArea = new Rectangle(0, 0, vw, vh);
     this.fade.clear();
-    this.fade.beginFill(0x0a0e1a);
+    this.fade.beginFill(COLORS.fadeBlack);
     this.fade.drawRect(0, 0, vw, vh);
     this.fade.endFill();
   }

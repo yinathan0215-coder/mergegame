@@ -97,7 +97,7 @@ export class BoardRenderer {
     });
     img.addChild(this.galaxy);
     const mask = new Graphics();
-    mask.beginFill(0xffffff);
+    mask.beginFill(COLORS.white);
     fillPoly(mask, insetToward(inner, cx, cy, PG_BAND));
     mask.endFill();
     mask.renderable = false;

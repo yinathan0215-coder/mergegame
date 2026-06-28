@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { JUICE, COLORS, DESIGN } from './data/config';
+import { JUICE, COLORS, DESIGN, FONT } from './data/config';
 
 interface FX {
   g: Graphics;
@@ -75,7 +75,7 @@ export class Effects {
     const t = new Text(`+${points}`, {
       fill: POPUP_COLOR,
       fontSize: JUICE.scorePopup.fontSize,
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: FONT,
       fontWeight: '800',
     });
     t.anchor.set(0.5);
@@ -90,7 +90,7 @@ export class Effects {
   comboBonus(points: number, combo: number) {
     const c = JUICE.combo;
     const mk = (s: string, size: number, anchorY: number, y: number): Text => {
-      const t = new Text(s, { fill: BONUS_COLOR, fontSize: size, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const t = new Text(s, { fill: BONUS_COLOR, fontSize: size, fontFamily: FONT, fontWeight: '800' });
       t.anchor.set(0.5, anchorY);
       t.y = y;
       return t;

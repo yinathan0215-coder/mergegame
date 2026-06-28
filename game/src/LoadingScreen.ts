@@ -3,7 +3,7 @@
 // slim progress bar across the minimum load window. Pure render (no simulation); drawn in DESIGN space
 // inside fgRoot (contain), so it scales/centres with the 9:16 frame.
 import { Container, Graphics, Text } from 'pixi.js';
-import { DESIGN } from './data/config';
+import { COLORS, DESIGN, FONT } from './data/config';
 
 const TITLE_LINES = ['GALAXY', 'PINBALL'];
 const FONT_SIZE = 50;
@@ -42,7 +42,7 @@ export class LoadingScreen {
       const baseY = TITLE_CY + (li - (TITLE_LINES.length - 1) / 2) * LINE_GAP;
       // create the line's letters, measure, then centre the row horizontally
       const glyphs = [...word].map((ch) => {
-        const t = new Text(ch, { fill: 0xffffff, fontSize: FONT_SIZE, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+        const t = new Text(ch, { fill: COLORS.white, fontSize: FONT_SIZE, fontFamily: FONT, fontWeight: '800' });
         t.anchor.set(0.5);
         return t;
       });
@@ -81,11 +81,11 @@ export class LoadingScreen {
   private drawBar(p: number) {
     const x = DESIGN.w / 2 - BAR_W / 2;
     this.bar.clear();
-    this.bar.beginFill(0xffffff, 0.16);
+    this.bar.beginFill(COLORS.white, 0.16);
     this.bar.drawRoundedRect(x, BAR_Y, BAR_W, BAR_H, BAR_H / 2); // track
     this.bar.endFill();
     if (p > 0) {
-      this.bar.beginFill(0xffd23f); // gold fill — cheerful accent
+      this.bar.beginFill(COLORS.gold); // gold fill — cheerful accent
       this.bar.drawRoundedRect(x, BAR_Y, BAR_W * p, BAR_H, BAR_H / 2);
       this.bar.endFill();
     }

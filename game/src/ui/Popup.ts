@@ -1,5 +1,5 @@
 import { Container, Graphics, LINE_CAP, Rectangle, Text } from 'pixi.js';
-import { DESIGN, POPUP } from '../data/config';
+import { DESIGN, POPUP, COLORS, FONT, TYPE } from '../data/config';
 import { attachButtonFeedback } from './button';
 import { sound } from '../SoundManager';
 
@@ -41,7 +41,7 @@ export class Popup {
 
     // oversized rect → bleeds over the letterbox under the contain transform (covers full viewport)
     const M = 3000;
-    this.dim.beginFill(0x000000, 1);
+    this.dim.beginFill(COLORS.black, 1);
     this.dim.drawRect(-M, -M, DESIGN.w + 2 * M, DESIGN.h + 2 * M);
     this.dim.endFill();
     this.dim.eventMode = 'static';
@@ -63,10 +63,10 @@ export class Popup {
   private drawPanel(title: string) {
     const p = PANEL;
     const g = new Graphics();
-    g.beginFill(0x1b2748, 0.98); // panel body (dark slate-blue, matches lobby tone)
+    g.beginFill(COLORS.panelBg, 0.98); // panel body (dark slate-blue, matches lobby tone)
     g.drawRoundedRect(p.x, p.y, p.w, p.h, 22);
     g.endFill();
-    g.lineStyle(3, 0x8aa0df, 0.5);
+    g.lineStyle(3, COLORS.panelBorder, 0.5);
     g.drawRoundedRect(p.x, p.y, p.w, p.h, 22);
     this.content.addChild(g);
 
@@ -76,16 +76,16 @@ export class Popup {
     const bx = DESIGN.w / 2 - barW / 2;
     const by = p.y - 18;
     const bar = new Graphics();
-    bar.beginFill(0x7a2fb0);
+    bar.beginFill(COLORS.popupBarDark);
     bar.drawRoundedRect(bx, by + 4, barW, barH, 16);
     bar.endFill();
-    bar.beginFill(0xb24ce6);
+    bar.beginFill(COLORS.popupBarLight);
     bar.drawRoundedRect(bx, by, barW, barH, 16);
     bar.endFill();
-    bar.lineStyle(2, 0xffffff, 0.35);
+    bar.lineStyle(2, COLORS.white, 0.35);
     bar.drawRoundedRect(bx, by, barW, barH, 16);
     this.content.addChild(bar);
-    const t = new Text(title, { fill: 0xffffff, fontSize: 26, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const t = new Text(title, { fill: COLORS.white, fontSize: TYPE.s26, fontFamily: FONT, fontWeight: '800' });
     t.anchor.set(0.5);
     t.x = DESIGN.w / 2;
     t.y = by + barH / 2;
@@ -94,8 +94,8 @@ export class Popup {
 
   private drawTitleOnly(title: string) {
     const t = new Text(title, {
-      fill: 0xffffff, fontSize: 30, fontFamily: 'Arial, sans-serif', fontWeight: '800',
-      stroke: 0x0a0a14, strokeThickness: 4,
+      fill: COLORS.white, fontSize: TYPE.s30, fontFamily: FONT, fontWeight: '800',
+      stroke: COLORS.pocket, strokeThickness: 4,
     });
     t.anchor.set(0.5);
     t.x = DESIGN.w / 2;
@@ -126,9 +126,9 @@ export class Popup {
       g.moveTo(-s, -s + dy); g.lineTo(s, s + dy);
       g.moveTo(s, -s + dy); g.lineTo(-s, s + dy);
     };
-    stroke(14, 0x0e1428, 3); // drop shadow
-    stroke(14, 0x4a5573); // dark slate outline
-    stroke(7, 0xe4eaf6); // light grey core
+    stroke(14, COLORS.closeShadow, 3); // drop shadow
+    stroke(14, COLORS.closeOutline); // dark slate outline
+    stroke(7, COLORS.closeCore); // light grey core
     return g;
   }
   private onCloseCb?: () => void;

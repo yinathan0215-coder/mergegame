@@ -1,7 +1,7 @@
 import { Container, Rectangle, Text } from 'pixi.js';
 import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
-import { LAUNCHER, INNER_INSET, COLORS } from './data/config';
+import { LAUNCHER, INNER_INSET, COLORS, FONT, TYPE } from './data/config';
 import { button3D, attachButtonFeedback, BUTTON3D_DY } from './ui/button';
 import type { GameMode } from './modes/ModeController';
 
@@ -19,7 +19,7 @@ const NEXT_X = 130;
 const RIGHT_X = 388;
 
 function cap(s: string, x: number, y: number): Text {
-  const t = new Text(s, { fill: 0x9fb0d8, fontSize: 12, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+  const t = new Text(s, { fill: COLORS.labelMuted, fontSize: TYPE.s12, fontFamily: FONT, fontWeight: '800' });
   t.anchor.set(0.5);
   t.x = x;
   t.y = y;
@@ -39,7 +39,7 @@ export class GameInfoPanel {
 
   constructor(layer: Container, onCharge: () => void) {
     // ── bottom-left: COUNT + NEXT — two centred columns (title over value), side by side ──
-    this.countText = new Text('0', { fill: 0xffffff, fontSize: 28, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.countText = new Text('0', { fill: COLORS.white, fontSize: TYPE.s28, fontFamily: FONT, fontWeight: '800' });
     this.countText.anchor.set(0.5);
     this.countText.x = COUNT_X;
     this.countText.y = STRIP_C + 11;
@@ -60,7 +60,7 @@ export class GameInfoPanel {
     this.chargeEarth.x = -34;
     this.chargeEarth.y = BUTTON3D_DY;
     const chargeLabel = new Text('Planet\nCharge', {
-      fill: 0xffffff, fontSize: 14, fontFamily: 'Arial, sans-serif', fontWeight: '800', align: 'center', lineHeight: 16,
+      fill: COLORS.white, fontSize: TYPE.s14, fontFamily: FONT, fontWeight: '800', align: 'center', lineHeight: 16,
     });
     chargeLabel.anchor.set(0.5);
     chargeLabel.x = 22;
@@ -75,7 +75,7 @@ export class GameInfoPanel {
     this.targetCap = cap('TARGET', RIGHT_X, STRIP_C - 34);
     this.container.addChild(this.targetCap);
     this.targetWrap.addChild(this.targetPlanet);
-    this.targetName = new Text('', { fill: 0xffe28a, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.targetName = new Text('', { fill: COLORS.goldText, fontSize: TYPE.s15, fontFamily: FONT, fontWeight: '800' });
     this.targetName.anchor.set(0.5);
     this.targetName.y = 28;
     this.targetWrap.addChild(this.targetName);

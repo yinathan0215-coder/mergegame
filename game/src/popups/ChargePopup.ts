@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text, type FederatedPointerEvent } from 'pixi.js';
-import { DESIGN, MODES, COLORS } from '../data/config';
+import { DESIGN, MODES, COLORS, FONT, TYPE } from '../data/config';
 import { tierData } from '../data/planets';
 import { Popup } from '../ui/Popup';
 import { button3D, attachButtonFeedback, BUTTON3D_DY } from '../ui/button';
@@ -36,7 +36,7 @@ export class ChargePopup extends Popup {
     this.earth.x = cx - 44;
     this.earth.y = 300;
     this.body.addChild(this.earth);
-    this.plusText = new Text('+0', { fill: 0xffe28a, fontSize: 46, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.plusText = new Text('+0', { fill: COLORS.goldText, fontSize: TYPE.s46, fontFamily: FONT, fontWeight: '800' });
     this.plusText.anchor.set(0, 0.5);
     this.plusText.x = cx + 28;
     this.plusText.y = 300;
@@ -44,7 +44,7 @@ export class ChargePopup extends Popup {
 
     // slider (track + fill + knob) — interactive strip handles drag
     const track = new Graphics();
-    track.beginFill(0x0e1730);
+    track.beginFill(COLORS.chargeTrack);
     track.drawRoundedRect(TRACK_L, TRACK_Y - 5, TRACK_R - TRACK_L, 10, 5);
     track.endFill();
     this.body.addChild(track, this.fill, this.knob);
@@ -65,7 +65,7 @@ export class ChargePopup extends Popup {
     btn.y = 566;
     btn.hitArea = new Rectangle(-120, -32, 240, 64);
     btn.addChild(this.btnFace);
-    const btnLabel = new Text('충전', { fill: 0xffffff, fontSize: 22, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const btnLabel = new Text('충전', { fill: COLORS.white, fontSize: TYPE.s22, fontFamily: FONT, fontWeight: '800' });
     btnLabel.anchor.set(0.5);
     btnLabel.y = BUTTON3D_DY;
     btn.addChild(btnLabel);
@@ -75,7 +75,7 @@ export class ChargePopup extends Popup {
     const coin = coinSprite(22);
     coin.x = cx - 44;
     coin.y = 622;
-    this.coinText = new Text('0/0', { fill: 0xdde7ff, fontSize: 18, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.coinText = new Text('0/0', { fill: COLORS.textBlue, fontSize: TYPE.s18, fontFamily: FONT, fontWeight: '800' });
     this.coinText.anchor.set(0, 0.5);
     this.coinText.x = cx - 28;
     this.coinText.y = 622;
@@ -112,7 +112,7 @@ export class ChargePopup extends Popup {
     this.fill.drawRoundedRect(TRACK_L, TRACK_Y - 5, Math.max(0, kx - TRACK_L), 10, 5);
     this.fill.endFill();
     this.knob.clear();
-    this.knob.beginFill(this.maxValue > 0 ? 0xffffff : 0x55617f);
+    this.knob.beginFill(this.maxValue > 0 ? COLORS.white : COLORS.settingsGrey);
     this.knob.drawCircle(kx, TRACK_Y, 15);
     this.knob.endFill();
     this.plusText.text = `+${this.value}`;

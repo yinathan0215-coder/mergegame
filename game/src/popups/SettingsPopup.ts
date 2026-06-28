@@ -1,5 +1,5 @@
 import { Container, Graphics, LINE_CAP, Rectangle, Text } from 'pixi.js';
-import { COLORS, DESIGN } from '../data/config';
+import { COLORS, DESIGN, FONT, TYPE } from '../data/config';
 import { Popup } from '../ui/Popup';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { sound } from '../SoundManager';
@@ -8,9 +8,6 @@ import { sound } from '../SoundManager';
 // 진동·닉네임·UID 복사·언어·게임 저장·구글/Apple 로그인은 레퍼런스 구색용 비동작 placeholder(탭 시
 // 공통 프레스 피드백 + uiPress만). 사운드 토글은 SoundManager.toggleMuted()로 ppm.muted를 영속한다.
 const BLUE = COLORS.btnBlue;
-const GREY = 0x55617f;
-const ORANGE = 0xf2a13a;
-const RED = 0xd9483b; // 게임 초기화(파괴적 동작) 경고색
 
 interface ChipOpts {
   labelSize?: number;
@@ -26,31 +23,31 @@ export class SettingsPopup extends Popup {
 
     // 1) 사운드(동작) · 진동(placeholder)
     this.soundChip(cx - 93, 196);
-    this.chip(cx + 93, 196, 176, 52, BLUE, '진동', vibrateIcon(0xffffff), () => {});
+    this.chip(cx + 93, 196, 176, 52, BLUE, '진동', vibrateIcon(COLORS.white), () => {});
 
     // 2) 닉네임(placeholder)
-    this.chip(cx, 262, 362, 52, GREY, 'Player_1536384912', editIcon(0xdfe6f5), () => {}, { labelSize: 17 });
+    this.chip(cx, 262, 362, 52, COLORS.settingsGrey, 'Player_1536384912', editIcon(COLORS.textSoft), () => {}, { labelSize: 17 });
 
     // 3) UID + 복사(placeholder)
     this.uidRow(324);
 
     // 4) 언어 · 게임 저장(placeholder)
-    this.chip(cx - 93, 392, 176, 52, BLUE, '언어', langIcon(0xffffff), () => {});
-    this.chip(cx + 93, 392, 176, 52, BLUE, '게임 저장', saveIcon(0xffffff), () => {});
+    this.chip(cx - 93, 392, 176, 52, BLUE, '언어', langIcon(COLORS.white), () => {});
+    this.chip(cx + 93, 392, 176, 52, BLUE, '게임 저장', saveIcon(COLORS.white), () => {});
 
     // 구분선
     const div = new Graphics();
-    div.lineStyle(2, 0x8aa0df, 0.22);
+    div.lineStyle(2, COLORS.panelBorder, 0.22);
     div.moveTo(this.panel.x + 30, 448);
     div.lineTo(this.panel.x + this.panel.w - 30, 448);
     this.body.addChild(div);
 
     // 5) 소셜 로그인(placeholder)
-    this.chip(cx, 498, 362, 50, 0xffffff, '구글 로그인', googleIcon(), () => {}, { textColor: 0x222a3a });
-    this.chip(cx, 558, 362, 50, 0x1b1f2c, 'Apple 로그인', appleIcon(0xffffff), () => {}, { textColor: 0xffffff });
+    this.chip(cx, 498, 362, 50, COLORS.white, '구글 로그인', googleIcon(), () => {}, { textColor: COLORS.googleText });
+    this.chip(cx, 558, 362, 50, COLORS.chipDark, 'Apple 로그인', appleIcon(COLORS.white), () => {}, { textColor: COLORS.white });
 
     // 게임 초기화(동작) — 로컬 저장 전체 삭제 후 첫 로딩 화면으로 재시작 (docs/30-systems/settings)
-    this.chip(cx, 660, 362, 52, RED, '게임 초기화', resetIcon(0xffffff), () => this.resetGame());
+    this.chip(cx, 660, 362, 52, COLORS.settingsRed, '게임 초기화', resetIcon(COLORS.white), () => this.resetGame());
   }
 
   // 로컬 저장소를 전부 비우고 첫 로딩 화면(GALAXY PINBALL 스플래시)으로 재시작한다. 저장을 비운 뒤
@@ -85,9 +82,9 @@ export class SettingsPopup extends Popup {
   // 아이콘(≈26) + gap + 라벨을 한 덩어리로 가로 가운데 정렬해 face 컨테이너에 얹는다.
   private layoutFace(parent: Container, icon: Container | null, label: string, opts: ChipOpts) {
     const lbl = new Text(label, {
-      fill: opts.textColor ?? 0xffffff,
+      fill: opts.textColor ?? COLORS.white,
       fontSize: opts.labelSize ?? 18,
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: FONT,
       fontWeight: '800',
     });
     lbl.anchor.set(0, 0.5);
@@ -124,8 +121,8 @@ export class SettingsPopup extends Popup {
   private drawSound() {
     this.soundFace.removeChildren();
     const muted = sound.isMuted;
-    this.soundFace.addChild(button3D(176, 52, muted ? GREY : BLUE));
-    this.layoutFace(this.soundFace, speakerIcon(0xffffff, muted), muted ? '사운드 OFF' : '사운드', { labelSize: 17 });
+    this.soundFace.addChild(button3D(176, 52, muted ? COLORS.settingsGrey : BLUE));
+    this.layoutFace(this.soundFace, speakerIcon(COLORS.white, muted), muted ? '사운드 OFF' : '사운드', { labelSize: 17 });
   }
 
   // UID 표기(회색 박스) + 복사 버튼(주황) — 둘 다 placeholder.
@@ -133,16 +130,16 @@ export class SettingsPopup extends Popup {
     const box = new Container();
     box.x = 166;
     box.y = cy;
-    box.addChild(button3D(244, 52, GREY));
-    const cap = new Text('UID', { fill: 0xb9c4e0, fontSize: 11, fontFamily: 'Arial, sans-serif', fontWeight: '700' });
+    box.addChild(button3D(244, 52, COLORS.settingsGrey));
+    const cap = new Text('UID', { fill: COLORS.uidCap, fontSize: TYPE.s11, fontFamily: FONT, fontWeight: '700' });
     cap.anchor.set(0.5);
     cap.y = -12;
-    const uid = new Text('4620928315709', { fill: 0xeef3ff, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const uid = new Text('4620928315709', { fill: COLORS.uidValue, fontSize: TYPE.s15, fontFamily: FONT, fontWeight: '800' });
     uid.anchor.set(0.5);
     uid.y = 7;
     box.addChild(cap, uid);
     this.body.addChild(box);
-    this.chip(354, cy - 1, 96, 46, ORANGE, '복사', null, () => {});
+    this.chip(354, cy - 1, 96, 46, COLORS.settingsOrange, '복사', null, () => {});
   }
 }
 
@@ -184,7 +181,7 @@ function editIcon(color: number): Graphics {
   g.beginFill(color);
   g.drawRoundedRect(-12, -12, 24, 24, 5); // 카드
   g.endFill();
-  g.lineStyle({ width: 2.6, color: 0x2a3550, cap: LINE_CAP.ROUND });
+  g.lineStyle({ width: 2.6, color: COLORS.iconStroke, cap: LINE_CAP.ROUND });
   g.moveTo(2, -6); g.lineTo(8, 0); // 연필 자국
   g.moveTo(-5, 6); g.lineTo(6, 6);
   return g;
@@ -213,9 +210,9 @@ function saveIcon(color: number): Graphics {
 
 function googleIcon(): Graphics {
   const g = new Graphics();
-  g.lineStyle(3, 0x4285f4); // 파란 링(약식 G)
+  g.lineStyle(3, COLORS.googleBlue); // 파란 링(약식 G)
   g.arc(0, 0, 9, -0.5, 5.0);
-  g.lineStyle(3, 0x4285f4);
+  g.lineStyle(3, COLORS.googleBlue);
   g.moveTo(9, 0); g.lineTo(1, 0); // G 가로획
   return g;
 }
@@ -225,7 +222,7 @@ function appleIcon(color: number): Graphics {
   g.beginFill(color);
   g.drawCircle(0, 1, 9); // 사과 몸통
   g.endFill();
-  g.beginFill(0x1b1f2c);
+  g.beginFill(COLORS.chipDark);
   g.drawCircle(7, -2, 5); // 한 입 베어낸 자국(버튼색)
   g.endFill();
   g.beginFill(color);

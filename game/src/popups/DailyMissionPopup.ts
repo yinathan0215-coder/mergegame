@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
-import { MISSIONS, COLORS } from '../data/config';
+import { MISSIONS, COLORS, FONT, TYPE } from '../data/config';
 import { Popup } from '../ui/Popup';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
@@ -34,9 +34,9 @@ export class DailyMissionPopup extends Popup {
 
     // track (grey base, green up to `done`)
     const track = new Graphics();
-    track.lineStyle(6, 0x39456b);
+    track.lineStyle(6, COLORS.btnDisabled);
     track.moveTo(tx0, ny); track.lineTo(tx1, ny);
-    track.lineStyle(6, 0x49d06a);
+    track.lineStyle(6, COLORS.missionGreen);
     track.moveTo(tx0, ny); track.lineTo(nodeX(Math.min(done, 8)), ny);
     this.body.addChild(track);
 
@@ -46,23 +46,23 @@ export class DailyMissionPopup extends Popup {
       const lit = i <= done;
       const isMs = MILESTONES.includes(i);
       const node = new Graphics();
-      node.beginFill(lit ? 0x49d06a : 0x2b3556);
+      node.beginFill(lit ? COLORS.missionGreen : COLORS.tileBg);
       node.drawCircle(x, ny, isMs ? 16 : 11);
       node.endFill();
-      node.lineStyle(2, 0xffffff, 0.5);
+      node.lineStyle(2, COLORS.white, 0.5);
       node.drawCircle(x, ny, isMs ? 16 : 11);
       this.body.addChild(node);
       if (isMs) {
         const cs = coinSprite(26);
         cs.x = x; cs.y = ny;
         this.body.addChild(cs);
-        const amt = new Text(String(milestoneReward[String(i)]), { fill: 0xffffff, fontSize: 14, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+        const amt = new Text(String(milestoneReward[String(i)]), { fill: COLORS.white, fontSize: TYPE.s14, fontFamily: FONT, fontWeight: '800' });
         amt.anchor.set(0.5);
         amt.x = x; amt.y = ny + 26;
         this.body.addChild(amt);
         this.body.addChild(this.milestoneClaim(x, ny + 48, i));
       } else {
-        const num = new Text(String(i), { fill: lit ? 0x103018 : 0x9fb0e0, fontSize: 12, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+        const num = new Text(String(i), { fill: lit ? COLORS.milestoneNumLit : COLORS.star, fontSize: TYPE.s12, fontFamily: FONT, fontWeight: '800' });
         num.anchor.set(0.5);
         num.x = x; num.y = ny;
         this.body.addChild(num);
@@ -77,7 +77,7 @@ export class DailyMissionPopup extends Popup {
     const c = new Container();
     c.x = x; c.y = y;
     if (claimed) {
-      const ok = new Text('✓', { fill: 0x49d06a, fontSize: 22, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const ok = new Text('✓', { fill: COLORS.missionGreen, fontSize: TYPE.s22, fontFamily: FONT, fontWeight: '800' });
       ok.anchor.set(0.5);
       c.addChild(ok);
       return c;
@@ -85,7 +85,7 @@ export class DailyMissionPopup extends Popup {
     const reachable = done >= threshold;
     const w = 52, h = 28;
     c.addChild(button3D(w, h, COLORS.btnBlue, 8, !reachable));
-    const t = new Text('받기', { fill: reachable ? 0xffffff : 0x6c7aa0, fontSize: 14, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const t = new Text('받기', { fill: reachable ? COLORS.white : COLORS.missionLockText, fontSize: TYPE.s14, fontFamily: FONT, fontWeight: '800' });
     t.anchor.set(0.5); t.y = BUTTON3D_DY;
     c.addChild(t);
     if (reachable) {
@@ -105,36 +105,36 @@ export class DailyMissionPopup extends Popup {
       const y = top + i * rowH;
       // icon tile
       const tile = new Graphics();
-      tile.beginFill(0x24407e);
+      tile.beginFill(COLORS.missionTile);
       tile.drawRoundedRect(left, y, 44, 44, 10);
       tile.endFill();
-      tile.lineStyle(2, 0x8aa0df, 0.4);
+      tile.lineStyle(2, COLORS.panelBorder, 0.4);
       tile.drawRoundedRect(left, y, 44, 44, 10);
       this.body.addChild(tile);
-      const glyph = new Text(TYPE_GLYPH[m.type] ?? '•', { fontSize: 24, fontFamily: 'Arial, sans-serif' });
+      const glyph = new Text(TYPE_GLYPH[m.type] ?? '•', { fontSize: TYPE.s24, fontFamily: FONT });
       glyph.anchor.set(0.5);
       glyph.x = left + 22; glyph.y = y + 22;
       this.body.addChild(glyph);
 
       // name
-      const name = new Text(m.name, { fill: 0xe7edff, fontSize: 16, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const name = new Text(m.name, { fill: COLORS.textBright, fontSize: TYPE.s16, fontFamily: FONT, fontWeight: '800' });
       name.x = left + 56; name.y = y + 2;
       this.body.addChild(name);
 
       // progress gauge
       const gx = left + 56, gy = y + 26, gw = 230, gh = 18;
       const gauge = new Graphics();
-      gauge.beginFill(0x10182e);
+      gauge.beginFill(COLORS.gaugeTrack);
       gauge.drawRoundedRect(gx, gy, gw, gh, 9);
       gauge.endFill();
       const frac = Math.max(0, Math.min(1, m.progress / m.target));
       if (frac > 0) {
-        gauge.beginFill(0xf0902a);
+        gauge.beginFill(COLORS.missionGauge);
         gauge.drawRoundedRect(gx, gy, Math.max(gh, gw * frac), gh, 9);
         gauge.endFill();
       }
       this.body.addChild(gauge);
-      const pt = new Text(`${m.progress} / ${m.target}`, { fill: 0xffffff, fontSize: 12, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const pt = new Text(`${m.progress} / ${m.target}`, { fill: COLORS.white, fontSize: TYPE.s12, fontFamily: FONT, fontWeight: '800' });
       pt.anchor.set(0.5);
       pt.x = gx + gw / 2; pt.y = gy + gh / 2;
       this.body.addChild(pt);
@@ -150,18 +150,18 @@ export class DailyMissionPopup extends Popup {
     const c = new Container();
     c.x = cx; c.y = cy;
     if (m.claimed) {
-      const ok = new Text('✓', { fill: 0x49d06a, fontSize: 30, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const ok = new Text('✓', { fill: COLORS.missionGreen, fontSize: TYPE.s30, fontFamily: FONT, fontWeight: '800' });
       ok.anchor.set(0.5);
       c.addChild(ok);
       return c;
     }
     const claimable = m.done; // done & unclaimed
     const w = 78, h = 50;
-    c.addChild(button3D(w, h, 0x2faa48, 10, !claimable)); // 초록(수령 가능) / 회색 비활성(미달성)
+    c.addChild(button3D(w, h, COLORS.missionBtn, 10, !claimable)); // 초록(수령 가능) / 회색 비활성(미달성)
     const dy = BUTTON3D_DY;
     // 위 줄: [코인 아이콘][보상 숫자]
     const coin = coinSprite(18);
-    const num = new Text(String(MISSIONS.perMission), { fill: claimable ? 0xffffff : 0xaab4cc, fontSize: 15, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const num = new Text(String(MISSIONS.perMission), { fill: claimable ? COLORS.white : COLORS.textDisabled, fontSize: TYPE.s15, fontFamily: FONT, fontWeight: '800' });
     num.anchor.set(0, 0.5);
     const gap = 2;
     const groupW = 18 + gap + num.width;
@@ -169,7 +169,7 @@ export class DailyMissionPopup extends Popup {
     num.x = coin.x + 9 + gap; num.y = dy - 10;
     c.addChild(coin, num);
     // 아래 줄: 보상
-    const label = new Text('보상', { fill: claimable ? 0xffffff : 0xaab4cc, fontSize: 14, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const label = new Text('보상', { fill: claimable ? COLORS.white : COLORS.textDisabled, fontSize: TYPE.s14, fontFamily: FONT, fontWeight: '800' });
     label.anchor.set(0.5);
     label.y = dy + 13;
     c.addChild(label);

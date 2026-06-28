@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
-import { DESIGN, COLORS } from '../data/config';
+import { DESIGN, COLORS, FONT, TYPE } from '../data/config';
 import { Popup } from '../ui/Popup';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';
@@ -26,7 +26,7 @@ export class AttendancePopup extends Popup {
     this.countdown = undefined;
     this.body.removeChildren().forEach((c) => c.destroy({ children: true }));
 
-    const sub = new Text('매일 더 많은 보상을 획득하세요!', { fill: 0xe7edff, fontSize: 18, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const sub = new Text('매일 더 많은 보상을 획득하세요!', { fill: COLORS.textBright, fontSize: TYPE.s18, fontFamily: FONT, fontWeight: '800' });
     sub.anchor.set(0.5);
     sub.x = DESIGN.w / 2; sub.y = this.panel.y + 88;
     this.body.addChild(sub);
@@ -55,20 +55,20 @@ export class AttendancePopup extends Popup {
     const c = new Container();
     c.x = x; c.y = y;
     const bg = new Graphics();
-    bg.beginFill(claimed ? 0x2f4a86 : claimable ? 0x3f93e0 : future ? 0x222c49 : 0x2b3556);
+    bg.beginFill(claimed ? COLORS.attClaimed : claimable ? COLORS.attClaimable : future ? COLORS.attFuture : COLORS.tileBg);
     bg.drawRoundedRect(0, 0, w, h, 12);
     bg.endFill();
-    bg.lineStyle(2, claimable ? 0x9fd0ff : 0x8aa0df, claimable ? 0.9 : 0.35);
+    bg.lineStyle(2, claimable ? COLORS.attBorderLit : COLORS.panelBorder, claimable ? 0.9 : 0.35);
     bg.drawRoundedRect(0, 0, w, h, 12);
     c.addChild(bg);
 
-    const label = new Text(`${day}일차`, { fill: 0xffffff, fontSize: 16, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const label = new Text(`${day}일차`, { fill: COLORS.white, fontSize: TYPE.s16, fontFamily: FONT, fontWeight: '800' });
     label.anchor.set(0.5, 0);
     label.x = w / 2; label.y = 8;
     c.addChild(label);
 
     if (claimed) {
-      const ok = new Text('✓', { fill: 0x6fe39a, fontSize: 44, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const ok = new Text('✓', { fill: COLORS.attCheck, fontSize: TYPE.s44, fontFamily: FONT, fontWeight: '800' });
       ok.anchor.set(0.5);
       ok.x = w / 2; ok.y = h / 2 + 12;
       c.addChild(ok);
@@ -76,7 +76,7 @@ export class AttendancePopup extends Popup {
       const cs = coinSprite(40);
       cs.x = w / 2; cs.y = h / 2 + 4;
       c.addChild(cs);
-      const amt = new Text(String(reward), { fill: 0xffffff, fontSize: 20, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const amt = new Text(String(reward), { fill: COLORS.white, fontSize: TYPE.s20, fontFamily: FONT, fontWeight: '800' });
       amt.anchor.set(0.5);
       amt.x = w / 2; amt.y = h - 22;
       c.addChild(amt);
@@ -94,14 +94,14 @@ export class AttendancePopup extends Popup {
       c.x = DESIGN.w / 2; c.y = y + 6;
       const w = 180, h = 52;
       c.addChild(button3D(w, h, COLORS.btnBlue, 13));
-      const t = new Text('받기', { fill: 0xffffff, fontSize: 22, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      const t = new Text('받기', { fill: COLORS.white, fontSize: TYPE.s22, fontFamily: FONT, fontWeight: '800' });
       t.anchor.set(0.5); t.y = BUTTON3D_DY;
       c.addChild(t);
       c.hitArea = new Rectangle(-w / 2, -h / 2, w, h);
       attachButtonFeedback(c, () => this.store.claimAttendance());
       this.body.addChild(c);
     } else {
-      this.countdown = new Text('', { fill: 0xdfe6f5, fontSize: 20, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+      this.countdown = new Text('', { fill: COLORS.textSoft, fontSize: TYPE.s20, fontFamily: FONT, fontWeight: '800' });
       this.countdown.anchor.set(0.5);
       this.countdown.x = DESIGN.w / 2; this.countdown.y = y + 6;
       this.body.addChild(this.countdown);

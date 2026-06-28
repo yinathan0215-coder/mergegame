@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
-import { DESIGN, COLORS } from './data/config';
+import { DESIGN, COLORS, FONT, TYPE } from './data/config';
 import { tierData } from './data/planets';
 import { makePlanetSprite } from './PlanetFactory';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from './ui/button';
@@ -32,7 +32,7 @@ export class UnlockModal {
     this.container.visible = false;
 
     const M = DIM_MARGIN;
-    this.dim.beginFill(0x000000, 1);
+    this.dim.beginFill(COLORS.black, 1);
     this.dim.drawRect(-M, -M, DESIGN.w + 2 * M, DESIGN.h + 2 * M);
     this.dim.endFill();
     this.dim.eventMode = 'static';
@@ -45,8 +45,8 @@ export class UnlockModal {
 
     // top title — English "PLANET UNLOCK" (docs/30-systems/tier-unlock 모달 UX)
     const title = new Text('PLANET UNLOCK', {
-      fill: 0xffffff, fontSize: 28, fontFamily: 'Arial, sans-serif', fontWeight: '800',
-      stroke: 0x0a0a14, strokeThickness: 5,
+      fill: COLORS.white, fontSize: TYPE.s28, fontFamily: FONT, fontWeight: '800',
+      stroke: COLORS.pocket, strokeThickness: 5,
     });
     title.anchor.set(0.5);
     title.x = DESIGN.w / 2;
@@ -61,7 +61,7 @@ export class UnlockModal {
     okBtn.y = DESIGN.h * 0.7;
     okBtn.hitArea = new Rectangle(-bw / 2, -bh / 2, bw, bh);
     okBtn.addChild(button3D(bw, bh, COLORS.btnBlue, 14));
-    const label = new Text('OK', { fill: 0xffffff, fontSize: 26, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    const label = new Text('OK', { fill: COLORS.white, fontSize: TYPE.s26, fontFamily: FONT, fontWeight: '800' });
     label.anchor.set(0.5);
     label.y = BUTTON3D_DY;
     okBtn.addChild(label);
@@ -70,14 +70,14 @@ export class UnlockModal {
 
     // planet English name — below the planet (upright), set per-tier in show()
     this.nameText = new Text('', {
-      fill: 0xffffff, fontSize: 28, fontFamily: 'Arial, sans-serif', fontWeight: '800',
-      stroke: 0x0a0a14, strokeThickness: 4,
+      fill: COLORS.white, fontSize: TYPE.s28, fontFamily: FONT, fontWeight: '800',
+      stroke: COLORS.pocket, strokeThickness: 4,
     });
     this.nameText.anchor.set(0.5);
     this.content.addChild(this.nameText);
 
     // "Count +N" — emphasised, Infinite only (below the name, above OK)
-    this.bonusText = new Text('', { fill: 0xffd23f, fontSize: 24, fontFamily: 'Arial, sans-serif', fontWeight: '800' });
+    this.bonusText = new Text('', { fill: COLORS.gold, fontSize: TYPE.s24, fontFamily: FONT, fontWeight: '800' });
     this.bonusText.anchor.set(0.5);
     this.bonusText.visible = false;
     this.content.addChild(this.bonusText);

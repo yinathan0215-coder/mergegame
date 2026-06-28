@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { DESIGN, LAUNCHER } from './data/config';
+import { DESIGN, LAUNCHER, COLORS, FONT, TYPE } from './data/config';
 
 // First-launch coach (docs/50-art-ux/input-ux §첫 제스처 코치): on entering Pool In-Game the screen is
 // DIMMED and a 👆 finger repeatedly mimes the full slingshot — PRESS (shrink), drag DOWN, then RELEASE
@@ -23,17 +23,17 @@ export class FirstGestureHint {
 
   constructor(layer: Container) {
     // 코치 표시 중 화면 딤드 — 입력은 막지 않는다(누르면 조준 시작 → 코치 사라짐)
-    this.dim.beginFill(0x000000, DIM_ALPHA);
+    this.dim.beginFill(COLORS.black, DIM_ALPHA);
     this.dim.drawRect(-DIM_MARGIN, -DIM_MARGIN, DESIGN.w + 2 * DIM_MARGIN, DESIGN.h + 2 * DIM_MARGIN);
     this.dim.endFill();
     this.dim.eventMode = 'none';
 
-    this.finger = new Text('👆', { fontSize: 46, fontFamily: 'Arial, sans-serif' });
+    this.finger = new Text('👆', { fontSize: TYPE.s46, fontFamily: FONT });
     this.finger.anchor.set(0.5, 0.05);
     this.finger.x = LAUNCHER.x;
     this.hint = new Text('꾹 눌러 아래로 당겨 놓기', {
-      fill: 0xffffff, fontSize: 16, fontFamily: 'Arial, sans-serif', fontWeight: '800',
-      stroke: 0x0a0a14, strokeThickness: 4,
+      fill: COLORS.white, fontSize: TYPE.s16, fontFamily: FONT, fontWeight: '800',
+      stroke: COLORS.pocket, strokeThickness: 4,
     });
     this.hint.anchor.set(0.5);
     this.hint.x = LAUNCHER.x;

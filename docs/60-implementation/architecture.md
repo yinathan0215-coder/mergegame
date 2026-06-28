@@ -93,7 +93,8 @@ sources:
 
 - `balance.json` — 단일 출처: `planets`(11단계 반지름·점수·색·패턴) · `scoring` · `juice`(`combo`·`result` 포함) ·
   `queue` · `rack` · `launch` · `physics` · `progression` · `modes`(Infinite/Stage·카운트·차지·블랙홀 보너스·스테이지 레벨) ·
-  `layout`(HUD/보드/PLAY/발사대) · `colors` · `engine` · `economy` · `dailyMissions` · `attendance` · `wheel` · `sound`.
+  `layout`(HUD/보드/PLAY/발사대) · `colors`(**전 UI 팔레트** — 게임플레이+팝업/타이틀/HUD 토큰 일원화) ·
+  `fontFamily` · `type`(폰트 크기 스케일) · `engine` · `economy` · `dailyMissions` · `attendance` · `wheel` · `sound`.
 - `game/src/data/planets.ts` — 로더: JSON에서 행성 사다리/랙을 빌드(`TIERS`·`tierData`·
   `INITIAL_RACK`) + 큐 보충(`randomQueueTier` — 해금 범위 균등 랜덤), 색 hex 문자열→숫자 파싱,
   무결성 검증(11단계).
