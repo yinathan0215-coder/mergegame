@@ -1,7 +1,7 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
 import { Body } from 'matter-js';
-import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, JUICE, SCORING, PROGRESSION, MODES, RESULT } from './data/config';
-import { tierData, MAX_TIER, INITIAL_RACK, SUN_TIER } from './data/planets';
+import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, JUICE, PROGRESSION, MODES, RESULT } from './data/config';
+import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
 import { ModeController } from './modes/ModeController';
 import { GameInfoPanel } from './GameInfoPanel';
 import { FirstGestureHint } from './FirstGestureHint';
@@ -22,6 +22,7 @@ import { Effects } from './Effects';
 import { UnlockModal } from './UnlockModal';
 import { StageClearFx } from './StageClearFx';
 import { Combo } from './Combo';
+import { MergeOutcome } from './MergeOutcome';
 import { sound } from './SoundManager';
 import { makePlanetSprite } from './PlanetFactory';
 import { LoadingScreen } from './LoadingScreen';
@@ -65,6 +66,7 @@ export class GameScene {
   private score: ScoreSystem;
   private queue: QueueSystem;
   private merge: MergeSystem;
+  private mergeOutcome!: MergeOutcome; // merge reward fan-out + collision scoring (extracted from this orchestrator)
   private launcher: Launcher;
   private effects: Effects;
   private combo: Combo;
@@ -158,72 +160,9 @@ export class GameScene {
         unlockedTier: () => this.unlockedTier,
         terminalMerge: (pa, pb) => this.onTerminalMerge(pa, pb), // 블랙홀끼리 합성 → Infinite 카운트 +20
       },
-      (tier, x, y, planet) => {
-        eventLog.emit('ITEM_MERGED', { tier });
-        this.stats.merges++;
-        this.stats.maxTier = Math.max(this.stats.maxTier, tier);
-        if (tier >= MAX_TIER) this.stats.sunReached = true;
-        const d = tierData(tier);
-        this.effects.mergeBurst(x, y, d.colors[0], d.radius); // 발산 버스트(모드 공통 juice)
-        sound.play('merge', { pitch: 1 + (tier - 1) * 0.05 }); // 생성 등급↑ → 피치↑ (docs/50-art-ux/sound-design)
-        // Stage는 점수·콤보를 집계/표시하지 않는다 (docs/30-systems/stage-mode §인게임 상단 표시)
-        if (!this.modeC.isStage) {
-          const pts = this.score.onMerge(tier);
-          this.effects.scorePopup(pts, x, y); // +N at the merge location
-          const comboBonus = this.combo.onMerge(performance.now()); // chain counter; returns milestone bonus
-          if (comboBonus > 0) {
-            eventLog.emit('COMBO_MILESTONE', { bonus: comboBonus });
-            this.score.addBonus(comboBonus); // combo 5/10/15… milestone → large bonus score
-            this.effects.comboBonus(comboBonus, this.combo.value); // "+N(combo M)" at screen centre
-            this.lastComboBonus = comboBonus;
-            sound.play('comboMilestone');
-          }
-        }
-        this.meta.onMerge(this.combo.value, tier === SUN_TIER); // daily missions: merge count / combo peak / sun
-        this.maxCombo = Math.max(this.maxCombo, this.combo.value); // session combo peak (Infinite result)
-        // Stage clear: created the target tier (docs/30-systems/stage-mode) — launches the fly-to-target
-        // animation (which then opens the clear window). Already-cleared stage: no reward → falls through.
-        if (this.modeC.isStage && (this.phase === 'playing' || this.phase === 'pendingEnd') && tier >= this.modeC.targetTier
-            && !this.meta.isStageCleared(this.modeC.stageIndex)) {
-          this.clearFx.start(tier, x, y, planet, performance.now());
-          this.phase = 'clearing';
-          return;
-        }
-        // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock).
-        // Infinite only — Stage starts fully unlocked and never shows the modal (docs/30-systems/stage-mode).
-        if (!this.modeC.isStage && tier > this.unlockedTier && this.phase === 'playing') {
-          this.pendingUnlockTier = tier;
-          this.phase = 'paused';
-          const bonus = this.modeC.mode === 'Infinite' ? MODES.infinite.unlockBonusCount : 0;
-          if (bonus > 0) {
-            this.modeC.addCount(bonus);
-            this.info.setCount(this.modeC.count);
-          }
-          this.unlockModal.show(tier, bonus);
-          sound.play('unlock');
-        }
-      }
+      (tier, x, y, planet) => this.mergeOutcome.onMerge(tier, x, y, planet, performance.now())
     );
-    this.physics.onCollision((a, b, impact, cx, cy, bx, by) => {
-      const aP = a.label === 'planet';
-      const bP = b.label === 'planet';
-      if (aP && bP) {
-        this.merge.queuePair(a, b); // 머지 큐잉은 impact와 무관(동급 접촉 시)
-        if (impact >= SCORING.minImpact) {
-          eventLog.emit('COLLISION', { impact });
-          if (!this.modeC.isStage) this.score.onBallHit(); // 행성–행성 충돌 +3 (Stage 미집계)
-          this.effects.hitBurst(cx, cy, bx, by);
-          sound.play('ballHit'); // 다발 충돌은 throttle로 솎임 (docs/50-art-ux/sound-design)
-        }
-      } else if (aP || bP) {
-        if (impact >= SCORING.minImpact) {
-          eventLog.emit('COLLISION', { impact });
-          if (!this.modeC.isStage) this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1 (Stage 미집계)
-          this.effects.hitBurst(cx, cy, bx, by);
-          sound.play('wall');
-        }
-      }
-    });
+    this.physics.onCollision((a, b, impact, cx, cy, bx, by) => this.mergeOutcome.onCollision(a, b, impact, cx, cy, bx, by));
     this.launcher = new Launcher(this.app.stage, this.aimLayer, this.uiLayer, {
       currentTier: () => this.queue.current(),
       fire: (tier, vx, vy) => this.fire(tier, vx, vy),
@@ -243,6 +182,36 @@ export class GameScene {
     this.meta = new MetaStore();
     this.meta.subscribe(() => this.hud.refreshMenuBadges()); // 보상 수령·KST 리셋 시 ≡ 집계 레드닷 갱신
     this.hud.refreshMenuBadges(); // 부팅 직후 초기 상태(출석 등 받을 보상)
+    // Reward fan-out + collision scoring (extracted from this orchestrator). Host = the flow/state
+    // this owns: stats, combo peak, phase machine, stage-clear trigger and the unlock modal.
+    this.mergeOutcome = new MergeOutcome({
+      score: this.score, combo: this.combo, effects: this.effects, meta: this.meta,
+      merge: this.merge, modeC: this.modeC,
+      host: {
+        bumpStats: (tier) => {
+          this.stats.merges++;
+          this.stats.maxTier = Math.max(this.stats.maxTier, tier);
+          if (tier >= MAX_TIER) this.stats.sunReached = true;
+        },
+        trackCombo: (cv) => { this.maxCombo = Math.max(this.maxCombo, cv); }, // session combo peak (Infinite result)
+        setComboBonus: (b) => { this.lastComboBonus = b; },
+        canStageClear: () => (this.phase === 'playing' || this.phase === 'pendingEnd') && !this.meta.isStageCleared(this.modeC.stageIndex),
+        triggerStageClear: (tier, x, y, planet) => { this.clearFx.start(tier, x, y, planet, performance.now()); this.phase = 'clearing'; },
+        canUnlock: () => this.phase === 'playing',
+        triggerUnlock: (tier) => {
+          this.pendingUnlockTier = tier;
+          this.phase = 'paused';
+          const bonus = this.modeC.mode === 'Infinite' ? MODES.infinite.unlockBonusCount : 0;
+          if (bonus > 0) {
+            this.modeC.addCount(bonus);
+            this.info.setCount(this.modeC.count);
+          }
+          this.unlockModal.show(tier, bonus);
+          sound.play('unlock');
+        },
+        unlockedTier: () => this.unlockedTier,
+      },
+    });
     this.metaUI = new MetaUI(this.meta);
     this.coinPill = new CoinPill(this.meta); // 공통 코인 표시 (docs/30-systems/meta-economy · docs/50-art-ux/layout)
     this.metaUI.wheel.coinHooks = {
