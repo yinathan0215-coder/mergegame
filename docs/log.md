@@ -12,6 +12,15 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Title 태양 게임시작 위로 노출 + 검은 반투명 박스; 배경 fill 롤백 진단=untracked
+why: 사용자 지시 3건. (1) 태양계 중점(태양)을 **게임 시작 버튼보다 위**로 올려 노출 — `ORBIT_CY=DESIGN.h×0.3`
+(궤도 중심 상단). (2) **최고 점수 + 게임 시작 버튼을 검은색 반투명 사각 박스**로 묶음(`centerPanel` alpha 0.4).
+[[50-art-ux/title-screen]] §1·§2-2 정본화. (3) "은하수+태양계 배경 세로 fill이 계속 롤백" 진단: 코드상 fill은
+현재 존재(`GalaxyBackground`=DESIGN.w×h, 궤도 `ryMax=DESIGN.h×0.56`)하고 docs도 반영됨(title-screen §1
+"상하 꽉 채움"·layout §1 cover/contain 2-레이어). 롤백 원인 = `TitleScreen.ts`·`GalaxyBackground.ts`가
+**untracked(미커밋)**이라 다중 세션 편집이 last-write-wins로 서로 덮어씀(git revert 아님). 해소: 현재 그린
+상태(tsc·vite build OK)의 game/src를 **baseline 커밋**해 추적 시작 — 이후 편집은 diff로 보이고 silent 덮어쓰기 방지.
+
 ## [2026-06-28] manual | Title 로비 UI 정렬(아이콘 카드·중앙 컬럼·토글 슬라이드) + 씬 전이 페이드
 why: 사용자 지시 2건(레퍼런스 이미지). (1) Title 로비 UI를 정본 레이아웃으로: 👑최고점수(Play 위)·
 **게임 시작** 버튼(▶ 아이콘·확대)·🪐현재점수(Play 아래) 중앙 컬럼, 좌·우 **아이콘 타일+라벨 카드** 4개
