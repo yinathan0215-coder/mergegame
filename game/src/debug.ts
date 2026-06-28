@@ -48,22 +48,10 @@ export function exposeDebug(g: GameScene): void {
     launcherLoaded: () => a.launcher.loaded, // 발사대에 대기 행성이 있는가
     comboValue: () => a.combo.value,
     comboBonusAwarded: () => a.lastComboBonus,
-    planetCount: () => a.planets.length,
+    planetCount: () => a.planetSys.count,
     queue: () => a.queue.peek(),
-    tiersOnBoard: () => a.planets.map((p: any) => p.tier).sort((x: number, y: number) => x - y),
-    snapshot: () =>
-      a.planets.map((p: any) => ({
-        tier: p.tier,
-        x: p.body.position.x,
-        y: p.body.position.y,
-        speed: Math.hypot(p.body.velocity.x, p.body.velocity.y),
-        inPlayArea: p.inPlayArea,
-        inBoard:
-          p.body.position.x > PLAY.x - 30 &&
-          p.body.position.x < PLAY.x + PLAY.w + 30 &&
-          p.body.position.y > PLAY.y - 30 &&
-          p.body.position.y < LINE_Y + 90,
-      })),
+    tiersOnBoard: () => a.planetSys.tiers(),
+    snapshot: () => a.planetSys.snapshot(),
     lineY: () => LINE_Y,
     launcher: () => ({ x: LAUNCHER.x, y: LAUNCHER.y, r: LAUNCHER.r }),
     bounds: () => {
@@ -76,15 +64,15 @@ export function exposeDebug(g: GameScene): void {
       return a.fire(a.queue.current(), Math.cos(angleRad) * speed, Math.sin(angleRad) * speed);
     },
     clearBoard: () => {
-      for (const p of [...a.planets]) a.removePlanet(p);
+      a.planetSys.clear();
     },
     spawnPair: (tier: number) => {
       const now = performance.now() - 1000;
       const cx = PLAY.x + PLAY.w / 2;
       const cy = PLAY.y + PLAY.h * 0.5;
       const r = tierData(tier).radius;
-      a.spawnPlanet(tier, cx - r - 1, cy, 5, 0, now, true);
-      a.spawnPlanet(tier, cx + r + 1, cy, -5, 0, now, true);
+      a.planetSys.spawn(tier, cx - r - 1, cy, 5, 0, now, true);
+      a.planetSys.spawn(tier, cx + r + 1, cy, -5, 0, now, true);
     },
     // meta layer (coin wallet + missions + attendance + wheel) — docs/30-systems/meta-economy
     meta: () => ({ coins: a.meta.coins, completed: a.meta.completedCount(), attendanceDay: a.meta.attendanceDay, best: a.meta.bestScore, current: a.meta.currentScore }),

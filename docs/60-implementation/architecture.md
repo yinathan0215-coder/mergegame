@@ -41,6 +41,7 @@ sources:
 | `ScoreSystem` | 충돌(벽 +1·행성 +3)·머지 등급 점수·콤보 보너스 가산 | [[../90-methodology/event-driven]] · [[../90-methodology/data-driven]] |
 | `Combo` | 연속 머지 체인 카운터(유지창) + 5단위 마일스톤 보너스 산출·"Combo/N" 표시 | [[../90-methodology/event-driven]] · [[../90-methodology/layered-rendering]] |
 | `Planet` | 행성 **entity**(바디+단계+스프라이트 묶음) | [[../90-methodology/ecs-lite]] |
+| `PlanetSystem` | 행성 엔티티 스토어 + 수명(spawn/remove·byBody 색인) + 매 프레임 바디→스프라이트 동기(위치·회전·머지 pop). 엔티티/렌더 시스템을 오케스트레이터에서 분리 | [[../90-methodology/ecs-lite]] · [[../90-methodology/layered-rendering]] |
 
 ### 입력 · 렌더
 | 모듈 | 단일 책임 | 방법론 매핑 |

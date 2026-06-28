@@ -1,6 +1,5 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
-import { Body } from 'matter-js';
-import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, JUICE, PROGRESSION, MODES, RESULT } from './data/config';
+import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, PROGRESSION, MODES, RESULT } from './data/config';
 import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
 import { ModeController } from './modes/ModeController';
 import { GameInfoPanel } from './GameInfoPanel';
@@ -25,13 +24,13 @@ import { StageClearFx } from './StageClearFx';
 import { Combo } from './Combo';
 import { MergeOutcome } from './MergeOutcome';
 import { sound } from './SoundManager';
-import { makePlanetSprite } from './PlanetFactory';
 import { LoadingScreen } from './LoadingScreen';
 import { CoinPill } from './ui/CoinPill';
 import { ASSETS } from './assets';
 import { exposeDebug } from './debug';
 import { eventLog } from './EventLog';
 import { containPlanets } from './Containment';
+import { PlanetSystem } from './PlanetSystem';
 import type { Planet } from './Planet';
 
 type SceneState = 'Loading' | 'Title' | 'PoolInGame';
@@ -39,14 +38,6 @@ type SceneState = 'Loading' | 'Title' | 'PoolInGame';
 type Phase = 'playing' | 'paused' | 'pendingFail' | 'clearing' | 'result' | 'stageClear' | 'stageFail';
 
 const LOAD_MIN_MS = 2000; // 최소 로딩 시간 floor (docs/20-core-loop/screen-flow §Loading)
-
-// merge spawn pop curve: startScale → peakScale (0–40%) → settle to 1.0 (40–100%).
-function popScale(k: number): number {
-  const { startScale, peakScale } = JUICE.mergePop;
-  return k < 0.4
-    ? startScale + (peakScale - startScale) * (k / 0.4)
-    : peakScale + (1 - peakScale) * ((k - 0.4) / 0.6);
-}
 
 export class GameScene {
   readonly app: Application;
@@ -58,9 +49,7 @@ export class GameScene {
   private aimLayer = new Container();
   private uiLayer = new Container();
 
-  private planets: Planet[] = [];
-  private byBody = new Map<Body, Planet>();
-  private nextId = 1;
+  private planetSys: PlanetSystem; // planet entity store + lifecycle + per-frame sprite-sync (ECS-lite)
   private cooldownUntil = 0;
   private acc = 0;
 
@@ -138,6 +127,7 @@ export class GameScene {
     this.app.stage.eventMode = 'static';
 
     this.physics = new PhysicsWorld();
+    this.planetSys = new PlanetSystem(this.physics, this.planetLayer);
     this.board = new BoardRenderer(this.boardLayer);
     this.hud = new Hud(this.uiLayer, () => this.setScene('Title'), [
       // ≡ dropdown shortcuts — same actions as the Title-lobby buttons (docs/50-art-ux/layout §2-c)
@@ -158,9 +148,9 @@ export class GameScene {
     );
     this.merge = new MergeSystem(
       {
-        planetByBody: (b) => this.byBody.get(b),
-        removePlanet: (p) => this.removePlanet(p),
-        spawnPlanet: (tier, x, y, vx, vy, now) => this.spawnPlanet(tier, x, y, vx, vy, now, true, true),
+        planetByBody: (b) => this.planetSys.at(b),
+        removePlanet: (p) => this.planetSys.remove(p),
+        spawnPlanet: (tier, x, y, vx, vy, now) => this.planetSys.spawn(tier, x, y, vx, vy, now, true, true),
         unlockedTier: () => this.unlockedTier,
         terminalMerge: (pa, pb) => this.onTerminalMerge(pa, pb), // 블랙홀끼리 합성 → Infinite 카운트 +20
       },
@@ -171,12 +161,12 @@ export class GameScene {
       currentTier: () => this.queue.current(),
       fire: (tier, vx, vy) => this.fire(tier, vx, vy),
       obstacles: () =>
-        this.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
+        this.planetSys.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
       canAim: () => this.scene === 'PoolInGame' && !this.trans && this.phase === 'playing'
         && this.metaUI.openKind() === null && !this.charge.container.visible,
     }, this.fgRoot);
     this.clearFx = new StageClearFx(this.effectLayer, {
-      removePlanet: (p) => this.removePlanet(p),
+      removePlanet: (p) => this.planetSys.remove(p),
       clearChamber: () => this.launcher.clearChamber(),
       targetPos: () => this.info.targetPos(),
       burst: (x, y, c, r) => this.effects.mergeBurst(x, y, c, r),
@@ -336,7 +326,7 @@ export class GameScene {
     const sy = LAUNCHER.y + (vy / spd) * sp;
     // bornAt in the past → a launched ball merges on its FIRST collision (the re-merge delay is
     // only for freshly MERGED balls — docs/30-systems/merge-rules).
-    this.spawnPlanet(tier, sx, sy, vx, vy, now - 1000, false);
+    this.planetSys.spawn(tier, sx, sy, vx, vy, now - 1000, false);
     this.queue.shift();
     this.stats.shots++;
     this.modeC.consume(); // 카운트 -1 (docs/30-systems/launch-count)
@@ -345,41 +335,6 @@ export class GameScene {
     sound.play('launch', { pitch: 0.85 + Math.min(1, Math.hypot(vx, vy) / LAUNCH.vMax) * 0.5 }); // 파워↑ → 피치↑
     eventLog.emit('FIRE', { tier });
     return true;
-  }
-
-  private spawnPlanet(
-    tier: number,
-    x: number,
-    y: number,
-    vx: number,
-    vy: number,
-    now: number,
-    inPlayArea: boolean,
-    pop = false
-  ): Planet {
-    const r = tierData(tier).radius;
-    const body = this.physics.createPlanetBody(x, y, r, inPlayArea);
-    Body.setVelocity(body, { x: vx, y: vy });
-    const sprite = makePlanetSprite(tier);
-    sprite.x = x;
-    sprite.y = y;
-    if (pop) sprite.scale.set(JUICE.mergePop.startScale); // start small for the merge pop
-    this.planetLayer.addChild(sprite);
-    const p: Planet = {
-      id: this.nextId++, tier, body, sprite, bornAt: now, merging: false, inPlayArea,
-      popMs: pop ? JUICE.mergePop.ms : undefined,
-    };
-    this.planets.push(p);
-    this.byBody.set(body, p);
-    return p;
-  }
-
-  private removePlanet(p: Planet) {
-    this.physics.remove(p.body);
-    this.byBody.delete(p.body);
-    p.sprite.destroy({ children: true });
-    const i = this.planets.indexOf(p);
-    if (i >= 0) this.planets.splice(i, 1);
   }
 
   private buildInitialRack() {
@@ -393,7 +348,7 @@ export class GameScene {
       const y = cy + (ri - 1.5) * rowGap;
       row.forEach((tier, ci) => {
         const x = cx + (ci - (row.length - 1) / 2) * spacing;
-        this.spawnPlanet(tier, x, y, 0, 0, born, true);
+        this.planetSys.spawn(tier, x, y, 0, 0, born, true);
       });
     });
   }
@@ -412,7 +367,7 @@ export class GameScene {
       const spacing = r.count > 1 && (r.count - 1) * want > maxW ? maxW / (r.count - 1) : want;
       for (let ci = 0; ci < r.count; ci++) {
         const x = cx + (ci - (r.count - 1) / 2) * spacing;
-        this.spawnPlanet(r.tier, x, y, 0, 0, born, true);
+        this.planetSys.spawn(r.tier, x, y, 0, 0, born, true);
       }
       y += 2 * rad + 10; // next row below, spaced by this row's planet size
     }
@@ -421,7 +376,7 @@ export class GameScene {
   // Start a fresh session of the current mode: clear the board, reset score/combo/count, build the
   // mode's rack + queue, and configure the HUD (docs/20-core-loop/game-modes).
   private startSession() {
-    for (const p of [...this.planets]) this.removePlanet(p);
+    this.planetSys.clear();
     // Stage는 처음부터 전 단계 해금(목표까지 합성이 막히지 않고 해금 모달도 없음, docs/30-systems/tier-unlock);
     // Infinite는 unlockStart부터 시작해 해금 모달로 한 단계씩 연다.
     if (this.modeC.isStage) this.modeC.stageIndex = this.meta.stageProgress; // 영속 진행도 = 현재 스테이지
@@ -469,8 +424,8 @@ export class GameScene {
     if (this.modeC.mode !== 'Infinite') return false;
     const x = (pa.body.position.x + pb.body.position.x) / 2;
     const y = (pa.body.position.y + pb.body.position.y) / 2;
-    this.removePlanet(pa);
-    this.removePlanet(pb);
+    this.planetSys.remove(pa);
+    this.planetSys.remove(pb);
     this.economy.terminalMergeBonus(); // Infinite 카운트 +blackHoleBonusCount (economy rules)
     const d = tierData(MAX_TIER);
     this.effects.mergeBurst(x, y, d.colors[0], d.radius);
@@ -488,7 +443,7 @@ export class GameScene {
       this.scheduleEnd('fail');
       return;
     }
-    if (this.planets.some((p) => Math.hypot(p.body.velocity.x, p.body.velocity.y) > 0.6)) return;
+    if (this.planetSys.planets.some((p) => Math.hypot(p.body.velocity.x, p.body.velocity.y) > 0.6)) return;
     this.showEnd('result');
   }
 
@@ -577,7 +532,7 @@ export class GameScene {
     while (this.acc >= STEP_MS && steps < 5 && !this.isClearing) { // 연출 시작 시 즉시 중단
       this.physics.update(STEP_MS);
       this.merge.process(performance.now());
-      containPlanets(this.planets, this.physics); // absolute play-area containment + one-way line (per substep)
+      containPlanets(this.planetSys.planets, this.physics); // absolute play-area containment + one-way line (per substep)
       this.acc -= STEP_MS;
       steps++;
     }
@@ -585,21 +540,7 @@ export class GameScene {
     if (!this.isClearing) this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
     if (this.phase === 'pendingFail' && nowMs >= this.endAt) this.showEnd('fail'); // Stage 종료창 지연 등장
 
-    for (const p of this.planets) {
-      p.sprite.x = p.body.position.x;
-      p.sprite.y = p.body.position.y;
-      p.sprite.rotation = p.body.angle;
-      // merge spawn pop (small→big→settle), render-only
-      if (p.popMs !== undefined) {
-        const k = (nowMs - p.bornAt) / p.popMs;
-        if (k >= 1) {
-          p.sprite.scale.set(1);
-          p.popMs = undefined;
-        } else {
-          p.sprite.scale.set(popScale(k));
-        }
-      }
-    }
+    this.planetSys.syncSprites(nowMs);
     if (!this.isClearing) this.launcher.update(); // 연출 중엔 비운 발사대를 다시 채우지 않음
     this.board.update(nowMs);
     this.hud.update(nowMs); // score odometer roll
