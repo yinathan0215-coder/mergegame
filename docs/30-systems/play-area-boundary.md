@@ -68,7 +68,7 @@ sources:
 
 ## Relates to
 
-- [[30-systems/launcher]] — 발사대 원에서 부채꼴 120°로 발사.
+- [[30-systems/launcher]] — 발사대 원에서 부채꼴 90°로 발사.
 - [[30-systems/merge-rules]] — 보드 안 합성.
 - [[50-art-ux/screen-structure]] — inner line·발사대 원·게이지 시각 구조.
 - [[70-verification/index]] — 충돌 경계·일방향 검증.

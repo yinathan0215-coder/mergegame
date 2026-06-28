@@ -8,8 +8,9 @@ updated: 2026-06-28
 
 # mergegame 기획문서 — 목차 (MOC)
 
-**Planet Pool Merge** — 풀 조준 + Suika식 물리 머지를 결합한 글로벌 캐주얼 게임의 HTML5
-프로토타입 기획문서이자, 게임 제작 과정에서 훅으로 갱신되는 **정본**. 진입 안내는 [[README]].
+**Planet Pool Merge**(플레이어 노출명 **GALAXY PINBALL**) — 풀 조준 + Suika식 물리 머지를 결합한
+글로벌 캐주얼 게임의 HTML5 프로토타입 기획문서이자, 게임 제작 과정에서 훅으로 갱신되는 **정본**.
+진입 안내는 [[README]].
 
 ## 섹션 (과제 요구사항 정렬)
 

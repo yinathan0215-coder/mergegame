@@ -12,6 +12,20 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 정합 감사 반영 + ADR 4종 흡수·삭제 + 버전·토글·네이밍 정정
+why: 사용자 지시(정합 감사 기반 문서 수정 + 버전 표시 제거 + ADR 흡수/삭제). (1) **ADR 4종을 섹션
+정본에 흡수 후 삭제**: remove-combo→[[30-systems/scoring-combo]]·[[40-balancing/combo-scoring]],
+data-driven-balance-json→[[60-implementation/architecture]](no-SQLite 근거 본문화),
+stack-pixijs-matter→[[60-implementation/tech-stack]](Three.js·Canvas 미채택 본문화),
+blackhole-infinite-count→[[30-systems/merge-rules]]. 전 링크 repoint, `decisions/` 디렉터리 제거.
+(2) **MVP·범위 펜스 정정**: [[20-core-loop/core-loop]] 범위표·[[60-implementation/agent-runbook]] §4·
+[[70-verification/index]] — 사운드·저장·세션종료·게임모드는 구현 범위로(클래식 게임오버 없음=카운트 소진
+결과창). (3) **공개명 GALAXY PINBALL 표기**: concept·MOC·README(내부명 Planet Pool Merge 병기).
+(4) **Title 토글 Galaxy/Fantasy→Infinite/Stage** 4문서, 아키텍처 모듈맵 8개 추가. (5) cross-ref 정정:
+launcher 110px·부채꼴 90°·룰렛 100·랙 소행성~금성·와인→네이비·meta onMerge API·layout 코인 모순.
+**버전 표시 제거**(settings.md는 병행 작업이 게임 초기화로 대체; SettingsPopup 코드는 병행 작업 영역).
+미처리(별도): 이어하기 문서(구현 결정 필요)·미문서 코드 추가·task-breakdown/plan 기능 확장.
+
 ## [2026-06-28] manual | Stage 1~100 데이터 생성 + 랙 스키마 구조 변경(좌표→구성)
 why: 사용자 지시 — [[40-balancing/stage-balance]] 기조로 스테이지 1~100 데이터 작업, 구조가 없으면 수정.
 구조: `StageDef.rack`을 `{tier,x,y}[]`(좌표) → **`{tier,count}[]`(구성)** 로 바꾸고 `GameScene.buildStageRack`이

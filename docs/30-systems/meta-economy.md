@@ -55,7 +55,7 @@ sources:
 
 ### 게임플레이 → 미션 보고
 - Pool In-Game의 머지 콜백([[../60-implementation/architecture]] `GameScene`)이 `MetaStore`에
-  보고한다: 머지 1회(`reportMerge`), 현재 콤보값(`reportComboPeak`), 태양(tier 10) 생성(`reportSun`).
+  보고한다: 단일 메서드 `onMerge(콤보값, isSun)` — 머지 1회·현재 콤보값(comboPeak)·태양(tier 10) 생성(sunCount)을 함께 갱신.
 - `MetaStore`가 보고를 받아 일일 미션 진행도를 갱신한다. 개당 보상 50은 각 미션 행의 **보상 버튼으로 수령**한다([[daily-missions]]).
 
 ## Relates to

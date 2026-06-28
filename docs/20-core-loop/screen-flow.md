@@ -25,7 +25,7 @@ sources:
 | **Title (Lobby)** | 시작 화면 — 태양계 공전 배경 + 로비 UI. Play로 게임 진입 | [[../50-art-ux/title-screen]] |
 | **Pool In-Game** | 현재 구현된 풀 조준·물리 머지 보드(코어 루프가 도는 화면) | [[../50-art-ux/layout]] · [[../50-art-ux/screen-structure]] · [[core-loop]] |
 
-세 씬 모두 같은 **9:16 세로** 프레임을 쓰고, 바깥 와인색 `background color`가 화면 전체를
+세 씬 모두 같은 **9:16 세로** 프레임을 쓰고, 바깥 네이비(`outerBg`) `background color`가 화면 전체를
 채운다([[../50-art-ux/layout]]). 한 번에 **하나의 씬만** 활성화된다.
 
 ## 상태 전이 ([[../90-methodology/state-machine]] 바인딩)

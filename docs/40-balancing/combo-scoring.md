@@ -14,8 +14,7 @@ sources:
 
 > 점수는 세 갈래: **충돌**(벽 +1 · 행성–행성 +3) + **머지 시 생성 등급의 기본 점수**(등급↑ = 점수↑)
 > + **콤보 마일스톤 보너스**(연속 머지 5단위마다 `콤보값 × bonusPer`). 코드 SSoT:
-> `game/src/data/balance.json`(`scoring`, `planets[].score`, `juice.combo`). 점수 모델 ADR
-> [[decisions/2026-06-28-remove-combo]].
+> `game/src/data/balance.json`(`scoring`, `planets[].score`, `juice.combo`).
 
 ## 1. 충돌 점수
 
@@ -68,4 +67,3 @@ sources:
 - [[planet-stats]] — 등급별 기본 점수(= 머지 점수)
 - [[../30-systems/scoring-combo]] — 점수 규칙(시스템 측)
 - [[../50-art-ux/feedback-effects]] — 점수·콤보 연출(1단위 오도미터·머지 +N·콤보 +N 플로팅)
-- [[decisions/2026-06-28-remove-combo]] — 점수 모델 ADR

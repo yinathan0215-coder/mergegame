@@ -1,13 +1,12 @@
 # mergegame — 기획문서 (GDD + 에이전트 빌드 스펙)
 
-글로벌 캐주얼 **Merge** 게임 — **Planet Pool Merge**(풀 조준 + Suika식 물리 머지)의 HTML5
-플레이 가능 프로토타입을 위한 기획문서. 이 문서는 **AI 코딩 에이전트(Claude Code 등)에게
-그대로 전달**되어 Core Loop를 플레이할 수 있는 프로토타입을 만들어내는 것을 목표로 한다.
-(베이글코드 신작팀 게임 기획 PD 과제용.)
+글로벌 캐주얼 **Merge** 게임 — **Planet Pool Merge**(플레이어 노출명 **GALAXY PINBALL**; 풀 조준 +
+Suika식 물리 머지)의 HTML5 플레이 가능 프로토타입을 위한 기획문서. 이 문서는 **AI 코딩
+에이전트(Claude Code 등)에게 그대로 전달**되어 Core Loop를 플레이할 수 있는 프로토타입을 만들어내는
+것을 목표로 한다. (베이글코드 신작팀 게임 기획 PD 과제용.)
 
-> 현재 상태: **Planet Pool Merge 설계 분배 완료**(2026-06-28). 장르·코어루프·시스템·밸런싱·
-> 아트/UX·구현·검증 섹션 `status: design`, 스택 = Vite + TS + PixiJS + Matter.js 확정.
-> 다음: phase별 구현 플랜 → `game/` 빌드 → Playwright 검증.
+> 현재 상태: `game/` 프로토타입 **구현·플레이 가능**(GALAXY PINBALL). 스택 = Vite + TS + PixiJS +
+> Matter.js. 이 문서는 빌드와 함께 훅으로 갱신되는 **정본**이다.
 
 ## 과제 요구사항 → 문서 매핑
 

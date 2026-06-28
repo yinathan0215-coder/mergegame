@@ -32,7 +32,7 @@ sources:
 - **최종 등급:** **태양끼리 충돌하면 블랙홀로 합성**된다. 블랙홀끼리 충돌하면 **기본적으로
   합성하지 않고 일반 물리 충돌만** 처리한다(블랙홀은 사다리 끝). **단 Infinite 모드 한정으로**
   블랙홀끼리 충돌하면 두 블랙홀이 사라지고 **카운트 +20** 을 준다(새 행성 생성 없음,
-  [[30-systems/launch-count]] · ADR [[30-systems/decisions/2026-06-28-blackhole-infinite-count]]).
+  [[30-systems/launch-count]]).
 
 ### 합성 위치
 - 새 행성은 **두 행성 중심점의 중간 지점**에 생성한다.
@@ -56,7 +56,7 @@ sources:
 
 ## Relates to
 - [[30-systems/scoring-combo]] — 합성마다 등급 점수, 충돌마다 점수(벽 +1·행성 +3), 콤보 보너스.
-- [[30-systems/launch-count]] · [[30-systems/decisions/2026-06-28-blackhole-infinite-count]] — Infinite 블랙홀 합성 → 카운트 +20.
+- [[30-systems/launch-count]] — Infinite 블랙홀 합성 → 카운트 +20.
 - [[30-systems/launch-queue]] — 상위 등급은 큐가 아니라 여기 합성으로만 등장.
 - [[40-balancing/launch-physics]] — 최소 속도·재합성 지연 등 물리 튜닝 값.
 - [[40-balancing/index]] — 등급별 반지름·점수.

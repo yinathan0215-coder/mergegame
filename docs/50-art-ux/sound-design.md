@@ -31,7 +31,7 @@ sources:
 | id | 발생 사건 | 느낌 | 우선순위 |
 |---|---|---|---|
 | `uiPress` | 버튼 누름(로비·HUD·모달 OK·토글) | 부드러운 클릭/팝 | 중 |
-| `toggle` | Galaxy/Fantasy 토글 전환 | 짧은 틱 | 중 |
+| `toggle` | Infinite/Stage 모드 토글 전환 | 짧은 틱 | 중 |
 | `play` | 게임 시작(Play) | 밝은 확정 휘릭 | 높음 |
 | `popupOpen` | 팝업/모달 등장 | 부드러운 차임 | 높음 |
 | `popupClose` | 팝업 닫기(X) | 짧은 틱 | 중 |

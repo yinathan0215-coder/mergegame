@@ -50,7 +50,7 @@ sources:
 | play(id) | 호출 위치 |
 |---|---|
 | `uiPress` | `ui/button.ts` `attachButtonFeedback`(모든 버튼 공통) |
-| `toggle` | `TitleScreen` Galaxy/Fantasy 토글 핸들러 · 설정 팝업 사운드 ON 복귀 |
+| `toggle` | `TitleScreen` Infinite/Stage 모드 토글 핸들러 · 설정 팝업 사운드 ON 복귀 |
 | `play` | Title Play 버튼 콜백 (`GameScene` setScene→PoolInGame) |
 | `launch` | `GameScene.fire` (파워→`pitch`) |
 | `wall` / `ballHit` | `GameScene` `physics.onCollision`(스로틀로 솎임) |

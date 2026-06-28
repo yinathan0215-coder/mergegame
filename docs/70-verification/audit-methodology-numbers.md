@@ -58,7 +58,7 @@ Machine은 사실상 미구현, Event-driven은 카탈로그/버스 부재다.
 ## 3. 발견된 불일치 — 3건 모두 해소됨 ✅ (2026-06-28)
 
 > 후속 작업으로 전부 수정. data-driven 일원화(`balance.json` 단일 SSoT) + 문서 reconcile.
-> 근거: ADR [[../60-implementation/decisions/2026-06-28-data-driven-balance-json]]. 검증:
+> 근거: [[../60-implementation/architecture]] (수치 SSoT·no-SQLite). 검증:
 > typecheck·build·Playwright 16/16 통과(동작 보존).
 
 ### a. 문서 공식 모순 — 발사 파워 하한 → **해소(문서를 코드에 맞춤)**

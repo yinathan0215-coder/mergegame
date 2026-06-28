@@ -44,7 +44,6 @@ sources:
 
 - [[../10-concept/planet-ladder]] — 행성 사다리 11단계 **순서** 정본 (이 섹션은 수치만 소유)
 - [[../50-art-ux/planet-art]] — 행성 **색·패턴** 정본
-- [[decisions/2026-06-28-remove-combo]] — 점수 모델 ADR(충돌·머지·콤보 보너스)
 - [[../30-systems/index]] — 이 수치가 적용되는 합성/발사/큐 시스템 규칙
 - [[../70-verification/index]] — 이 수치가 만드는 체감의 합격 기준 (KPI)
 - [[../90-methodology/data-driven]] — 수치 단일 출처·데이터 주도 표준

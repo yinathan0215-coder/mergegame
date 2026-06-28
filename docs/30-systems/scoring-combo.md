@@ -13,7 +13,6 @@ sources:
 # 점수 (Scoring) (§7)
 
 > **준수 기준(방법론):** [[90-methodology/event-driven]] (충돌·머지 이벤트 → 점수 가산).
-> 결정 근거 ADR [[40-balancing/decisions/2026-06-28-remove-combo]].
 
 ## Summary
 

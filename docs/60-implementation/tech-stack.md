@@ -13,7 +13,7 @@ sources:
 # 기술 스택 (§10)
 
 > **결정됨.** `Planet Pool Merge`는 **2D 물리 머지 퍼즐**이므로 2D 렌더러 + 2D 물리
-> 엔진 조합으로 고정한다. 채택 근거 ADR: [[decisions/2026-06-28-stack-pixijs-matter]].
+> 엔진 조합으로 고정한다.
 
 ## 결정
 
@@ -35,11 +35,14 @@ sources:
 - **TypeScript** — 행성 단계 데이터, 게임 상태, 점수 계산, 합성 규칙을 타입으로
   고정. 움직이는 수치는 코드에 박지 않고 데이터 테이블로 둔다([[../40-balancing/index|밸런싱]]).
 
-## Three.js 미사용 (근거)
+## 다른 스택 미채택 (근거)
 
-이 게임은 세로 2D 보드 위의 원형 바디 충돌·합성이 전부다. 3D 엔진(Three.js)은
-**범위 대비 과하다** — 카메라/조명/메시 비용 없이 PixiJS의 플랫 2D 아이콘만으로
-[[../50-art-ux/index|아트 방향]]을 충족한다. 전체 비교는 ADR 참조.
+- **Three.js(3D):** 미채택. 이 게임은 세로 2D 보드 위 원형 바디의 충돌·합성이 전부다 —
+  카메라/조명/메시 비용 없이 PixiJS의 플랫 2D 아이콘만으로 [[../50-art-ux/index|아트 방향]]을
+  충족한다. 3D 파이프라인은 **범위 대비 과하다.**
+- **Canvas-only(무프레임워크 HTML5 Canvas):** 미채택. 충돌·반발·연쇄 합성 물리를 직접 구현하면
+  손맛 튜닝 비용이 커지고 에이전트 실행이 막히기 쉽다. Matter.js가 충돌 이벤트·반발·속도를 제공해
+  합성 판정 입력을 안정화하고, 다수 스프라이트 배칭은 PixiJS가 유리하다.
 
 ## 제약
 
@@ -52,7 +55,6 @@ sources:
 
 ## 관련
 
-- [[architecture]] — 9 모듈 경계 / 데이터 모델
+- [[architecture]] — 모듈 경계 / 데이터 모델
 - [[task-breakdown]] — Phase 순 구현
-- [[decisions/2026-06-28-stack-pixijs-matter]] — 채택 ADR
 - [[../90-methodology/layered-rendering]] — 시뮬/렌더 분리 표준
