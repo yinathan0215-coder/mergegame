@@ -1,6 +1,6 @@
 import { Application, Container, Rectangle } from 'pixi.js';
 import { Body } from 'matter-js';
-import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS } from './data/config';
+import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS, SCORING } from './data/config';
 import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
 import { PhysicsWorld } from './PhysicsWorld';
 import { BoardRenderer } from './BoardRenderer';
@@ -81,14 +81,20 @@ export class GameScene {
         this.effects.scorePopup(pts); // +N 플로팅
       }
     );
-    this.physics.onCollision((a, b) => {
+    this.physics.onCollision((a, b, impact, cx, cy, bx, by) => {
       const aP = a.label === 'planet';
       const bP = b.label === 'planet';
       if (aP && bP) {
-        this.score.onBallHit(); // 행성–행성 충돌 +3
-        this.merge.queuePair(a, b);
+        this.merge.queuePair(a, b); // 머지 큐잉은 impact와 무관(동급 접촉 시)
+        if (impact >= SCORING.minImpact) {
+          this.score.onBallHit(); // 행성–행성 충돌 +3
+          this.effects.hitBurst(cx, cy, bx, by);
+        }
       } else if (aP || bP) {
-        this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1
+        if (impact >= SCORING.minImpact) {
+          this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1
+          this.effects.hitBurst(cx, cy, bx, by);
+        }
       }
     });
     this.launcher = new Launcher(this.app.stage, this.aimLayer, this.uiLayer, {

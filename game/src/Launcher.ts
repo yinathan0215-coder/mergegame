@@ -50,6 +50,7 @@ export class Launcher {
   private aim: Graphics;
   private chamber = new Container();
   private shownTier = -1;
+  private readonly outline = innerOutline(); // static board geometry, cached for aim raycasts
 
   constructor(
     stage: Container,
@@ -164,7 +165,7 @@ export class Launcher {
         ny = (oy + dy * t - o.y) / l;
       }
     }
-    const pts = innerOutline();
+    const pts = this.outline;
     const ccx = PLAY.x + PLAY.w / 2;
     const ccy = PLAY.y + PLAY.h / 2;
     for (let i = 0; i < pts.length; i++) {

@@ -105,9 +105,28 @@ export class PhysicsWorld {
     Engine.update(this.engine, dtMs);
   }
 
-  onCollision(cb: (a: Body, b: Body) => void) {
+  // impact = closing speed along the collision normal (filters glancing/rolling contacts);
+  // (cx,cy) = contact point; (bx,by) = unit bounce direction (incoming velocity reflected about
+  // the normal). Lets the caller gate scoring/effects on real bounces and spray in the bounce dir.
+  onCollision(cb: (a: Body, b: Body, impact: number, cx: number, cy: number, bx: number, by: number) => void) {
     Events.on(this.engine, 'collisionStart', (e) => {
-      for (const p of e.pairs) cb(p.bodyA, p.bodyB);
+      for (const p of e.pairs) {
+        const n = p.collision.normal;
+        const va = p.bodyA.velocity;
+        const vb = p.bodyB.velocity;
+        const impact = Math.abs((va.x - vb.x) * n.x + (va.y - vb.y) * n.y);
+        const s = p.collision.supports[0];
+        const cx = s ? s.x : (p.bodyA.position.x + p.bodyB.position.x) / 2;
+        const cy = s ? s.y : (p.bodyA.position.y + p.bodyB.position.y) / 2;
+        // bounce direction = the faster (incoming) body's velocity reflected about the normal
+        const inc = va.x * va.x + va.y * va.y >= vb.x * vb.x + vb.y * vb.y ? va : vb;
+        const vn = inc.x * n.x + inc.y * n.y;
+        let bx = inc.x - 2 * vn * n.x;
+        let by = inc.y - 2 * vn * n.y;
+        const bl = Math.hypot(bx, by);
+        if (bl > 1e-4) { bx /= bl; by /= bl; } else { bx = n.x; by = n.y; }
+        cb(p.bodyA, p.bodyB, impact, cx, cy, bx, by);
+      }
     });
   }
 }

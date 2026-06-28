@@ -18,10 +18,18 @@ sources:
 
 ## 1. 충돌 점수
 
+**최소 충돌 힘 기준:** 충돌 점수는 충돌의 **법선 방향 접근 속도(impact)가 `scoring.minImpact`
+이상**일 때만 준다 — 각도 있게 튕기는 충돌만 점수가 되고, 벽을 따라 약하게 구르거나 맞닿아 있는
+저강도 접촉은 점수가 없다.
+
 | 충돌 종류 | 값 | 적용 |
 |---|---|---|
-| 벽 충돌 | **+1** (`scoring.wallPoint`) | 행성이 충돌 경계 벽(inner line · 발사대 원)에 부딪힐 때마다 1점 |
-| 행성–행성 충돌 | **+3** (`scoring.ballPoint`) | 두 행성이 부딪힐 때마다 3점(머지 여부 무관) |
+| 벽 충돌 | **+1** (`scoring.wallPoint`) | impact ≥ `minImpact`인 벽(inner line · 발사대 원) 충돌마다 1점 |
+| 행성–행성 충돌 | **+3** (`scoring.ballPoint`) | impact ≥ `minImpact`인 행성 충돌마다 3점(머지 여부 무관) |
+| 최소 충돌 힘 | `scoring.minImpact` = **3.5** px/step | 이 미만 접촉은 점수 없음(굴러다님 방지). 튜닝값 |
+
+> 점수에 충족한 충돌은 충돌 위치에 **히트 이펙트**를 낸다 → [[../50-art-ux/feedback-effects]].
+> 머지 자체는 impact와 무관하게 동급 접촉 시 발생한다.
 
 ## 2. 머지 점수 (등급 차등)
 
