@@ -7,6 +7,7 @@ export interface MergeHost {
   planetByBody(b: Body): Planet | undefined;
   removePlanet(p: Planet): void;
   spawnPlanet(tier: number, x: number, y: number, vx: number, vy: number, now: number): Planet;
+  unlockedTier(): number; // highest tier merges may create (docs/30-systems/tier-unlock)
 }
 
 // Collision-driven merge. Pairs collected during the physics step are processed after it,
@@ -30,6 +31,7 @@ export class MergeSystem {
       if (pa.merging || pb.merging) continue;
       if (pa.tier !== pb.tier) continue;
       if (pa.tier >= MAX_TIER) continue; // 태양 terminal → normal collision only
+      if (pa.tier > this.host.unlockedTier()) continue; // locked tier: not mergeable until unlocked
       if (now - pa.bornAt < PHYSICS.remergeDelayMs || now - pb.bornAt < PHYSICS.remergeDelayMs) continue;
       pa.merging = true;
       pb.merging = true;

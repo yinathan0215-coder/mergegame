@@ -1,13 +1,13 @@
 import { QUEUE_SIZE } from './data/config';
 import { randomQueueTier } from './data/planets';
 
-// 3-slot launch queue. slot[0] = current (fires next). On fire: shift left, refill last
-// slot from the low-5 uniform candidates (§5.3).
+// Launch queue. slot[0] = current (fires next). Refill is uniform over tiers 1..maxTier(), the
+// unlock-gated range (docs/30-systems/launch-queue · tier-unlock).
 export class QueueSystem {
   private slots: number[] = [];
 
-  constructor(private onChange: (slots: number[]) => void) {
-    for (let i = 0; i < QUEUE_SIZE; i++) this.slots.push(randomQueueTier());
+  constructor(private onChange: (slots: number[]) => void, private maxTier: () => number) {
+    for (let i = 0; i < QUEUE_SIZE; i++) this.slots.push(randomQueueTier(this.maxTier()));
     this.onChange(this.peek());
   }
 
@@ -21,7 +21,7 @@ export class QueueSystem {
 
   shift() {
     this.slots.shift();
-    this.slots.push(randomQueueTier());
+    this.slots.push(randomQueueTier(this.maxTier()));
     this.onChange(this.peek());
   }
 }

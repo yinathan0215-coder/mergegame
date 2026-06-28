@@ -1,6 +1,6 @@
-import { Application, Container, Rectangle } from 'pixi.js';
+import { Application, Container, Graphics, Rectangle } from 'pixi.js';
 import { Body } from 'matter-js';
-import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS, SCORING } from './data/config';
+import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS, SCORING, PROGRESSION } from './data/config';
 import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
 import { PhysicsWorld } from './PhysicsWorld';
 import { BoardRenderer } from './BoardRenderer';
@@ -11,6 +11,8 @@ import { QueueSystem } from './QueueSystem';
 import { ScoreSystem } from './ScoreSystem';
 import { MergeSystem } from './MergeSystem';
 import { Effects } from './Effects';
+import { UnlockModal } from './UnlockModal';
+import { Combo } from './Combo';
 import { makePlanetSprite } from './PlanetFactory';
 import type { Planet } from './Planet';
 
@@ -28,6 +30,7 @@ export class GameScene {
   readonly app: Application;
   private gameLayer = new Container();
   private boardLayer = new Container();
+  private comboLayer = new Container(); // combo watermark — behind the planets
   private planetLayer = new Container();
   private effectLayer = new Container();
   private aimLayer = new Container();
@@ -46,9 +49,16 @@ export class GameScene {
   private merge: MergeSystem;
   private launcher: Launcher;
   private effects: Effects;
+  private combo: Combo;
   private board: BoardRenderer;
   private title: TitleScreen;
   private scene: SceneState = 'Title';
+  private unlockModal!: UnlockModal;
+  private unlockedTier = PROGRESSION.unlockStart; // highest tier merges may create (docs/30-systems/tier-unlock)
+  private pendingUnlockTier = 0;
+  private paused = false; // true while the unlock modal is up (game frozen)
+  private fade = new Graphics(); // 씬 전이 페이드 오버레이(최상위)
+  private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
 
   stats = { shots: 0, merges: 0, maxTier: 1, sunReached: false };
 
@@ -62,7 +72,7 @@ export class GameScene {
       autoDensity: true,
     });
     mount.appendChild(this.app.view as unknown as HTMLCanvasElement);
-    this.gameLayer.addChild(this.boardLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
+    this.gameLayer.addChild(this.boardLayer, this.comboLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
     this.app.stage.addChild(this.gameLayer);
     this.app.stage.eventMode = 'static';
     this.app.stage.hitArea = new Rectangle(0, 0, DESIGN.w, DESIGN.h);
@@ -71,13 +81,18 @@ export class GameScene {
     this.board = new BoardRenderer(this.boardLayer);
     this.hud = new Hud(this.uiLayer, () => this.setScene('Title')); // back button → Title
     this.effects = new Effects(this.effectLayer);
+    this.combo = new Combo(this.comboLayer);
     this.score = new ScoreSystem((s) => this.hud.setScore(s));
-    this.queue = new QueueSystem(() => {}); // launcher shows the current planet; next is random-refilled
+    this.queue = new QueueSystem(
+      () => {}, // launcher shows the current planet; next is random-refilled
+      () => Math.max(1, Math.min(this.unlockedTier - PROGRESSION.queueBelow, PROGRESSION.queueCap))
+    );
     this.merge = new MergeSystem(
       {
         planetByBody: (b) => this.byBody.get(b),
         removePlanet: (p) => this.removePlanet(p),
         spawnPlanet: (tier, x, y, vx, vy, now) => this.spawnPlanet(tier, x, y, vx, vy, now, true, true),
+        unlockedTier: () => this.unlockedTier,
       },
       (tier, x, y) => {
         this.stats.merges++;
@@ -87,6 +102,13 @@ export class GameScene {
         const d = tierData(tier);
         this.effects.mergeBurst(x, y, d.colors[0], d.radius); // 발산 버스트
         this.effects.scorePopup(pts, x, y); // +N at the merge location
+        this.combo.onMerge(performance.now()); // merge chain counter (docs/50-art-ux/feedback-effects §8)
+        // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock)
+        if (tier > this.unlockedTier && !this.paused) {
+          this.pendingUnlockTier = tier;
+          this.paused = true;
+          this.unlockModal.show(tier);
+        }
       }
     );
     this.physics.onCollision((a, b, impact, cx, cy, bx, by) => {
@@ -115,6 +137,14 @@ export class GameScene {
     this.buildInitialRack();
     this.title = new TitleScreen(() => this.setScene('PoolInGame'));
     this.app.stage.addChild(this.title.container);
+    this.fade.beginFill(0x0a0e1a);
+    this.fade.drawRect(0, 0, DESIGN.w, DESIGN.h);
+    this.fade.endFill();
+    this.fade.alpha = 0;
+    this.fade.eventMode = 'none';
+    this.unlockModal = new UnlockModal(() => this.onUnlockOk());
+    this.app.stage.addChild(this.unlockModal.container);
+    this.app.stage.addChild(this.fade); // 씬 전이 페이드(최상위)
     this.setScene('Title');
     this.app.ticker.add(() => this.tick());
 
@@ -124,14 +154,56 @@ export class GameScene {
   }
 
   private setScene(scene: SceneState) {
+    if (this.scene === scene && !this.trans) {
+      this.applyScene(scene);
+      return;
+    }
+    // 씬 전이: 짧은 페이드(블랙 인 → 씬 교체 → 아웃), 전환 중 입력 차단 (docs/20-core-loop/screen-flow)
+    this.trans = { to: scene, t0: performance.now(), phase: 'out' };
+    this.fade.eventMode = 'static';
+  }
+
+  private applyScene(scene: SceneState) {
     this.scene = scene;
     this.gameLayer.visible = scene === 'PoolInGame';
     this.title.container.visible = scene === 'Title';
-    if (scene === 'PoolInGame') this.acc = 0;
+    if (scene === 'PoolInGame') {
+      this.acc = 0;
+      this.unlockedTier = PROGRESSION.unlockStart; // new game: reset unlock progression
+      this.paused = false;
+      this.unlockModal.hide();
+    }
+  }
+
+  // OK on the unlock modal: raise the unlock cap to the new tier and resume.
+  private onUnlockOk() {
+    this.unlockedTier = Math.max(this.unlockedTier, this.pendingUnlockTier);
+    this.paused = false;
+    this.unlockModal.hide();
+  }
+
+  private updateTransition(now: number) {
+    if (!this.trans) return;
+    const DUR = 200; // 각 페이즈(out/in) 지속 ms
+    const k = (now - this.trans.t0) / DUR;
+    if (this.trans.phase === 'out') {
+      this.fade.alpha = Math.min(1, k);
+      if (k >= 1) {
+        this.applyScene(this.trans.to);
+        this.trans = { to: this.trans.to, t0: now, phase: 'in' };
+      }
+    } else {
+      this.fade.alpha = Math.max(0, 1 - k);
+      if (k >= 1) {
+        this.fade.alpha = 0;
+        this.fade.eventMode = 'none';
+        this.trans = null;
+      }
+    }
   }
 
   private fire(tier: number, vx: number, vy: number): boolean {
-    if (this.scene !== 'PoolInGame') return false;
+    if (this.scene !== 'PoolInGame' || this.paused) return false;
     const now = performance.now();
     if (now < this.cooldownUntil) return false;
     this.cooldownUntil = now + LAUNCH.cooldownMs;
@@ -185,15 +257,15 @@ export class GameScene {
     if (i >= 0) this.planets.splice(i, 1);
   }
 
-  // 초기 랙: triangle whose rows encode the counts 지구1·금성2·화성3·수성4 (in the play area).
+  // 초기 랙: INVERTED triangle (▽) — wide top (수성×4) narrowing to 지구×1 at the bottom.
   private buildInitialRack() {
     const cx = PLAY.x + PLAY.w / 2;
     const cy = PLAY.y + PLAY.h * 0.36;
     const spacing = 58;
     const rowGap = 56;
-    // Pyramid rows derived from the rack SSoT: 지구(top)→수성(bottom). Each row = `count` copies
-    // of `tier`, so row length encodes the count. Reversing INITIAL_RACK yields [[4],[3,3],[2,2,2],[1,1,1,1]].
-    const rows = [...INITIAL_RACK].reverse().map(({ tier, count }) => Array<number>(count).fill(tier));
+    // Each row = `count` copies of `tier`. INITIAL_RACK order (수성→지구) gives rows
+    // [[1,1,1,1],[2,2,2],[3,3],[4]] = inverted triangle (docs/40-balancing/spawn-rack).
+    const rows = INITIAL_RACK.map(({ tier, count }) => Array<number>(count).fill(tier));
     const born = performance.now() - 1000;
     rows.forEach((row, ri) => {
       const y = cy + (ri - 1.5) * rowGap;
@@ -244,7 +316,9 @@ export class GameScene {
   private tick() {
     const nowMs = performance.now();
     this.title.update(nowMs);
-    if (this.scene !== 'PoolInGame') return;
+    this.updateTransition(nowMs);
+    this.unlockModal.update();
+    if (this.scene !== 'PoolInGame' || this.paused) return;
 
     this.acc += this.app.ticker.deltaMS;
     let steps = 0;
@@ -275,6 +349,7 @@ export class GameScene {
     this.launcher.update();
     this.board.update(nowMs);
     this.hud.update(); // score odometer roll
+    this.combo.update(nowMs); // merge chain counter (window expiry + odometer + fade)
     this.effects.update(nowMs); // bursts + floating popups
   }
 
@@ -291,8 +366,15 @@ export class GameScene {
       scene: () => this.scene,
       startGame: () => this.setScene('PoolInGame'),
       showTitle: () => this.setScene('Title'),
+      unlockedTier: () => this.unlockedTier,
+      unlockPending: () => this.paused,
+      okUnlock: () => this.onUnlockOk(),
+      unlockAll: () => {
+        this.unlockedTier = MAX_TIER;
+      },
       stats: () => ({ ...this.stats }),
       score: () => this.score.score,
+      comboValue: () => this.combo.value,
       planetCount: () => this.planets.length,
       queue: () => this.queue.peek(),
       tiersOnBoard: () => this.planets.map((p) => p.tier).sort((a, b) => a - b),

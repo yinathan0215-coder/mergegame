@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import {
   DESIGN,
   PLAY,
@@ -10,7 +10,7 @@ import {
   boardOutline,
   innerOutline,
 } from './data/config';
-import { ASSETS } from './assets';
+import { GalaxyBackground } from './GalaxyBackground';
 
 type Pt = { x: number; y: number };
 
@@ -49,6 +49,7 @@ function strokePoly(g: Graphics, pts: Pt[], width: number, color: number, alpha 
 // Collision (PhysicsWorld) follows the inner line + launcher circle; the gold outline is visual only.
 export class BoardRenderer {
   readonly imageLayer = new Container();
+  private galaxy!: GalaxyBackground;
 
   constructor(layer: Container) {
     const outer = boardOutline();
@@ -86,19 +87,26 @@ export class BoardRenderer {
 
     // 5. background IMAGE (swappable) — clipped to just inside the inner line.
     const img = this.imageLayer;
-    const background = Sprite.from(ASSETS.board.background);
-    background.x = PLAY.x;
-    background.y = PLAY.y;
-    background.width = PLAY.w;
-    background.height = floorY - PLAY.y;
-    img.addChild(background);
+    this.galaxy = new GalaxyBackground({
+      x: PLAY.x,
+      y: PLAY.y,
+      width: PLAY.w,
+      height: floorY - PLAY.y,
+      seed: 1977,
+      count: 34,
+    });
+    img.addChild(this.galaxy);
     const mask = new Graphics();
     mask.beginFill(0xffffff);
     fillPoly(mask, insetToward(inner, cx, cy, PG_BAND));
     mask.endFill();
     mask.renderable = false;
     img.addChild(mask);
-    background.mask = mask;
+    img.mask = mask;
     layer.addChild(img);
+  }
+
+  update(nowMs: number) {
+    this.galaxy.update(nowMs);
   }
 }

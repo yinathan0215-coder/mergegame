@@ -180,4 +180,5 @@ export const PHYSICS = balance.physics;
 export const SCORING = balance.scoring; // { collisionPoint }
 export const JUICE = balance.juice; // mergePop / burst / scorePopup / scoreRoll
 export const QUEUE_SIZE = balance.queue.size;
+export const PROGRESSION = balance.progression; // { unlockStart, queueBelow, queueCap }
 export const STEP_MS = 1000 / balance.engine.fixedFps;

@@ -48,11 +48,12 @@ export function tierData(tier: number): PlanetTier {
   return TIERS[tier - 1];
 }
 
-// Queue refill candidates: low 5 (수성..해왕성), each uniform (§5.3 / 40-balancing §3).
+// Queue refill: uniform over tiers 1..maxTier (the unlock-gated range — docs/30-systems/launch-queue).
 export const QUEUE_CANDIDATES: number[] = balance.queue.candidates;
 
-export function randomQueueTier(): number {
-  return QUEUE_CANDIDATES[Math.floor(Math.random() * QUEUE_CANDIDATES.length)];
+export function randomQueueTier(maxTier: number): number {
+  const m = Math.max(1, Math.floor(maxTier));
+  return 1 + Math.floor(Math.random() * m);
 }
 
 // Initial rack composition (§5.1 / 40-balancing §4): 수성4·화성3·금성2·지구1 = 10.
