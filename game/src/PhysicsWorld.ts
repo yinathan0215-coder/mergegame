@@ -1,5 +1,5 @@
 import { Engine, Bodies, Composite, Events, type Body } from 'matter-js';
-import { innerOutline, LAUNCHER, CAT, PHYSICS } from './data/config';
+import { innerOutline, LAUNCHER, PLAY, CAT, PHYSICS } from './data/config';
 
 // Matter is authoritative. Top-down pool table: gravity 0, frictionAir damps motion.
 // Collision boundary = inner line (board outline: rounded rect + 140° tapers + gauge lower arc) +
@@ -32,13 +32,32 @@ export class PhysicsWorld {
       label: 'wall',
       collisionFilter: { category: CAT.DEFAULT, mask: 0xffffffff },
     };
-    // inner-line collision walls (closed polyline)
+    // inner-line collision walls (closed polyline). THICK and offset OUTWARD so the inner face
+    // stays on the visual outline while the wall is tunnel-proof for fast balls: Matter has no
+    // continuous collision detection, so a wall thinner than a ball's per-step travel (~vMax) can
+    // be passed through. A 48px wall safely contains the 30px/step max speed on every edge of the
+    // shield (incl. the tapers), so strong launches/collisions can't escape the playground.
     const pts = innerOutline();
+    const cx = PLAY.x + PLAY.w / 2;
+    const cy = PLAY.y + PLAY.h / 2;
+    const THICK = 48;
     const segs: Body[] = [];
     for (let i = 0; i < pts.length; i++) {
       const a = pts[i];
       const b = pts[(i + 1) % pts.length];
-      segs.push(PhysicsWorld.segment(a.x, a.y, b.x, b.y, 16, wall));
+      // outward normal (away from board centre) → offset the wall outward by half its thickness
+      let nx = -(b.y - a.y);
+      let ny = b.x - a.x;
+      const nl = Math.hypot(nx, ny) || 1;
+      nx /= nl;
+      ny /= nl;
+      if (((a.x + b.x) / 2 - cx) * nx + ((a.y + b.y) / 2 - cy) * ny < 0) {
+        nx = -nx;
+        ny = -ny;
+      }
+      const ox = (nx * THICK) / 2;
+      const oy = (ny * THICK) / 2;
+      segs.push(PhysicsWorld.segment(a.x + ox, a.y + oy, b.x + ox, b.y + oy, THICK, wall));
     }
     Composite.add(this.engine.world, segs);
 
