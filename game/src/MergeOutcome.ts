@@ -1,6 +1,6 @@
 import type { Body } from 'matter-js';
 import { SCORING } from './data/config';
-import { tierData, SUN_TIER } from './data/planets';
+import { tierData, SUN_TIER, MAX_TIER } from './data/planets';
 import { sound } from './SoundManager';
 import { eventLog } from './EventLog';
 import type { ScoreSystem } from './ScoreSystem';
@@ -9,6 +9,8 @@ import type { Effects } from './Effects';
 import type { MetaStore } from './MetaStore';
 import type { MergeSystem } from './MergeSystem';
 import type { ModeController } from './modes/ModeController';
+import type { PlanetSystem } from './PlanetSystem';
+import type { Economy } from './Economy';
 import type { Planet } from './Planet';
 
 // Host = the GameScene-owned FLOW/STATE the reward rules defer to. MergeOutcome owns the REWARD
@@ -33,6 +35,8 @@ interface MergeOutcomeDeps {
   meta: MetaStore;
   merge: MergeSystem;
   modeC: ModeController;
+  planetSys: PlanetSystem;
+  economy: Economy;
   host: MergeOutcomeHost;
 }
 
@@ -98,5 +102,21 @@ export class MergeOutcome {
         sound.play('wall');
       }
     }
+  }
+
+  // Black hole + black hole (Infinite only): consume both for +blackHoleBonusCount count, no spawn
+  // (ADR docs/30-systems/decisions/2026-06-28-blackhole-infinite-count). Other modes: no merge.
+  onTerminalMerge(pa: Planet, pb: Planet): boolean {
+    if (this.d.modeC.mode !== 'Infinite') return false;
+    const x = (pa.body.position.x + pb.body.position.x) / 2;
+    const y = (pa.body.position.y + pb.body.position.y) / 2;
+    this.d.planetSys.remove(pa);
+    this.d.planetSys.remove(pb);
+    this.d.economy.terminalMergeBonus(); // Infinite 카운트 +blackHoleBonusCount (economy rules)
+    const d = tierData(MAX_TIER);
+    this.d.effects.mergeBurst(x, y, d.colors[0], d.radius);
+    sound.play('merge', { pitch: 0.55 });
+    eventLog.emit('TERMINAL_MERGE', {});
+    return true;
   }
 }

@@ -31,8 +31,10 @@ sources:
 | `GameScene` | Pixi 앱·렌더 루프·씬 상태(`Loading`→`Title`→`PoolInGame`) + **세션 내부 phase**(`playing`/`paused`/`pendingFail`/`clearing`/`result`/`stageClear`/`stageFail`, 가드된 `setPhase`, [[../20-core-loop/screen-flow]])·시스템 오케스트레이션·세션 종료 판정. 검증 훅(`debug`)·경계 물리(`Containment`)는 별 모듈로 분리 | [[../90-methodology/state-machine]] · [[../90-methodology/game-loop]] |
 | `Containment` | 절대 플레이 영역 경계 — 매 substep clamp+반사로 터널링 방지 + 발사대 원 재진입 차단(물리 규칙, 오케스트레이터에서 분리) | [[../90-methodology/game-loop]] · [[../90-methodology/ecs-lite]] |
 | `StageClearFx` | Stage 클리어 비행 연출(목표 행성 제거→우하단 목표 UI로 포물선 비행→버스트→완료 콜백). 일시 애니메이션을 오케스트레이터에서 분리 | [[../90-methodology/layered-rendering]] · [[../90-methodology/ecs-lite]] |
-| `MergeOutcome` | 머지 보상 fan-out(점수·콤보·이펙트·사운드·미션) + 충돌 점수(벽/행성) 조율 — 합성/충돌의 "보상 규칙"을 오케스트레이터에서 분리. 흐름(해금·클리어 트리거)은 host 콜백으로 GameScene이 보유 | [[../90-methodology/ecs-lite]] · [[../90-methodology/event-driven]] |
+| `MergeOutcome` | 머지 보상 fan-out(점수·콤보·이펙트·사운드·미션) + 충돌 점수(벽/행성) + **블랙홀끼리 종단 합성**(카운트 +보너스·소멸) 조율 — 합성/충돌의 "보상 규칙"을 오케스트레이터에서 분리. 흐름(해금·클리어 트리거)은 host 콜백으로 GameScene이 보유 | [[../90-methodology/ecs-lite]] · [[../90-methodology/event-driven]] |
 | `Economy` | 경제/진행 규칙 — Stage 클리어 보상(코인 +300·클리어 기록·다음 스테이지 전진·진행도 영속), 카운트 충전 구매(코인↔카운트), 블랙홀 보너스 카운트. 화폐/진행 규칙을 오케스트레이터에서 분리 | [[../90-methodology/ecs-lite]] · [[../90-methodology/data-driven]] |
+| `RackBuilder` | 초기/스테이지 시작 랙 배치 — 행성 종류·개수를 보드 좌표(행/열·tier 간격)로 계산해 스폰. 랙 기하 로직을 오케스트레이터에서 분리 | [[../90-methodology/ecs-lite]] · [[../90-methodology/data-driven]] |
+| `LaunchController` | 발사 실행 — 쿨다운 게이트·스폰·큐 shift·카운트 소비·첫 제스처 코치 종료·사운드. 입력(`Launcher`)과 분리된 "발사 처리" 책임 | [[../90-methodology/ecs-lite]] · [[../90-methodology/state-machine]] |
 | `SessionController` | 세션 종료 판정·예약·결과창 — 카운트 소진/정지 감지(Infinite 결과·Stage 실패 2초 예약)·목표 비행 완료 시 클리어창·결과/클리어/실패 창 표시. **phase 전이는 GameScene.setPhase로 위임(단일 가드점 유지)** | [[../90-methodology/state-machine]] · [[../90-methodology/ecs-lite]] |
 | `LoadingScreen` | 부팅 로딩 씬 — `GALAXY PINBALL` 타이틀 글자 스트림 + 최소 2초 floor | [[../90-methodology/state-machine]] · [[../90-methodology/layered-rendering]] |
 | `modes/ModeController` | 게임 모드 권위(Infinite/Stage): 남은 카운트·차지·스테이지 레벨 로드·클리어/실패 판정 | [[../90-methodology/state-machine]] · [[../90-methodology/data-driven]] |

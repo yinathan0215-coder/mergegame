@@ -1,6 +1,6 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
-import { DESIGN, PLAY, LAUNCHER, LAUNCH, COLORS, STEP_MS, PROGRESSION, MODES } from './data/config';
-import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
+import { DESIGN, LAUNCHER, LAUNCH, COLORS, STEP_MS, PROGRESSION, MODES } from './data/config';
+import { tierData, MAX_TIER } from './data/planets';
 import { ModeController } from './modes/ModeController';
 import { GameInfoPanel } from './GameInfoPanel';
 import { FirstGestureHint } from './FirstGestureHint';
@@ -31,8 +31,8 @@ import { exposeDebug } from './debug';
 import { eventLog } from './EventLog';
 import { containPlanets } from './Containment';
 import { PlanetSystem } from './PlanetSystem';
+import { RackBuilder } from './RackBuilder';
 import { SessionController } from './SessionController';
-import type { Planet } from './Planet';
 
 type SceneState = 'Loading' | 'Title' | 'PoolInGame';
 // In-session phase — the end phase itself carries the kind (result / stageClear / stageFail).
@@ -51,6 +51,7 @@ export class GameScene {
   private uiLayer = new Container();
 
   private planetSys: PlanetSystem; // planet entity store + lifecycle + per-frame sprite-sync (ECS-lite)
+  private rack: RackBuilder; // session starting-board spawn geometry (extracted from this orchestrator)
   private cooldownUntil = 0;
   private acc = 0;
 
@@ -129,6 +130,7 @@ export class GameScene {
 
     this.physics = new PhysicsWorld();
     this.planetSys = new PlanetSystem(this.physics, this.planetLayer);
+    this.rack = new RackBuilder(this.planetSys);
     this.board = new BoardRenderer(this.boardLayer);
     this.hud = new Hud(this.uiLayer, () => this.setScene('Title'), [
       // ≡ dropdown shortcuts — same actions as the Title-lobby buttons (docs/50-art-ux/layout §2-c)
@@ -153,7 +155,7 @@ export class GameScene {
         removePlanet: (p) => this.planetSys.remove(p),
         spawnPlanet: (tier, x, y, vx, vy, now) => this.planetSys.spawn(tier, x, y, vx, vy, now, true, true),
         unlockedTier: () => this.unlockedTier,
-        terminalMerge: (pa, pb) => this.onTerminalMerge(pa, pb), // 블랙홀끼리 합성 → Infinite 카운트 +20
+        terminalMerge: (pa, pb) => this.mergeOutcome.onTerminalMerge(pa, pb), // 블랙홀끼리 합성 → Infinite 카운트 +20
       },
       (tier, x, y, planet) => this.mergeOutcome.onMerge(tier, x, y, planet, performance.now())
     );
@@ -182,7 +184,7 @@ export class GameScene {
     // this owns: stats, combo peak, phase machine, stage-clear trigger and the unlock modal.
     this.mergeOutcome = new MergeOutcome({
       score: this.score, combo: this.combo, effects: this.effects, meta: this.meta,
-      merge: this.merge, modeC: this.modeC,
+      merge: this.merge, modeC: this.modeC, planetSys: this.planetSys, economy: this.economy,
       host: {
         bumpStats: (tier) => {
           this.stats.merges++;
@@ -355,42 +357,6 @@ export class GameScene {
     return true;
   }
 
-  private buildInitialRack() {
-    const cx = PLAY.x + PLAY.w / 2;
-    const cy = PLAY.y + PLAY.h * 0.36;
-    const spacing = 58;
-    const rowGap = 56;
-    const rows = INITIAL_RACK.map(({ tier, count }) => Array<number>(count).fill(tier));
-    const born = performance.now() - 1000;
-    rows.forEach((row, ri) => {
-      const y = cy + (ri - 1.5) * rowGap;
-      row.forEach((tier, ci) => {
-        const x = cx + (ci - (row.length - 1) / 2) * spacing;
-        this.planetSys.spawn(tier, x, y, 0, 0, born, true);
-      });
-    });
-  }
-
-  // Stage rack: lay out the stage's composition ({tier,count}) as one centred row per tier, stacked
-  // top→down with tier-aware spacing so big planets never spawn overlapping (docs/30-systems/stage-mode ·
-  // 40-balancing/stage-balance). Positions form the "shape"; physics settles them.
-  private buildStageRack(rack: { tier: number; count: number }[]) {
-    const born = performance.now() - 1000;
-    const cx = PLAY.x + PLAY.w / 2;
-    let y = PLAY.y + PLAY.h * 0.22;
-    for (const r of rack) {
-      const rad = tierData(r.tier).radius;
-      const want = 2 * rad + 6; // spacing that avoids spawn overlap
-      const maxW = PLAY.w - 2 * rad - 8;
-      const spacing = r.count > 1 && (r.count - 1) * want > maxW ? maxW / (r.count - 1) : want;
-      for (let ci = 0; ci < r.count; ci++) {
-        const x = cx + (ci - (r.count - 1) / 2) * spacing;
-        this.planetSys.spawn(r.tier, x, y, 0, 0, born, true);
-      }
-      y += 2 * rad + 10; // next row below, spaced by this row's planet size
-    }
-  }
-
   // Start a fresh session of the current mode: clear the board, reset score/combo/count, build the
   // mode's rack + queue, and configure the HUD (docs/20-core-loop/game-modes).
   private startSession() {
@@ -418,8 +384,8 @@ export class GameScene {
     this.session.reset();
     this.endSkip.eventMode = 'none';
     this.queue.reset(this.modeC.isStage ? this.modeC.stageDef.queue : null);
-    if (this.modeC.isStage) this.buildStageRack(this.modeC.stageDef.rack);
-    else this.buildInitialRack();
+    if (this.modeC.isStage) this.rack.buildStage(this.modeC.stageDef.rack);
+    else this.rack.buildInitial();
     this.info.setMode(this.modeC.mode, this.modeC.targetTier);
     this.info.setCount(this.modeC.count);
     this.info.setNext(this.queue.next());
@@ -435,22 +401,6 @@ export class GameScene {
   // Spend coins to add launch count (docs/30-systems/planet-charge). Returns false if unaffordable.
   private buyCharge(n: number): boolean {
     return this.economy.buyCharge(n);
-  }
-
-  // Black hole + black hole (Infinite only): consume both for +blackHoleBonusCount count, no spawn
-  // (ADR docs/30-systems/decisions/2026-06-28-blackhole-infinite-count). Other modes: no merge.
-  private onTerminalMerge(pa: Planet, pb: Planet): boolean {
-    if (this.modeC.mode !== 'Infinite') return false;
-    const x = (pa.body.position.x + pb.body.position.x) / 2;
-    const y = (pa.body.position.y + pb.body.position.y) / 2;
-    this.planetSys.remove(pa);
-    this.planetSys.remove(pb);
-    this.economy.terminalMergeBonus(); // Infinite 카운트 +blackHoleBonusCount (economy rules)
-    const d = tierData(MAX_TIER);
-    this.effects.mergeBurst(x, y, d.colors[0], d.radius);
-    sound.play('merge', { pitch: 0.55 });
-    eventLog.emit('TERMINAL_MERGE', {});
-    return true;
   }
 
   // Single guarded transition point for the in-session phase machine (audit D4) — every `this.phase`
