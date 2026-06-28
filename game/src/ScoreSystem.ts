@@ -1,21 +1,26 @@
 import { SCORING } from './data/config';
 import { tierData } from './data/planets';
 
-// Score model (docs/30-systems/scoring-combo · 40-balancing/combo-scoring): every ball-ball
-// collision adds a flat point; a merge adds the created tier's base score. NO combo (removed
-// 2026-06-28 — ADR 40-balancing/decisions/2026-06-28-remove-combo).
+// Score model (docs/30-systems/scoring-combo · 40-balancing/combo-scoring): a wall collision adds
+// wallPoint, a ball-ball collision adds ballPoint, and a merge adds the created tier's base score.
 export class ScoreSystem {
   score = 0;
 
   constructor(private onChange: (score: number) => void) {}
 
-  // +1 per ball-ball collision (wall/line collisions are excluded by the caller).
-  onCollision() {
-    this.score += SCORING.collisionPoint;
+  // +wallPoint when a planet hits a boundary wall (inner line / launcher circle).
+  onWallHit() {
+    this.score += SCORING.wallPoint;
     this.onChange(this.score);
   }
 
-  // Merge → base score of the created tier (no multiplier). Returns the points gained.
+  // +ballPoint when two planets collide (whether or not it triggers a merge).
+  onBallHit() {
+    this.score += SCORING.ballPoint;
+    this.onChange(this.score);
+  }
+
+  // Merge → base score of the created tier. Returns the points gained.
   onMerge(tier: number): number {
     const pts = tierData(tier).score;
     this.score += pts;

@@ -82,8 +82,14 @@ export class GameScene {
       }
     );
     this.physics.onCollision((a, b) => {
-      if (a.label === 'planet' && b.label === 'planet') this.score.onCollision();
-      this.merge.queuePair(a, b);
+      const aP = a.label === 'planet';
+      const bP = b.label === 'planet';
+      if (aP && bP) {
+        this.score.onBallHit(); // 행성–행성 충돌 +3
+        this.merge.queuePair(a, b);
+      } else if (aP || bP) {
+        this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1
+      }
     });
     this.launcher = new Launcher(this.app.stage, this.aimLayer, this.uiLayer, {
       currentTier: () => this.queue.current(),

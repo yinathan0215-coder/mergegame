@@ -23,9 +23,9 @@ sources:
 ## Details (decisions)
 
 ### 충돌 점수
-- 두 행성이 충돌할 때마다 **+1**(머지를 일으키든 아니든). **벽·일방향 선과의 충돌은 제외**
-  (한 공을 영원히 튕겨 점수를 버는 farming 방지). 값 SSoT [[40-balancing/combo-scoring]].
-- 구현: 물리 `collisionStart`에서 양쪽 label이 모두 `planet`일 때만 가산.
+- **벽 충돌 +1, 행성–행성 충돌 +3.** 행성이 충돌 경계 벽(inner line · 발사대 원)에 부딪히면 +1,
+  두 행성이 부딪히면 +3(머지 여부 무관). 값 SSoT [[40-balancing/combo-scoring]].
+- 구현: 물리 `collisionStart`에서 양쪽이 `planet`이면 `ballPoint`, 한쪽이 벽이면 `wallPoint`.
 
 ### 머지 점수
 - 머지로 생성된 행성 **등급의 기본 점수**를 가산한다(등급 차등). 표 SSoT [[40-balancing/planet-stats]].

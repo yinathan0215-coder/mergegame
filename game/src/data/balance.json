@@ -55,7 +55,7 @@
     "remergeDelayMs": 80
   },
 
-  "scoring": { "collisionPoint": 1 },
+  "scoring": { "wallPoint": 1, "ballPoint": 3 },
 
   "juice": {
     "mergePop": { "ms": 260, "startScale": 0.35, "peakScale": 1.18 },

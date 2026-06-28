@@ -14,27 +14,24 @@ export class Hud {
   private best = 0;
   private target = 0; // latest actual score
   private shown = 0; // odometer display value, rolls toward target
+  private crown!: Sprite;
 
   constructor(layer: Container) {
     const cx = HUD.w / 2;
 
-    // ── center: 👑 best (small) + Score (big) ──
-    const crown = Sprite.from(ASSETS.ui.crown);
-    const yk = 22;
-    crown.anchor.set(0.5);
-    crown.x = cx - 58;
-    crown.y = yk + 2;
-    crown.scale.set(28 / ASSET_SIZES.uiIcon.w);
-    layer.addChild(crown);
+    // ── center (HUD 수평 중앙 정렬): 👑 best (작게, 위) + Score (크게, 아래) ──
+    this.crown = Sprite.from(ASSETS.ui.crown);
+    this.crown.anchor.set(0.5);
+    this.crown.scale.set(28 / ASSET_SIZES.uiIcon.w);
+    layer.addChild(this.crown);
     this.bestText = txt('0', 17, 0xcccccc, '700');
     this.bestText.anchor.set(0, 0.5);
-    this.bestText.x = cx - 42;
-    this.bestText.y = yk + 2;
     layer.addChild(this.bestText);
+    this.centerBest(); // crown + best 를 cx 기준 수평 중앙 정렬
     this.scoreText = txt('0', 32, COLORS.hudText, '800');
     this.scoreText.anchor.set(0.5, 0.5);
     this.scoreText.x = cx;
-    this.scoreText.y = 56;
+    this.scoreText.y = 50;
     layer.addChild(this.scoreText);
 
     // ── top-left: money pill + exit button ──
@@ -116,11 +113,24 @@ export class Hud {
     layer.addChild(g);
   }
 
+  // crown + best 를 HUD 수평 중앙에 정렬 (best 폭이 바뀌면 재호출).
+  private centerBest() {
+    const cx = HUD.w / 2;
+    const crownW = 28;
+    const gap = 6;
+    const left = cx - (crownW + gap + this.bestText.width) / 2;
+    this.crown.x = left + crownW / 2;
+    this.crown.y = 24;
+    this.bestText.x = left + crownW + gap;
+    this.bestText.y = 24;
+  }
+
   setScore(score: number) {
     this.target = score;
     if (score > this.best) {
       this.best = score;
       this.bestText.text = this.best.toLocaleString();
+      this.centerBest();
     }
   }
 
