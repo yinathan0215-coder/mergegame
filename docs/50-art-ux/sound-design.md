@@ -52,6 +52,12 @@ sources:
 - **우선순위**: `merge`·`unlock`·`comboMilestone`·`play`·`popupOpen` = 높음(보존), `wall`·`ballHit` = 낮음
   (먼저 끊김/생략). 강한 충돌로 벽·볼 소리가 폭주해도 머지·해금 소리는 항상 들린다.
 
+### 충돌음 가청도 — "낮은 우선순위 ≠ 안 들림"
+- `wall`·`ballHit`는 **폭주 시 솎이는** 대상(낮은 우선순위·짧은 스로틀)이지만, **한 번 들릴 때는
+  발사·머지에 묻히지 않게 충분히 큰 레벨**로 들려 충돌 타격감을 준다. 충돌음을 절감 대상으로만 보고
+  게인을 너무 낮추면 "충돌음이 빠진" 것처럼 들린다 — `wall`·`ballHit` 게인은 `launch`·`merge`와 **동등
+  수준**(balance.json `sound`의 wall/ballHit `gain` 참조)을 유지한다.
+
 ### 음소거 / 볼륨 / 자동재생
 - **마스터 음소거·볼륨** 지원. **기본 ON**(소리 켜짐). 음소거 상태는 `localStorage`에 영속.
 - 브라우저 자동재생 정책: `AudioContext`는 **첫 사용자 입력(pointerdown)에서 resume**한다(그 전엔 무음).

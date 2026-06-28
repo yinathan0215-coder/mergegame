@@ -34,8 +34,8 @@ const DEFAULTS: SoundCfg = {
     popupOpen: { type: 'sine', freq: 520, freq2: 880, dur: 0.18, gain: 0.18, throttleMs: 100, priority: 6 },
     popupClose: { type: 'sine', freq: 720, freq2: 400, dur: 0.1, gain: 0.13, throttleMs: 80, priority: 4 },
     launch: { type: 'sawtooth', freq: 220, freq2: 540, dur: 0.14, gain: 0.17, throttleMs: 50, priority: 4 },
-    wall: { type: 'noise', freq: 1200, dur: 0.05, gain: 0.09, throttleMs: 70, priority: 1 },
-    ballHit: { type: 'noise', freq: 760, dur: 0.06, gain: 0.12, throttleMs: 55, priority: 1 },
+    wall: { type: 'noise', freq: 1200, dur: 0.05, gain: 0.16, throttleMs: 70, priority: 1 },
+    ballHit: { type: 'noise', freq: 760, dur: 0.08, gain: 0.2, throttleMs: 55, priority: 1 },
     merge: { type: 'triangle', freq: 440, freq2: 660, dur: 0.16, gain: 0.22, throttleMs: 25, priority: 5 },
     comboMilestone: { type: 'square', freq: 660, freq2: 1320, dur: 0.3, gain: 0.2, throttleMs: 150, priority: 6 },
     unlock: { type: 'sine', freq: 523, freq2: 1046, dur: 0.4, gain: 0.24, throttleMs: 200, priority: 7 },
@@ -64,6 +64,7 @@ class SoundManager {
   private muted: boolean;
   private active = new Set<Voice>();
   private lastAt = new Map<SoundId, number>();
+  private dbg: Record<string, { req: number; played: number; throttled: number; capped: number }> = {};
 
   constructor() {
     this.muted = (() => {
@@ -73,6 +74,17 @@ class SoundManager {
     const unlock = () => this.ensureCtx();
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
+    // Verification hook (not player-facing): per-sound disposition counters + context state.
+    (window as unknown as { __sound: unknown }).__sound = {
+      stats: () => this.dbg,
+      muted: () => this.muted,
+      ctxState: () => this.ctx?.state ?? 'none',
+      active: () => this.active.size,
+    };
+  }
+
+  private bump(id: SoundId, k: 'req' | 'played' | 'throttled' | 'capped') {
+    (this.dbg[id] ??= { req: 0, played: 0, throttled: 0, capped: 0 })[k]++;
   }
 
   private ensureCtx() {
@@ -98,19 +110,21 @@ class SoundManager {
     if (!this.ctx || !this.master) return;
     const def = CFG.sounds[id];
     if (!def) return;
+    this.bump(id, 'req');
 
     const now = performance.now();
-    if (now - (this.lastAt.get(id) ?? -1e9) < def.throttleMs) return; // per-sound throttle
+    if (now - (this.lastAt.get(id) ?? -1e9) < def.throttleMs) { this.bump(id, 'throttled'); return; } // per-sound throttle
 
     if (this.active.size >= CFG.maxVoices) {
       // preempt the lowest-priority active voice that is STRICTLY below this sound; else skip.
       let victim: Voice | null = null;
       for (const v of this.active) if (v.priority < def.priority && (!victim || v.priority < victim.priority)) victim = v;
       if (victim) victim.stop();
-      else return;
+      else { this.bump(id, 'capped'); return; }
     }
 
     this.lastAt.set(id, now);
+    this.bump(id, 'played');
     this.spawn(def, opts?.pitch ?? 1);
   }
 
