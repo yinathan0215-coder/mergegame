@@ -57,8 +57,6 @@ export function tierData(tier: number): PlanetTier {
 }
 
 // Queue refill: uniform over tiers 1..maxTier (the unlock-gated range — docs/30-systems/launch-queue).
-export const QUEUE_CANDIDATES: number[] = balance.queue.candidates;
-
 export function randomQueueTier(maxTier: number): number {
   const m = Math.max(1, Math.floor(maxTier));
   return 1 + Math.floor(Math.random() * m);

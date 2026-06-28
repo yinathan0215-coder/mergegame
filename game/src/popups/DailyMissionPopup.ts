@@ -1,5 +1,5 @@
 import { Container, Graphics, Rectangle, Text } from 'pixi.js';
-import { DESIGN, MISSIONS } from '../data/config';
+import { MISSIONS } from '../data/config';
 import { Popup } from '../ui/Popup';
 import { attachButtonFeedback, button3D, BUTTON3D_DY } from '../ui/button';
 import { coinSprite } from '../ui/coin';

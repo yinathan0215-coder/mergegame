@@ -1,7 +1,6 @@
 export const ASSETS = {
   board: {
     background: '/assets/board/space-background-cover-16x9.png',
-    legacyBackground: '/assets/board/space-background.png',
   },
   ui: {
     crown: '/assets/ui/crown.png',
@@ -12,6 +11,7 @@ export const ASSETS = {
     luckyWheel: '/assets/ui/lucky-wheel.png',
     shop: '/assets/ui/shop.png',
     playButton: '/assets/ui/play-button.png',
+    playButtonStage: '/assets/ui/play-button-stage.png',
     exit: '/assets/ui/exit.png',
     menu: '/assets/ui/menu.png',
   },
@@ -33,7 +33,6 @@ export const ASSETS = {
 
 export const ASSET_SIZES = {
   boardBackground: { w: 1920, h: 1080 },
-  legacyBoardBackground: { w: 376, h: 606 },
   uiIcon: { w: 192, h: 192 },
   playButtonSource: { w: 224, h: 100 },
   playButton: { w: 224, h: 100 },

@@ -3,7 +3,7 @@ import { ASSETS, ASSET_SIZES } from './assets';
 import { GalaxyBackground } from './GalaxyBackground';
 import { makePlanetSprite } from './PlanetFactory';
 import { tierData } from './data/planets';
-import { COLORS, DESIGN } from './data/config';
+import { DESIGN } from './data/config';
 import { attachButtonFeedback, redDot } from './ui/button';
 import { sound } from './SoundManager';
 import type { PopupKind } from './MetaUI';

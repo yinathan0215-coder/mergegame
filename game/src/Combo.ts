@@ -13,6 +13,7 @@ export class Combo {
   private num: Text;
   private count = 0;
   private shown = 0; // odometer display value
+  private lastRoll = 0; // 직전 odometer 갱신 시각 — 롤 속도 프레임레이트 무관(docs/90-methodology/game-loop)
   private lastMergeAt = -1e9; // timer anchor; reset on each merge
 
   constructor(layer: Container) {
@@ -52,6 +53,8 @@ export class Combo {
   }
 
   update(now: number) {
+    const frames = this.lastRoll ? Math.min(4, (now - this.lastRoll) / (1000 / 60)) : 1;
+    this.lastRoll = now;
     if (this.count === 0) {
       this.label.alpha = this.num.alpha = 0;
       return;
@@ -69,7 +72,7 @@ export class Combo {
     this.label.alpha = this.num.alpha = a;
     // odometer: rise toward the count by 1-unit steps, same as the score roll
     if (this.shown !== this.count) {
-      this.shown += Math.max(1, Math.ceil((this.count - this.shown) * JUICE.scoreRoll.lerp));
+      this.shown += Math.max(1, Math.ceil((this.count - this.shown) * JUICE.scoreRoll.lerp * frames));
       if (this.shown > this.count) this.shown = this.count;
       this.num.text = String(this.shown);
     }

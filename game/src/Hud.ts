@@ -25,6 +25,7 @@ export class Hud {
   private best = 0;
   private target = 0; // latest actual score
   private shown = 0; // odometer display value, rolls toward target
+  private lastRoll = 0; // 직전 odometer 갱신 시각 — 롤 속도를 프레임레이트와 무관하게(docs/90-methodology/game-loop)
   private crown!: Sprite;
   private scrim = new Graphics(); // full-screen tap-catcher: an outside tap closes the dropdown
   private dropdown = new Container(); // the icon-only shortcut list under the ≡ button
@@ -220,11 +221,13 @@ export class Hud {
 
   // Odometer: roll the shown value toward target in integer steps (docs/50-art-ux/feedback-effects).
   // Big jumps roll fast, small ones tick by 1. Called every tick.
-  update() {
+  update(now: number) {
+    const frames = this.lastRoll ? Math.min(4, (now - this.lastRoll) / (1000 / 60)) : 1; // 60fps 프레임 수(상한 4)
+    this.lastRoll = now;
     if (this.shown === this.target) return;
     const diff = this.target - this.shown;
     const dir = Math.sign(diff);
-    this.shown += Math.max(1, Math.ceil(Math.abs(diff) * JUICE.scoreRoll.lerp)) * dir;
+    this.shown += Math.max(1, Math.ceil(Math.abs(diff) * JUICE.scoreRoll.lerp * frames)) * dir;
     if ((dir > 0 && this.shown > this.target) || (dir < 0 && this.shown < this.target)) {
       this.shown = this.target;
     }

@@ -35,6 +35,7 @@ export interface LauncherHost {
   currentTier(): number;
   fire(tier: number, vx: number, vy: number): boolean;
   obstacles(): { x: number; y: number; r: number }[];
+  canAim(): boolean; // 보드 조준 허용 여부 — Playing(전이/팝업/종료 아님)일 때만 (docs/90-methodology/layered-rendering 입력 우선순위)
 }
 
 // Press-drag-release slingshot at the launcher circle (docs/30-systems/launcher):
@@ -72,6 +73,7 @@ export class Launcher {
   }
 
   private onDown = (e: FederatedPointerEvent) => {
+    if (!this.host.canAim()) return; // 조준은 Playing일 때만 시작 — 전이 페이드/팝업/종료 중 stray 입력 차단
     this.aiming = true;
     const p = this.coordRoot.toLocal(e.global); // 뷰포트 좌표 → 전경(디자인) 좌표
     this.curX = p.x;

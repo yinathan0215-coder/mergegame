@@ -136,6 +136,7 @@ export class GameScene {
     this.combo = new Combo(this.comboLayer);
     this.info = new GameInfoPanel(this.uiLayer, () => this.openCharge()); // 좌하단 Count/Next + 모드별 위젯
     this.gestureHint = new FirstGestureHint(this.uiLayer); // 첫 발사 전 손가락 코치(발사대 위)
+    this.uiLayer.setChildIndex(this.gestureHint.container, 0); // 코치 딤은 보드만 어둡게 — HUD/Count 수치는 그 위에 또렷이(docs/50-art-ux/input-ux)
     this.score = new ScoreSystem((s) => { this.hud.setScore(s); if (!this.modeC.isStage) this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드(Stage는 집계 안 함)
     this.queue = new QueueSystem(
       (slots) => this.info.setNext(slots[1] ?? slots[0]), // Next 미리보기 갱신(좌하단 HUD)
@@ -215,6 +216,8 @@ export class GameScene {
       fire: (tier, vx, vy) => this.fire(tier, vx, vy),
       obstacles: () =>
         this.planets.map((p) => ({ x: p.body.position.x, y: p.body.position.y, r: tierData(p.tier).radius })),
+      canAim: () => this.scene === 'PoolInGame' && !this.trans && !this.paused && !this.ended
+        && !this.endKind && !this.clearFly && this.metaUI.openKind() === null && !this.charge.container.visible,
     }, this.fgRoot);
 
     this.meta = new MetaStore();
@@ -249,6 +252,7 @@ export class GameScene {
     this.fgRoot.addChild(this.loadingScreen.container); // 부팅 스플래시 — 전경(contain) 최상위, 로딩 한정 표시
     this.fade.alpha = 0;
     this.fade.eventMode = 'none';
+    this.fade.on('pointerdown', (e) => e.stopPropagation()); // 전이 페이드(static)가 뒤 발사대로 입력을 흘리지 않게 차단(docs/50-art-ux)
     this.unlockModal = new UnlockModal(() => this.onUnlockOk());
     this.fgRoot.addChild(this.unlockModal.container); // 해금 모달 = contain 레이어 + 오버사이즈 딤(메타 팝업과 동일, docs/50-art-ux/popup-system)
     // 게임 모드 팝업(충전·결과·스테이지) = 같은 contain 레이어, 보드/HUD 위 (docs/50-art-ux/result-window)
@@ -642,7 +646,9 @@ export class GameScene {
       }
       return;
     }
-    if (this.scene !== 'PoolInGame' || this.paused || this.ended) return;
+    // 인게임 메타/충전 팝업이 떠 있으면 물리·발사를 정지(해금 모달과 동일한 시간정책 — docs/20-core-loop/screen-flow §씬별 입력·시간)
+    const popupOpen = this.metaUI.openKind() !== null || this.charge.container.visible;
+    if (this.scene !== 'PoolInGame' || this.paused || this.ended || popupOpen) return;
 
     // Stage 클리어 연출 중: 보드 물리·발사를 멈추고 비행+버스트 연출만 갱신(완료 시 클리어창).
     if (this.clearFly) {
@@ -681,7 +687,7 @@ export class GameScene {
     }
     if (!this.clearFly) this.launcher.update(); // 연출 중엔 비운 발사대를 다시 채우지 않음
     this.board.update(nowMs);
-    this.hud.update(); // score odometer roll
+    this.hud.update(nowMs); // score odometer roll
     this.info.update(nowMs); // 좌하단 위젯/충전 버튼·목표 행성 회전
     this.gestureHint.setActive(!this.gestureDone && !this.launcher.isAiming, nowMs); // 첫 발사 전·조준 전만
     this.gestureHint.update(nowMs);

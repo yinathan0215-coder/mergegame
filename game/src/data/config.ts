@@ -16,7 +16,6 @@ export const OUTLINE_W = L.outlineW;
 export const PG_BAND = L.pgBand;
 export const PLAY = L.play; // rounded-rect play area
 export const LINE_Y = PLAY.y + PLAY.h; // one-way separation line (play-area bottom)
-export const WALL_T = L.wallT;
 // Launcher circle + power-gauge ring share the same centre P (docs/50-art-ux/screen-structure).
 // The board's bottom is two 140°-taper sides meeting the gauge circle's lower arc; the launcher
 // circle sits inside it. inner line (= GAUGE/taper/rect outline) is the collision boundary.

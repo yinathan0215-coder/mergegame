@@ -85,8 +85,9 @@ sources:
 - `balance.json` — 단일 출처: `planets`(11단계 반지름·점수·색·패턴) · `scoring` · `juice`(`combo`·`result` 포함) ·
   `queue` · `rack` · `launch` · `physics` · `progression` · `modes`(Infinite/Stage·카운트·차지·블랙홀 보너스·스테이지 레벨) ·
   `layout`(HUD/보드/PLAY/발사대) · `colors` · `engine` · `economy` · `dailyMissions` · `attendance` · `wheel` · `sound`.
-- `game/src/data/planets.ts` — 로더: JSON에서 행성 사다리/큐/랙을 빌드(`TIERS`·`tierData`·
-  `INITIAL_RACK`·`QUEUE_CANDIDATES`), 색 hex 문자열→숫자 파싱, 무결성 검증(11단계).
+- `game/src/data/planets.ts` — 로더: JSON에서 행성 사다리/랙을 빌드(`TIERS`·`tierData`·
+  `INITIAL_RACK`) + 큐 보충(`randomQueueTier` — 해금 범위 균등 랜덤), 색 hex 문자열→숫자 파싱,
+  무결성 검증(11단계).
 - `game/src/data/config.ts` — 로더: 레이아웃·색·발사·물리·점수·연출 export, **파생값**(`LINE_Y`=
   PLAY 하단, `POCKET.cy`·`LAUNCHER.y`, `STEP_MS`=1000/fps)을 JSON 원시값에서 계산.
 - 소비자 모듈은 기존대로 `./data/config`·`./data/planets`에서 import(이름 무변경).

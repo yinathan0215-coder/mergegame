@@ -45,6 +45,7 @@ export class CoinPill extends Container {
   private store: MetaStore;
   private label: Text;
   private shown: number;
+  private lastRoll = 0; // 직전 odometer 갱신 시각 — 롤 속도 프레임레이트 무관(docs/90-methodology/game-loop)
   private pending = 0; // coins added to the wallet but not yet "landed" in the display
   private flyers: Flyer[] = [];
 
@@ -90,11 +91,13 @@ export class CoinPill extends Container {
 
   // Per-frame: roll the shown balance toward (wallet − pending), and advance the poured coins.
   update(now: number) {
+    const frames = this.lastRoll ? Math.min(4, (now - this.lastRoll) / (1000 / 60)) : 1;
+    this.lastRoll = now;
     const target = this.store.coins - this.pending;
     if (this.shown !== target) {
       const diff = target - this.shown;
       const dir = Math.sign(diff);
-      this.shown += Math.max(1, Math.ceil(Math.abs(diff) * JUICE.scoreRoll.lerp)) * dir;
+      this.shown += Math.max(1, Math.ceil(Math.abs(diff) * JUICE.scoreRoll.lerp * frames)) * dir;
       if ((dir > 0 && this.shown > target) || (dir < 0 && this.shown < target)) this.shown = target;
       this.label.text = String(this.shown);
     }
