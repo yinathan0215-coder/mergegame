@@ -12,6 +12,14 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-29] auto | audit 69.6/100 (방법론 구조 재감사 @d55419b)
+why: 사용자 지시("코드가 좀 바뀌었어 → 다시 조사"). `methodology-audit` 스킬 재실행(체크·보고만) →
+[[70-verification/audits/2026-06-29-0130-methodology-structure-audit]]. 직전 2347 감사(@069fa7e) 이후 6개
+피처 커밋이 들어왔으나 구조 수정 0건. 종합 **69.6/100**으로 동점이나 1·2·4·9차원이 밴드 내 악화(추세 하방):
+GameScene 717→810줄(+93, clear-fly 연출 내장), 하드코딩 색 141→176·`#49a8e6` 중복 8곳, 세션 플래그 clearFly
+추가(4개 공존), dead 항목 4→6. game-loop는 워크플로 회의론자가 5로 상향했으나 메타팝업 물리 미정지 누수
+잔존 확인해 4로 환원. 수정은 별도 단계(P1 GameScene 분할·세션 상태화). index 감사 로그 링크 추가.
+
 ## [2026-06-29] manual | 기본 모드 Stage 전환 + 토글 위치·색상 swap + 최초 실행 Stage 1 직행
 why: 사용자 지시 — (1) 기본 활성 모드를 Infinite→**Stage**로, (2) 토글에서 Stage·Infinite의
 **위치(좌/우)와 색상(파랑/보라)을 서로 swap**(Stage=좌·파랑 `#1f8efa`·`play-button.png`,

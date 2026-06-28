@@ -47,6 +47,10 @@ sources:
   구조 감사(@069fa7e). 종합 **69.6/100**(이전 73→하락). 강점: Acceptance·Fixed Step·Event·Layered(4/5).
   약점: 단일책임(GameScene 380→717줄 god-object)·State(paused 불리언 공존)·ECS·SSoT(UI색 141 하드코딩)
   =3/5. P1: GameScene 6모듈 분할·세션 흐름 상태화.
+- [[70-verification/audits/2026-06-29-0130-methodology-structure-audit]] — **재감사**(@d55419b, 6 피처
+  커밋 후). 종합 **69.6/100**(2347과 동점이나 1·2·4·9차원 밴드 내 악화=추세 하방). GameScene **717→810줄**,
+  하드코딩 색 141→**176**·`#49a8e6` 중복 8곳, 세션 플래그 `clearFly` 추가(4개 공존). 구조 수정 0건 →
+  P1(GameScene 분할·세션 상태화)을 피처보다 먼저.
 
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.
