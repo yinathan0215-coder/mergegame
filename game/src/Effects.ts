@@ -28,12 +28,7 @@ export class Effects {
   private popups: Popup[] = [];
   private pool: Graphics[] = []; // reusable effect Graphics (avoid per-collision alloc/GC)
 
-  constructor(
-    private worldLayer: Container,
-    private hudLayer: Container,
-    private scoreX: number,
-    private scoreY: number
-  ) {}
+  constructor(private worldLayer: Container) {}
 
   private acquire(x: number, y: number): Graphics {
     const g = this.pool.pop() ?? new Graphics();
@@ -71,21 +66,20 @@ export class Effects {
     this.fx.push({ g: this.acquire(x, y), start: performance.now(), ms: h.ms, color: COLORS.aimLine, alpha: h.alpha, fan: { angs, len: h.len } });
   }
 
-  // Floating "+N" near the Score, rising and fading (merges only).
-  scorePopup(points: number) {
+  // Floating "+N" at the merge location (board/world space), rising and fading (merges only).
+  scorePopup(points: number, x: number, y: number) {
     if (this.popups.length >= MAX_POPUPS) return;
-    const j = JUICE.scorePopup;
     const t = new Text(`+${points}`, {
       fill: POPUP_COLOR,
-      fontSize: j.fontSize,
+      fontSize: JUICE.scorePopup.fontSize,
       fontFamily: 'Arial, sans-serif',
       fontWeight: '800',
     });
     t.anchor.set(0.5);
-    t.x = this.scoreX + (Math.random() * 2 - 1) * j.spreadX;
-    t.y = this.scoreY + (Math.random() * 2 - 1) * j.spreadY;
-    this.hudLayer.addChild(t);
-    this.popups.push({ t, start: performance.now(), y0: t.y });
+    t.x = x;
+    t.y = y;
+    this.worldLayer.addChild(t);
+    this.popups.push({ t, start: performance.now(), y0: y });
   }
 
   update(now: number) {

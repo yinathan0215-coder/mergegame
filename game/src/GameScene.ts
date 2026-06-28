@@ -4,6 +4,7 @@ import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, 
 import { tierData, MAX_TIER, INITIAL_RACK } from './data/planets';
 import { PhysicsWorld } from './PhysicsWorld';
 import { BoardRenderer } from './BoardRenderer';
+import { TitleScreen } from './TitleScreen';
 import { Hud } from './Hud';
 import { Launcher } from './Launcher';
 import { QueueSystem } from './QueueSystem';
@@ -12,6 +13,8 @@ import { MergeSystem } from './MergeSystem';
 import { Effects } from './Effects';
 import { makePlanetSprite } from './PlanetFactory';
 import type { Planet } from './Planet';
+
+type SceneState = 'Title' | 'PoolInGame';
 
 // merge spawn pop curve: startScale → peakScale (0–40%) → settle to 1.0 (40–100%).
 function popScale(k: number): number {
@@ -23,6 +26,7 @@ function popScale(k: number): number {
 
 export class GameScene {
   readonly app: Application;
+  private gameLayer = new Container();
   private boardLayer = new Container();
   private planetLayer = new Container();
   private effectLayer = new Container();
@@ -42,6 +46,9 @@ export class GameScene {
   private merge: MergeSystem;
   private launcher: Launcher;
   private effects: Effects;
+  private board: BoardRenderer;
+  private title: TitleScreen;
+  private scene: SceneState = 'Title';
 
   stats = { shots: 0, merges: 0, maxTier: 1, sunReached: false };
 
@@ -55,14 +62,15 @@ export class GameScene {
       autoDensity: true,
     });
     mount.appendChild(this.app.view as unknown as HTMLCanvasElement);
-    this.app.stage.addChild(this.boardLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
+    this.gameLayer.addChild(this.boardLayer, this.planetLayer, this.effectLayer, this.aimLayer, this.uiLayer);
+    this.app.stage.addChild(this.gameLayer);
     this.app.stage.eventMode = 'static';
     this.app.stage.hitArea = new Rectangle(0, 0, DESIGN.w, DESIGN.h);
 
     this.physics = new PhysicsWorld();
-    new BoardRenderer(this.boardLayer);
+    this.board = new BoardRenderer(this.boardLayer);
     this.hud = new Hud(this.uiLayer);
-    this.effects = new Effects(this.effectLayer, this.uiLayer, DESIGN.w / 2, 56);
+    this.effects = new Effects(this.effectLayer);
     this.score = new ScoreSystem((s) => this.hud.setScore(s));
     this.queue = new QueueSystem(() => {}); // launcher shows the current planet; next is random-refilled
     this.merge = new MergeSystem(
@@ -78,7 +86,7 @@ export class GameScene {
         const pts = this.score.onMerge(tier);
         const d = tierData(tier);
         this.effects.mergeBurst(x, y, d.colors[0], d.radius); // 발산 버스트
-        this.effects.scorePopup(pts); // +N 플로팅
+        this.effects.scorePopup(pts, x, y); // +N at the merge location
       }
     );
     this.physics.onCollision((a, b, impact, cx, cy, bx, by) => {
@@ -105,6 +113,9 @@ export class GameScene {
     });
 
     this.buildInitialRack();
+    this.title = new TitleScreen(() => this.setScene('PoolInGame'));
+    this.app.stage.addChild(this.title.container);
+    this.setScene('Title');
     this.app.ticker.add(() => this.tick());
 
     this.fitCanvas();
@@ -112,7 +123,15 @@ export class GameScene {
     this.exposeDebug();
   }
 
+  private setScene(scene: SceneState) {
+    this.scene = scene;
+    this.gameLayer.visible = scene === 'PoolInGame';
+    this.title.container.visible = scene === 'Title';
+    if (scene === 'PoolInGame') this.acc = 0;
+  }
+
   private fire(tier: number, vx: number, vy: number): boolean {
+    if (this.scene !== 'PoolInGame') return false;
     const now = performance.now();
     if (now < this.cooldownUntil) return false;
     this.cooldownUntil = now + LAUNCH.cooldownMs;
@@ -223,6 +242,10 @@ export class GameScene {
   }
 
   private tick() {
+    const nowMs = performance.now();
+    this.title.update(nowMs);
+    if (this.scene !== 'PoolInGame') return;
+
     this.acc += this.app.ticker.deltaMS;
     let steps = 0;
     while (this.acc >= STEP_MS && steps < 5) {
@@ -234,7 +257,6 @@ export class GameScene {
     }
     if (this.acc > STEP_MS * 5) this.acc = 0;
 
-    const nowMs = performance.now();
     for (const p of this.planets) {
       p.sprite.x = p.body.position.x;
       p.sprite.y = p.body.position.y;
@@ -251,6 +273,7 @@ export class GameScene {
       }
     }
     this.launcher.update();
+    this.board.update(nowMs);
     this.hud.update(); // score odometer roll
     this.effects.update(nowMs); // bursts + floating popups
   }
@@ -265,6 +288,9 @@ export class GameScene {
   // Verification hooks (Playwright). Not part of the player-facing game.
   private exposeDebug() {
     (window as any).__game = {
+      scene: () => this.scene,
+      startGame: () => this.setScene('PoolInGame'),
+      showTitle: () => this.setScene('Title'),
       stats: () => ({ ...this.stats }),
       score: () => this.score.score,
       planetCount: () => this.planets.length,

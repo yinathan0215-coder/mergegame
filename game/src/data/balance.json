@@ -63,8 +63,9 @@
     "mergePop": { "ms": 260, "startScale": 0.35, "peakScale": 1.18 },
     "burst": { "ms": 380, "scale": 2.6, "alpha": 0.5 },
     "hitBurst": { "ms": 260, "len": 26, "streaks": 5, "spreadDeg": 34, "alpha": 0.7 },
-    "scorePopup": { "ms": 950, "rise": 46, "spreadX": 70, "spreadY": 28, "color": "#ffe28a", "fontSize": 22 },
-    "scoreRoll": { "lerp": 0.18 }
+    "scorePopup": { "ms": 950, "rise": 46, "color": "#ffe28a", "fontSize": 22 },
+    "scoreRoll": { "lerp": 0.18 },
+    "buttonPress": { "downScale": 0.92, "upScale": 1.04, "ms": 140 }
   },
 
   "queue": { "size": 1, "candidates": [1, 2, 3, 4, 5] },
