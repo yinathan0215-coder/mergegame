@@ -1,0 +1,22 @@
+{
+  "name": "planet-pool-merge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 5174",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "matter-js": "^0.19.0",
+    "pixi.js": "^7.4.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/matter-js": "^0.19.6",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}

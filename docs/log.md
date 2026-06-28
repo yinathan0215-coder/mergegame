@@ -3,7 +3,7 @@ id: log
 note_type: log
 status: active
 domain: meta
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Vault log (mergegame 기획문서)
@@ -11,6 +11,120 @@ updated: 2026-06-27
 Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
+
+## [2026-06-28] manual | 천왕성 리소스 고리 포함 정정
+why: "우라노스도 띠가 있어야 한다"는 사용자 지시에 따라 [[50-art-ux/planet-art]]의 Tier 6 패턴을 얇은 청록 고리 + 넓은 청록 곡선 줄무늬로 정정했다. 토성은 더 두껍고 큰 황금 고리, 천왕성은 얇고 기울어진 청록/얼음색 고리로 구분한다. 최종 프롬프트와 생성 원본/후처리/런타임 스케일 기준은 `game/public/assets/prompts/planet-sprite-canonical.md`에 기록했다.
+
+## [2026-06-28] manual | 천왕성 리소스 정본 스타일 및 프롬프트 기록 규칙 확정
+why: 새 천왕성 이미지가 기존 행성 세트와 다른 렌더링 질감으로 생성되어, [[50-art-ux/planet-art]]에 스프라이트 생성 정본을 명시했다. 행성 리소스는 개별 정사각 캔버스에서 생성하고, 전체 캔버스 256x256 정규화와 프롬프트/원본/후처리/최종 경로 기록을 `game/public/assets/prompts/planet-sprite-canonical.md`에 남긴다. 천왕성(Tier 6)은 밝은 민트/시안 본체와 넓은 청록 곡선 밴드로 고정했다.
+
+## [2026-06-28] manual | 보드 형태 정밀 정정: 완만한 둔덕·공유 중점·균일 outline·라운드 연결부·힘 게이지
+why: 레퍼런스 이미지 대조로 보드 디테일 5건 정정. (1) **outline 균일 두께**(테이퍼 포함) — 닫힌 방패
+폴리라인을 중앙 정렬 stroke로 균일하게 그림. (2) **둔덕(bulge)=반원 전체가 아닌 하부 세그먼트**
+(sagitta≈지름/3)로 완만한 둔덕. (3) 발사대·둔덕·게이지
+**중점 공유(P)**. (4) 발사대 아래 아크를 **힘 게이지**로(드래그 시 왼쪽부터 시계방향 빨강 충전).
+(5) **테이퍼-사각형 연결부 라운드**. balance.json layout(bulge/gauge/junctionR 추가, funnel 제거),
+config 파생, PhysicsWorld(테이퍼+완만 호 벽), BoardRenderer(방패 fill outline), Launcher(동적 게이지).
+[[50-art-ux/screen-structure]] 정본화. 검증: typecheck·vite build OK · Playwright **18/18**(기능) ·
+headed(실 GPU) 스크린샷으로 5건 시각 대조 완료(headless는 SwiftShader 셰이더 init 한계로 캡처 불가).
+
+## [2026-06-28] auto | 버그픽스: 플레이 영역 절대화(이탈 0) + 일방향 선 반사벽 — 터널링 구조결함
+why: 강한 충돌/발사 시 행성이 플레이 영역을 **탈출**, 일방향 선에서 **튕기지 않고 멈춤**. 근본
+원인 = Matter.js는 CCD가 없어 빠른 공(vMax30·restitution0.88)이 얇은 벽(22px)·선(8px)을 **터널링**
+관통 → 경계가 절대적이지 않음(이산 충돌만 의존). 수정 = [[30-systems/play-area-boundary]] 정본에
+**절대 영역(authoritative clamp-and-reflect)** 도입: `GameScene.containPlanets()`가 매 고정 서브스텝마다
+`inPlayArea` 행성을 사각 경계 안으로 clamp + 바깥 방향 속도 반사(×wallRestitution). 일방향 하단(선)도
+같은 clamp로 벽처럼 반사(멈춤 해소). 충돌필터는 위로 1방향 통과만 담당. docs: play-area-boundary(절대
+영역·구조결함 §), launch-physics(vMax 주석), 70-verification/checklist(절대영역·반사 2항목). 검증(TDD):
+clamp 비활성 시 신규 '절대 영역' 테스트가 공 y=-2966 탈출로 **실패 재현** → clamp 복원 후 **Playwright
+18/18 통과**(typecheck·build OK). 디버그 훅 `bounds()` 추가.
+
+## [2026-06-28] auto | ball-feel 개편: 콤보 제거 + 충돌/머지 점수 + 경량·탄성 물리 + 머지 운동량 방향 + 연출 4종
+why: 사용자 지시(ball 물리·머지 방향·머지/스코어 연출·콤보 제거)를 GDD+코드에 reconcile.
+- **콤보 전면 제거**(ADR [[40-balancing/decisions/2026-06-28-remove-combo]]): "정확성이 없는 시스템".
+  점수 = 행성–행성 충돌마다 **+1** + 머지 시 **생성 등급 기본 점수**(배율 없음). 14개 docs 콤보 참조 정리.
+- **물리 경량·탄성**: density 0.0008·frictionAir 0.022→0.006·friction 0·restitution 0.5→0.88·
+  wallRestitution 0.72→0.85, 발사 vMax 22→30·dragMax 110(가볍고 경쾌하고 강하게). [[40-balancing/launch-physics]].
+- **머지 결과 속도 = 지배적 운동량**(질량×속도 큰 쪽 방향 이어받기; 평균→지배). [[30-systems/merge-rules]].
+- **연출 4종**: 머지 스케일 팝(작→큼→작)·발산 버스트(신규 `Effects` 모듈)·점수 1단위 오도미터·머지
+  +N 플로팅(랜덤 좌표·페이드). 타이밍 SSoT `balance.json`(`juice`). [[50-art-ux/feedback-effects]].
+- 코드: balance.json(combo→scoring/juice), config(COMBO→SCORING/JUICE), ScoreSystem 재작성,
+  MergeSystem(운동량+onMerge xy), PhysicsWorld(density), Planet(popMs), Hud(오도미터), Effects 신규,
+  GameScene(effectLayer·연출 배선·팝). 검증: typecheck·build OK · Playwright 16/16(동작 보존).
+
+## [2026-06-28] manual | 보드 형태 정정(방패형) + Next 미리보기 제거 (레퍼런스 이미지 정본)
+why: 레퍼런스 이미지 대조 결과 (1) 보드는 단순 직사각형이 아니라 **직사각형 + 하단 삼각 테이퍼 +
+둥근 볼록 끝(방패형)** 이고 충돌 경계는 이 outline 자체. 이전의 "발사대 반원 충돌 포켓"은
+오구현·오문서 → 제거(발사대 원/아크는 시각 장식). (2) **Next 미리보기 큐 제거**(발사대에 현재
+행성만). [[50-art-ux/screen-structure]] 보드 형태 정본화, [[30-systems/play-area-boundary]]
+발사대=outline로 정정, [[30-systems/launch-queue]]·[[50-art-ux/layout]]·[[20-core-loop/core-loop]]·
+70-verification에서 큐 미리보기 제거. 구현은 balance.json/config 지오메트리 + PhysicsWorld(테이퍼+
+볼록끝 벽) + BoardRenderer(방패 outline)로 반영.
+
+## [2026-06-28] auto | 밸런스 상수 data-driven 일원화(balance.json SSoT) + 감사 불일치 3건 수정 + 튜닝 스킬/에이전트
+why: 감사([[70-verification/audit-methodology-numbers]]) 불일치를 해소하고 [[90-methodology/data-driven]]
+완전 준수로 전환. 모든 튜너블 상수를 `game/src/data/balance.json` 단일 출처로 집약하고 `config.ts`/
+`planets.ts`를 리터럴 선언 → JSON 로드·검증·파생 모듈로 재작성(소비자 import 무변경, 중복 선언 0).
+파생값(LINE_Y/POCKET.cy/LAUNCHER.y/STEP_MS/MAX_TIER)은 로더 계산. 불일치 수정: (a) `minPower=0.14`+
+데드존 6px를 [[40-balancing/launch-physics]] 공식에 확정 명문화, (b) 물리계수 7종을 같은 페이지
+"현재 구현값" 표로 역반영(Open questions 닫음), (c) `buildInitialRack`을 `INITIAL_RACK` 파생으로
+교정(dead code 제거, 동작 보존). SQLite는 미채택(브라우저 정적 상수에 과스펙) — ADR
+[[60-implementation/decisions/2026-06-28-data-driven-balance-json]]. 데이터 변경 운영도구로 `/balance-tune`
+스킬 + `balance-tuner`(model: sonnet) 에이전트 추가(JSON 편집→docs reconcile→typecheck 자동화).
+검증: typecheck OK · vite build OK · Playwright 16/16 통과(동작 보존). [[60-implementation/architecture]] 데이터모델 갱신.
+
+## [2026-06-28] manual | 화면 구조/HUD 개편: 보드 레이어 + 발사대↔플레이영역 일방향 경계
+why: 레퍼런스 이미지 기반 화면 재설계. HUD = 좌상단 게임 머니·나가기 / 중앙 Score·👑최고점수 /
+우상단 메뉴·랭킹(친구·프리미엄 제외). 보드 레이어 = 배경색(와인, 화면 전체)·아웃라인(고정)·교체
+가능 플레이그라운드 배경 이미지·그 사이 단색 띠·발사대(원형+아크)·플레이 영역(사각). 신규 메카닉:
+발사대↔플레이 영역 **일방향 경계**(발사는 선 위로 통과, 진입 후 복귀 불가). [[50-art-ux/layout]]
+HUD/구조 개편, 신규 [[50-art-ux/screen-structure]]·[[30-systems/play-area-boundary]], 70-verification
+체크 추가. 화면비 9:16 유지("16:9" 지시는 세로형 9:16으로 해석).
+
+## [2026-06-28] auto | 방법론·수치 정합 감사 결과를 70-verification에 기록
+why: `game/`가 [[90-methodology/index]] 7대 원칙 + [[40-balancing/index]] 수치 SSoT 기반으로
+개발됐는지 14에이전트 워크플로로 교차검증. 결과: 못박힌 수치는 전부 코드와 일치(반지름·점수·콤보·
+큐·랙·드래그120·V_max22·쿨다운250 — 양방향 독립 재도출 확정). 방법론은 ECS-lite·Game Loop full,
+나머지 partial, State Machine none(흐름 상태머신 부재)·Event-driven 카탈로그 부재. 불일치 3건 발견:
+(a) `minPower=0.14`가 문서 공식 `clamp(...,0,1)` 위반, (b) 물리계수 7종이 코드에만 존재(SSoT 미완),
+(c) `INITIAL_RACK` dead code+랙 재하드코딩. 권고는 감사 페이지에. See [[70-verification/audit-methodology-numbers]].
+
+## [2026-06-28] manual | 섹션 index → 카탈로그 + 정밀 자식 페이지로 분할 (구조 일관화)
+why: 10-concept·20-core-loop·40-balancing·50-art-ux·70-verification가 단일 index.md에 내용을
+뭉쳐 두던 것을, 30-systems·60-implementation 패턴대로 **index(카탈로그) + 주제별 자식 페이지**로
+분할(워크플로). art-ux→{layout,input-ux,art-direction,planet-art}, concept→{concept,planet-ladder,
+fun-hypothesis}, core-loop→{core-loop,play-flow}, balancing→{planet-stats,combo-scoring,spawn-rack,
+launch-physics}, verification→{kpi,checklist}. 내용 무손실(핵심 수치 grep 확인), 위키링크 무결성
+0 broken(콘텐츠 섹션), 10-concept SSoT 포인터 정밀화, stack ADR dangling 링크 교정. 표준은
+[[00-meta/conventions]] §Section structure에 명시.
+
+## [2026-06-28] manual | game/ 버티컬 슬라이스 구현 + Playwright 검증 완료
+why: [[60-implementation/plan/index|구현 플랜]] Phase 0–7 순서대로 Vite+TS+PixiJS+Matter.js로
+Planet Pool Merge 프로토타입 구현(9모듈: GameScene/PhysicsWorld/PlanetFactory/Launcher/QueueSystem/
+MergeSystem/ScoreSystem/Hud/BoardRenderer). 초기 랙·슬링샷 발사·3큐·동급 합성·점수/콤보 동작.
+Playwright 실플레이 14/14 통과(desktop+mobile): 초기 랙 10, 큐 한 칸 갱신, 동급 합성 100%+충돌방향
+이동, 태양 종단, 첫5발 내 합성, 벽 반사(누출 0), 실드래그 발사. 70-verification 충족, 프로덕션 빌드 OK.
+
+## [2026-06-28] manual | Planet Pool Merge 설계 분배: 소스 문서 → GDD 섹션 reconcile (워크플로)
+why: `2026-06-28-planet-pool-merge-design.md`(Suika식 물리 발사 머지)를 docs 온톨로지에 분배.
+8섹션 병렬 작성 워크플로로 10-concept(컨셉+9행성 사다리+재미가설), 20-core-loop, 30-systems
+(merge-rules/launcher/launch-queue/initial-rack/scoring-combo), 40-balancing(수치 SSoT),
+50-art-ux, 60-implementation(tech-stack=PixiJS+Matter.js, architecture 9모듈, task-breakdown,
+agent-runbook, stack ADR), 70-verification(KPI+체크리스트) 작성. 80-research는 기존
+drop-merge/reverse-merge 연구 보존·링크. 장르·스택 draft→design 확정. 폐기된 Slime Legion
+잔재는 이미 부재. See [[index]], [[40-balancing/index]].
+
+## [2026-06-28] manual | SessionStart 훅으로 auto-reflect 규칙 상시 로드
+why: 턴끝 reflect 반사를 매 세션(시작/재개/compact) 컨텍스트에 항상 띄우기 위해
+`.claude/hooks/docs-session-reflect.mjs` 신설 — `.claude/rules/docs-auto-reflect.md`를 읽어
+그대로 주입(단일 출처, 드리프트 방지). `.claude/settings.json`에 `SessionStart` 훅 배선.
+
+## [2026-06-28] manual | docs 운영 도구 강화: `docs` 스킬 → `docs-find`/`docs-write` 분할 + auto-reflect 도입
+why: 게임 개발 중 결정/변경을 매 턴 끝에 알맞은 GDD 섹션으로 자동 정리·갱신하기 위해 운영 도구를
+ProjectA wiki 방식으로 확장. 읽기/쓰기 스킬 분리(`docs-find`/`docs-write`), soft 규칙
+`.claude/rules/docs-auto-reflect.md` 신설, `Stop` 훅(`docs-reconcile-check.mjs`)을 강화해
+후보 섹션 지목 + reflect 하우스키핑 리마인더를 출력. 파이프라인 stage 3 = reconcile + reflect.
+See [[00-meta/knowledge-system-blueprint]].
 
 ## [2026-06-27] manual | AI-Agent Friendly 방법론을 부록 A로 도입
 why: 사용자 제공 기본 원칙(ai_agent_friendly_prototype_methodology.md)을 패턴별 10모듈로 분해해

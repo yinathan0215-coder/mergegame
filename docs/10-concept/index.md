@@ -1,11 +1,13 @@
 ---
 id: concept-index
-note_type: section
-status: draft
+note_type: index
+status: design
 domain: concept
-updated: 2026-06-27
-tags: [concept]
-sources: []
+updated: 2026-06-28
+tags: [concept, planet-merge, suika, physics]
+sources:
+  - "[[00-meta/input-log/2026-06-28]]"
+  - "raw: 2026-06-28-planet-pool-merge-design.md"
 ---
 
 # 10 · 게임 컨셉 & 핵심 재미 가설
@@ -14,27 +16,23 @@ sources: []
 >
 > **준수 기준(방법론):** [[../90-methodology/00-core-principles]] · [[../90-methodology/agent-friendly-spec]] (원칙1: 문서가 제품 결정을 소유).
 
-## 작성할 내용 (draft skeleton)
+이 섹션은 카탈로그다. 상세 내용은 아래 자식 페이지에 있다.
 
-### 컨셉 한 줄
-_TBD — "무엇을 하는 게임인가"를 한 문장으로._
+## 페이지
 
-### 타겟 & 플랫폼
-_TBD — 글로벌 캐주얼, HTML5 웹/모바일 브라우저._
+- [[concept]] — 목적 맥락 + 컨셉 한 줄(풀 조준 + Suika 성장 보상 결합, 포켓에 넣는 게임 아님) + 타겟/장르/플랫폼.
+- [[planet-ladder]] — 9단계 행성 사다리 순서(수성→…→태양). **행성 사다리 순서 SSoT → [[planet-ladder]]**.
+- [[fun-hypothesis]] — 4개 핵심 재미 가설(조준 예측 / 물리 우연성 / 성장 보상 / 공간 관리), 검증 가능한 형태.
 
-### 핵심 재미 가설 (검증 가능한 형태)
-_TBD — "플레이어는 X 때문에 계속한다"는 가설을, 프로토타입으로 참/거짓을 가릴 수 있게._
-- 가설:
-- 이 가설이 맞다면 관찰될 행동:
-- 프로토타입에서 측정할 신호 → [[../70-verification/index|검증 기준]]과 연결
+> **행성 사다리 순서 SSoT → [[planet-ladder]].** 단계별 반지름·점수 수치는 [[../40-balancing/planet-stats]],
+> 단계별 색·패턴(아트)은 [[../50-art-ux/planet-art]]가 정본 — 이 섹션은 순서만 소유한다.
 
-### 장르 입장
-장르 = **Merge(합성)** 확정, 세부 메카닉 미정. 세부는 [[../30-systems/index|시스템]]에서 확정.
+> **status:** `design` — 컨셉·가설·사다리 순서는 확정 설계. 수치(반지름·점수)와 아트는 각각
+> [[../40-balancing/planet-stats]]·[[../50-art-ux/planet-art]]가 정본.
 
 ## 관련
-- [[../20-core-loop/index]] — 이 컨셉이 어떻게 플레이로 구현되는가
-- [[../80-research/index]] — 레퍼런스/시장 근거
-
-## Open questions
-- 머지 위에 얹을 메타(진행/수집/생존 등) 방향?
-- 핵심 재미 가설의 1차 측정 지표?
+- [[../20-core-loop/index]] — 이 컨셉이 어떻게 플레이로 구현되는가 (코어 루프·발사·큐)
+- [[../30-systems/index]] — 합성/발사/점수 시스템 상세
+- [[../40-balancing/index]] — 행성별 수치(반지름·점수)·랜덤 보충 정본
+- [[../50-art-ux/index]] — 행성별 색·패턴·레이아웃 정본
+- [[../80-research/index]] — Suika 계열 drop-merge 레퍼런스 근거

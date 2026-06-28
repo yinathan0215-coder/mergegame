@@ -3,13 +3,13 @@ id: index
 note_type: moc
 status: active
 domain: meta
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # mergegame 기획문서 — 목차 (MOC)
 
-글로벌 캐주얼 **Merge** 게임의 HTML5 프로토타입 기획문서이자, 게임 제작 과정에서 훅으로
-갱신되는 **정본**. 진입 안내는 [[README]].
+**Planet Pool Merge** — 풀 조준 + Suika식 물리 머지를 결합한 글로벌 캐주얼 게임의 HTML5
+프로토타입 기획문서이자, 게임 제작 과정에서 훅으로 갱신되는 **정본**. 진입 안내는 [[README]].
 
 ## 섹션 (과제 요구사항 정렬)
 
@@ -36,5 +36,7 @@ updated: 2026-06-27
 
 ## 상태
 
-2026-06-27 구조 재설계 완료(과제 정렬). 섹션 본문은 대부분 `draft` 골격 — `draft` 페이지를
-확정된 설계로 읽지 말 것. 다음 단계: 장르 세부·스택 확정 후 섹션 본문 작성.
+2026-06-28 **Planet Pool Merge 설계 분배 완료** — `2026-06-28-planet-pool-merge-design.md`를
+각 섹션에 reconcile. 장르 = 물리 드롭/발사 머지(Suika 계열), 스택 = **Vite + TS + PixiJS +
+Matter.js** 확정. 섹션 본문 `status: design`. 다음: phase별 구현 플랜
+([[60-implementation/plan/index|plan]]) → `game/` 빌드 → Playwright 검증.

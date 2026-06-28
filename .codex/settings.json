@@ -1,0 +1,34 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CODEX_PROJECT_DIR:-$PWD}/.codex/hooks/docs-session-reflect.mjs\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CODEX_PROJECT_DIR:-$PWD}/.codex/hooks/docs-input-log.mjs\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CODEX_PROJECT_DIR:-$PWD}/.codex/hooks/docs-reconcile-check.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,198 @@
+[
+  {
+    "asset": "game/public/assets/planets/tier-1-moon.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b884fadc8191b3291430d64c0511.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-2-mars.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b8bb5e588191bb958092ec81d70f.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-3-venus.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b8f17c208191953b32366f62db18.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-4-earth.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b92c93608191a6099d7c1e42f0cd.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-5-neptune.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b967f2d48191af6e46c11ca2d109.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-6-uranus.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c7f848d54dc3032016a40cbe65a4481918e2bf6c18424904b.png",
+    "promptRecord": "game/public/assets/prompts/planet-sprite-canonical.md#tier-6-uranus-ring-revision---2026-06-28",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-7-saturn.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40b9e0f4bc819185b0b691bc073a3e.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-8-jupiter.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40ba1e069481919d6b744238b6b492.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/planets/tier-9-sun.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40ba5d847881919288a0309ca2abff.png",
+    "mode": "alpha",
+    "size": [
+      256,
+      256
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/board/space-background.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40ba9f22d08191b7c339b22b2f12dd.png",
+    "mode": "copy",
+    "size": [
+      376,
+      606
+    ],
+    "hasAlpha": false,
+    "originalGeneratedSize": [
+      941,
+      1672
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/board/board-frame.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40bacb511c81918c63fca2d0987d49.png",
+    "mode": "alpha",
+    "size": [
+      430,
+      660
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      941,
+      1672
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/crown.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40baffd55c81918b7f8d2e125db654.png",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/ui/gold.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0c2fde82883900f4016a40bb3c5b508191b85d3ba4318ef0b7.png",
+    "mode": "alpha",
+    "size": [
+      192,
+      192
+    ],
+    "hasAlpha": true,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
+  }
+]

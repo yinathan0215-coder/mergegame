@@ -12,7 +12,9 @@ it.**
 
 Three stages run every turn. Stage 1 and part of stage 3 are enforced by hooks
 (`.claude/hooks/docs-input-log.mjs`, `.claude/hooks/docs-reconcile-check.mjs`); the
-judgment in stage 2 is yours.
+judgment in stage 2 is yours. Reading is done with the **`docs-find`** skill, writing with
+the **`docs-write`** skill; the turn-end reflect reflex is `.claude/rules/docs-auto-reflect.md`,
+loaded into context every session by `.claude/hooks/docs-session-reflect.mjs` (`SessionStart`).
 
 ## Stage 1 — Capture (automatic, unconditional)
 
@@ -46,10 +48,18 @@ Conflict you can't resolve → record a `> [!warning] Contradiction` block (see
 
 ## Stage 3 — Reflect / verify (turn end)
 
-The `Stop` hook checks the turn: if it carried design/implementation intent but **no
-`docs/` file was created or edited**, it blocks once. Resolve by updating the affected
-section (plus `docs/log.md`), **or** by stating in one sentence why no doc change was
-needed (pure tooling/chore, or docs already matched). One pass only — never loop.
+Two halves keep the final GDD organized as the game is built:
+
+- **Guidance (soft).** `.claude/rules/docs-auto-reflect.md` (loaded each session by the
+  `SessionStart` hook, so it is always active) — at turn end, judge whether the
+  turn *decided/added* GDD-relevant knowledge and, if so, file it into the right section
+  with `docs-write` (page → section index → `docs/index.md` MOC if new → nearest `log.md` →
+  bump frontmatter `updated:`). When in doubt, skip; never fabricate undecided design.
+- **Gate (hard).** The `Stop` hook (`docs-reconcile-check.mjs`) checks the turn: if it
+  carried design/implementation intent but **no `docs/` file was created or edited**, it
+  blocks once, **naming the likely target section**. Resolve by reflecting per the rule
+  above, **or** by stating in one sentence why no doc change was needed (pure tooling/chore,
+  or docs already matched). One pass only — never loop.
 
 ## Routing — where things go
 

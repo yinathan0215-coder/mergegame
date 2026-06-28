@@ -25,7 +25,8 @@ Every turn runs **log → reconcile → work**. Full spec: `.claude/rules/docs-p
 > Stronger-than-usual rule: the documented design leads and the work follows it. If a new
 > instruction disagrees with a doc, the doc is wrong until you fix it — fix it first.
 
-Use the **`docs` skill** to read/update the vault. **Don't fabricate undecided design** —
+Use the **`docs-find`** skill to read the vault and **`docs-write`** to update it (turn-end
+reflex: `.claude/rules/docs-auto-reflect.md`). **Don't fabricate undecided design** —
 genre detail and tech stack are open; keep such pages `status: draft`. The bar for every
 page is **agent-executability**: state what an agent can't infer.
 

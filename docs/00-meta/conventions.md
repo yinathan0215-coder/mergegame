@@ -45,6 +45,13 @@ sources:                       # optional — what this page derives from
 | `input-log` | Verbatim instruction capture (hook) | `00-meta/input-log/` |
 | `template` | Template for new pages | `00-meta/templates/` |
 
+### Section structure — index(카탈로그) + 정밀 자식 페이지
+
+각 번호 섹션 폴더는 **`index.md`(note_type: `index`) = 카탈로그**(과제 요구 프레이밍 ·
+방법론 바인딩 · 자식 페이지 링크 · SSoT 포인터 · status)이고, **상세 내용은 한 주제당
+하나의 자식 페이지**(note_type: `section`/`system`/`spec`/`checklist`)에 둔다. 한 `index.md`에
+모든 내용을 뭉쳐 쓰지 않는다(30-systems·60-implementation 패턴을 모든 섹션에 적용).
+
 ### `status` values
 
 | Value | Meaning |
@@ -62,6 +69,12 @@ The whole document exists to be handed to a coding agent. So:
   stated explicitly (that's what `40-balancing/` and `50-art-ux/` are for).
 - **Decisions, not options.** Where the design is settled, state the choice. Where it's
   genuinely open, mark it `draft` with an explicit open question — don't bury ambiguity.
+- **Positive canonical spec — destination, not journey.** State what the design IS and what to
+  build. A section page is not a changelog: no bug-fix narratives, no change history, no
+  negation/contrast (`~가 아닌`, `이전엔 X`, `제거됨`, `오류였다`, `A에서 B로`, `(X 없음)`).
+  Route the journey: bug-fix rationale → **code comments**; superseded decision → `decisions/`
+  ADR; dated change → `log.md`. Rewrite `X 없음` as a positive statement of what exists.
+  (Exception: verification `부정 항목` checks — "Shake 버튼이 없다" — are legitimate test items.)
 - **Traceable.** Claims cite a source (`[[…]]` or `raw:`). Implementation specs point at
   the design section they realize.
 

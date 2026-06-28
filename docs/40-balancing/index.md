@@ -1,11 +1,13 @@
 ---
 id: balancing-index
-note_type: section
-status: draft
+note_type: index
+status: design
 domain: balancing
-updated: 2026-06-27
-tags: [balancing]
-sources: []
+updated: 2026-06-28
+tags: [balancing, planet-pool-merge]
+sources:
+  - "[[00-meta/input-log/2026-06-28]]"
+  - "raw: 2026-06-28-planet-pool-merge-design.md"
 ---
 
 # 40 · 밸런싱 수치
@@ -15,22 +17,30 @@ sources: []
 >
 > **준수 기준(방법론):** [[../90-methodology/data-driven]] (단일 출처·값+단위+의도·공식).
 
-## 작성할 내용 (draft skeleton)
+이 섹션은 `Planet Pool Merge`의 **수치 단일 출처(SSoT) 홈**이다. 행성별 반지름·기본 점수,
+큐 랜덤 확률, 초기 랙 구성, 발사 튜닝, 물리 휴리스틱은 **여기 자식 페이지에만**
+적는다. 다른 섹션은 이 수치를 **링크**하고 값을 복제하지 않는다.
 
-### 핵심 수치 테이블
-_TBD — 보드 크기, 자원 초기/최대치, 생성 주기, 머지 단계별 가치 등._
+- 행성 사다리 **순서(9단계)** 의 정본: [[../10-concept/planet-ladder]] (여기서는 참조만).
+- 행성 **색/패턴** 의 정본: [[../50-art-ux/planet-art]] (여기서는 참조만).
 
-### 곡선 / 진행 페이싱
-_TBD — 비용·보상·난이도 곡선 (수식 또는 단계별 표)._
+## 페이지
 
-### 드랍 / 확률 테이블
-_TBD — 생성 확률, 보상 분포._
+- [[planet-stats]] — 행성 단계별 반지름·기본 점수 표(수성=점수 없음 명시) + 점수 부여 규칙 + 반지름 스케일링.
+- [[combo-scoring]] — 점수 수치(충돌 +1 · 머지 등급 점수).
+- [[spawn-rack]] — 발사 행성 랜덤 확률(낮은 5종 20%) + 초기 랙 구성(수성4·화성3·금성2·지구1).
+- [[launch-physics]] — 발사 튜닝(드래그/파워/V_max/쿨다운) + 물리·밸런싱 휴리스틱(증상→조치) + 달성 목표 + Open questions.
 
-> 원칙: 수치는 "값 + 근거 + 조정 범위"로 적는다. 에이전트는 값을, 평가자는 근거를 본다.
+## 상태
+
+`status: design` — 수치 사양은 확정, `game/` 미구현. 권장 초기값(`V_max`·발사 쿨다운·마찰·반발
+계수)은 [[launch-physics]]의 Open questions에서 추적하며 구현 실측 후 확정한다.
 
 ## 관련
-- [[../30-systems/index]] — 이 수치가 적용되는 시스템
-- [[../70-verification/index]] — 수치가 만드는 목표 체감의 합격 기준
 
-## Open questions
-- 메카닉 미정 → 표 골격만. 시스템 확정 후 값 채움.
+- [[../10-concept/planet-ladder]] — 행성 사다리 9단계 **순서** 정본 (이 섹션은 수치만 소유)
+- [[../50-art-ux/planet-art]] — 행성 **색·패턴** 정본
+- [[decisions/2026-06-28-remove-combo]] — 콤보 제거 ADR
+- [[../30-systems/index]] — 이 수치가 적용되는 합성/발사/큐 시스템 규칙
+- [[../70-verification/index]] — 이 수치가 만드는 체감의 합격 기준 (KPI)
+- [[../90-methodology/data-driven]] — 수치 단일 출처·데이터 주도 표준

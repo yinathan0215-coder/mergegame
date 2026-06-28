@@ -23,6 +23,9 @@ node_modules/
 # Claude — keep shared .claude/ tracked, drop per-machine local settings
 .claude/settings.local.json
 
+# Codex — keep shared .codex/ tracked, drop per-machine local settings
+.codex/settings.local.json
+
 # HTML5 prototype build artifacts (once game/ is scaffolded)
 game/node_modules/
 game/dist/
