@@ -92,18 +92,20 @@ export class BoardRenderer {
     background.mask = mask;
     layer.addChild(img);
 
-    // 6. one-way separation line (docs/30-systems/play-area-boundary)
-    const line = new Graphics();
-    line.lineStyle(2.5, COLORS.line, 0.7);
-    line.moveTo(PLAY.x, LINE_Y);
-    line.lineTo(PLAY.x + PLAY.w, LINE_Y);
-    layer.addChild(line);
+    // 5. inner line — visible collision boundary (docs/30-systems/play-area-boundary)
+    const innerLine = new Graphics();
+    innerLine.lineStyle(2.5, COLORS.line, 0.85);
+    const ip = innerOutline();
+    innerLine.moveTo(ip[0].x, ip[0].y);
+    for (let i = 1; i < ip.length; i++) innerLine.lineTo(ip[i].x, ip[i].y);
+    innerLine.lineTo(ip[0].x, ip[0].y);
+    layer.addChild(innerLine);
 
-    // 5. launcher SEAT (dark circle + gold rim). The power GAUGE is dynamic (Launcher).
+    // 6. launcher SEAT (dark circle + gold rim) = the launcher collision circle.
     const seat = new Graphics();
     seat.beginFill(COLORS.pocket, 1);
     seat.lineStyle(3, COLORS.launcherRim, 0.95);
-    seat.drawCircle(LAUNCHER.x, LAUNCHER.y, LAUNCHER.r + 12);
+    seat.drawCircle(LAUNCHER.x, LAUNCHER.y, LAUNCHER.r);
     seat.endFill();
     layer.addChild(seat);
   }
