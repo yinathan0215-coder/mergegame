@@ -2,106 +2,105 @@ import { Container, Graphics, Sprite } from 'pixi.js';
 import {
   DESIGN,
   PLAY,
-  LINE_Y,
   GAUGE,
   LAUNCHER,
   OUTLINE_W,
   PG_BAND,
+  INNER_LINE_W,
   COLORS,
+  boardOutline,
   innerOutline,
 } from './data/config';
-import { ASSETS, ASSET_SIZES } from './assets';
+import { ASSETS } from './assets';
 
-// SHIELD outline (docs/50-art-ux/screen-structure): rounded-rect play area; bottom corners ROUND into
-// tapers that meet a SHALLOW bulge mound (lower segment of a circle centred at BULGE, arc alpha..PI-alpha).
-// FILL version (arc/quadratic) — used for the dark band + image mask.
-function traceShield(g: Graphics, inset: number) {
-  const cx = PLAY.x + PLAY.w / 2;
-  const cy = (PLAY.y + GAUGE.cy + GAUGE.r) / 2;
-  const pts = innerOutline().map((p) => {
-    if (inset <= 0) return p;
-    const dx = p.x - cx;
-    const dy = p.y - cy;
+type Pt = { x: number; y: number };
+
+// Inset a closed polyline radially toward a centre point (used to clip the bg image just inside
+// the inner line). Approximate (radial, not true normal offset) but smooth enough for a mask.
+function insetToward(pts: Pt[], cx: number, cy: number, inset: number): Pt[] {
+  return pts.map((p) => {
+    const dx = p.x - cx, dy = p.y - cy;
     const len = Math.hypot(dx, dy) || 1;
-    const scale = Math.max(0, (len - inset) / len);
-    return { x: cx + dx * scale, y: cy + dy * scale };
+    const s = Math.max(0, (len - inset) / len);
+    return { x: cx + dx * s, y: cy + dy * s };
   });
-  g.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-  g.closePath();
 }
 
-// Same outline sampled as a closed list of points (pure straight samples).
-function shieldOutline(): { x: number; y: number }[] {
-  return innerOutline();
+// shieldPath ends on a duplicate of pts[0]; drop it so drawPolygon's auto-close stays clean
+// (a duplicate seam vertex makes a degenerate miter spike at the top-left corner).
+function ring(pts: Pt[]): number[] {
+  const last = pts[pts.length - 1];
+  const open = Math.abs(last.x - pts[0].x) < 0.01 && Math.abs(last.y - pts[0].y) < 0.01 ? pts.slice(0, -1) : pts;
+  return open.flatMap((p) => [p.x, p.y]);
 }
 
-// Stroke a closed polyline with a uniform-width gold line (smooth + uniform thickness everywhere).
-function strokeOutline(g: Graphics, pts: { x: number; y: number }[], width: number, color: number) {
-  g.lineStyle(width, color, 1);
-  g.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-  g.closePath();
+function fillPoly(g: Graphics, pts: Pt[]) {
+  g.drawPolygon(ring(pts));
 }
 
-// Layered board: 1 bg color  2 outline (UNIFORM gold)  3 pg-color band  4 background IMAGE
-//  5 launcher seat  6 one-way line.
+function strokePoly(g: Graphics, pts: Pt[], width: number, color: number, alpha = 1) {
+  g.lineStyle(width, color, alpha);
+  g.drawPolygon(ring(pts)); // closed loop, proper joins all the way around incl. the seam
+}
+
+// Layered board (docs/50-art-ux/screen-structure): 1 bg color → 2 gold outline → 3 bg-color band
+// → 4 inner line (brown) → 5 bg image (clipped inside the inner line) → 6 launcher seat.
+// Collision (PhysicsWorld) follows the inner line + launcher circle; the gold outline is visual only.
 export class BoardRenderer {
   readonly imageLayer = new Container();
 
   constructor(layer: Container) {
-    // 1. background color — fills whole screen
+    const outer = boardOutline();
+    const inner = innerOutline();
+    const floorY = GAUGE.cy + GAUGE.r;
+    const cx = PLAY.x + PLAY.w / 2;
+    const cy = (PLAY.y + floorY) / 2;
+
+    // 1. background color — fills the whole screen
     const bg = new Graphics();
     bg.beginFill(COLORS.outerBg);
     bg.drawRect(0, 0, DESIGN.w, DESIGN.h);
     bg.endFill();
     layer.addChild(bg);
 
-    // 2. outline (gold) — UNIFORM thickness everywhere (incl. tapers). A centered stroke of the closed
-    // shield polyline; the band + image below cover its inner half, so the outer ~OUTLINE_W is the frame.
-    const outline = shieldOutline();
+    // 2. gold outline — uniform-thickness frame stroked on the OUTER shield polyline. The band (3)
+    // paints over its inner half, leaving the outer ~OUTLINE_W as the visible gold frame.
     const frame = new Graphics();
-    strokeOutline(frame, outline, OUTLINE_W * 2 + 6, COLORS.outlineDark);
-    strokeOutline(frame, outline, OUTLINE_W * 2, COLORS.outline);
-    strokeOutline(frame, outline, Math.max(4, OUTLINE_W * 2 - 12), COLORS.outlineLight);
+    strokePoly(frame, outer, OUTLINE_W * 2 + 6, COLORS.outlineDark);
+    strokePoly(frame, outer, OUTLINE_W * 2, COLORS.outline);
+    strokePoly(frame, outer, Math.max(4, OUTLINE_W * 2 - 12), COLORS.outlineLight);
     layer.addChild(frame);
 
-    // 3. playground background color — dark band (interior shield)
+    // 3. background-color band — fills inside the gold path; the strip between gold and inner line.
     const band = new Graphics();
     band.beginFill(COLORS.pgBand);
-    traceShield(band, 0);
+    fillPoly(band, outer);
     band.endFill();
     layer.addChild(band);
 
-    // 4. playground background IMAGE (swappable) — clipped to the shield (inset by PG_BAND)
+    // 4. inner line — brown, inset from the gold outline; THIS is the collision boundary.
+    const innerLine = new Graphics();
+    strokePoly(innerLine, inner, INNER_LINE_W, COLORS.line, 0.95);
+    layer.addChild(innerLine);
+
+    // 5. background IMAGE (swappable) — clipped to just inside the inner line.
     const img = this.imageLayer;
     const background = Sprite.from(ASSETS.board.background);
-    background.x = PLAY.x + PG_BAND;
-    background.y = PLAY.y + PG_BAND;
-    background.scale.set(
-      (PLAY.w - PG_BAND * 2) / ASSET_SIZES.boardBackground.w,
-      (GAUGE.cy + GAUGE.r - PLAY.y - PG_BAND * 2) / ASSET_SIZES.boardBackground.h
-    );
+    background.x = PLAY.x;
+    background.y = PLAY.y;
+    background.width = PLAY.w;
+    background.height = floorY - PLAY.y;
     img.addChild(background);
     const mask = new Graphics();
     mask.beginFill(0xffffff);
-    traceShield(mask, PG_BAND);
+    fillPoly(mask, insetToward(inner, cx, cy, PG_BAND));
     mask.endFill();
-    img.addChild(mask);
     mask.renderable = false;
+    img.addChild(mask);
     background.mask = mask;
     layer.addChild(img);
 
-    // 5. inner line — visible collision boundary (docs/30-systems/play-area-boundary)
-    const innerLine = new Graphics();
-    innerLine.lineStyle(2.5, COLORS.line, 0.85);
-    const ip = innerOutline();
-    innerLine.moveTo(ip[0].x, ip[0].y);
-    for (let i = 1; i < ip.length; i++) innerLine.lineTo(ip[i].x, ip[i].y);
-    innerLine.lineTo(ip[0].x, ip[0].y);
-    layer.addChild(innerLine);
-
-    // 6. launcher SEAT (dark circle + gold rim) = the launcher collision circle.
+    // 6. launcher SEAT — dark circle + gold rim = the launcher collision circle.
     const seat = new Graphics();
     seat.beginFill(COLORS.pocket, 1);
     seat.lineStyle(3, COLORS.launcherRim, 0.95);

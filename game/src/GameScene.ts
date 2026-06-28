@@ -108,8 +108,14 @@ export class GameScene {
     const now = performance.now();
     if (now < this.cooldownUntil) return false;
     this.cooldownUntil = now + LAUNCH.cooldownMs;
-    // spawn inside the launcher circle; collidesLauncher=false so it passes OUT of the circle once.
-    this.spawnPlanet(tier, LAUNCHER.x, LAUNCHER.y, vx, vy, now, false);
+    // spawn just OUTSIDE the launcher circle, along the fire direction, so the ball never starts
+    // inside the collision pocket (no spin-in-pocket). collidesLauncher=false → it clears cleanly.
+    const r = tierData(tier).radius;
+    const sp = LAUNCHER.r + r + 1;
+    const spd = Math.hypot(vx, vy) || 1;
+    const sx = LAUNCHER.x + (vx / spd) * sp;
+    const sy = LAUNCHER.y + (vy / spd) * sp;
+    this.spawnPlanet(tier, sx, sy, vx, vy, now, false);
     this.queue.shift();
     this.stats.shots++;
     return true;

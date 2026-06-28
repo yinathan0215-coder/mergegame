@@ -24,9 +24,14 @@ export const LAUNCHER = { x: L.launcher.x, y: LINE_Y + L.launcher.offsetY, r: L.
 export const GAUGE = { cx: LAUNCHER.x, cy: LAUNCHER.y, r: L.gauge.r, dots: L.gauge.dots, dotR: L.gauge.dotR };
 export const JUNCTION_R = L.junctionR;
 export const INNER_LINE_W = L.innerLineW;
+export const INNER_INSET = L.innerInset; // gap between gold outline and brown inner line
 export const FAN_HALF = ((L.fanDeg / 2) * Math.PI) / 180; // half-fan from straight-up
 
-// taper: each side is (180−taperAngle)/2 below horizontal, ending where it meets the gauge circle.
+function unit(dx: number, dy: number) {
+  const l = Math.hypot(dx, dy) || 1;
+  return { x: dx / l, y: dy / l };
+}
+// near intersection of a ray (sx,sy)+t·(dx,dy) with circle (cx,cy,r); falls back to start if it misses.
 function rayCircle(sx: number, sy: number, dx: number, dy: number, cx: number, cy: number, r: number) {
   const fx = sx - cx, fy = sy - cy;
   const a = dx * dx + dy * dy;
@@ -37,15 +42,21 @@ function rayCircle(sx: number, sy: number, dx: number, dy: number, cx: number, c
   const t = (-b - Math.sqrt(disc)) / (2 * a);
   return { x: sx + dx * t, y: sy + dy * t };
 }
-const tA = (((180 - L.taperAngleDeg) / 2) * Math.PI) / 180;
-export const TAPER_L = rayCircle(PLAY.x, LINE_Y, Math.cos(tA), Math.sin(tA), GAUGE.cx, GAUGE.cy, GAUGE.r);
-export const TAPER_R = rayCircle(PLAY.x + PLAY.w, LINE_Y, -Math.cos(tA), Math.sin(tA), GAUGE.cx, GAUGE.cy, GAUGE.r);
 
-// Inner-line polyline (closed): rounded-rect top → junction → tapers → gauge lower arc. Shared by
-// BoardRenderer (draw) + PhysicsWorld (collision walls). Excludes the launcher circle (separate body).
-export function innerOutline(): { x: number; y: number }[] {
-  const x0 = PLAY.x, x1 = PLAY.x + PLAY.w, ty = PLAY.y;
+const tA = (((180 - L.taperAngleDeg) / 2) * Math.PI) / 180; // taper side: tA below horizontal
+// gold outline's lower arc sits innerInset outside the launcher rim, so the background-color gap
+// between the gold outline and the brown inner line is uniform on the tapers and the bottom too.
+const OUTER_LOWER_R = LAUNCHER.r + INNER_INSET;
+
+// Parameterized shield outline (closed polyline): rounded-rect top (inset by `rectInset`), 140°
+// tapers, and a lower arc around the LAUNCHER centre at radius `lowerR`. boardOutline = gold frame
+// (rectInset 0, outer arc); innerOutline = brown inner line + collision walls (inset, launcher arc).
+function shieldPath(rectInset: number, lowerR: number): { x: number; y: number }[] {
+  const x0 = PLAY.x + rectInset, x1 = PLAY.x + PLAY.w - rectInset, ty = PLAY.y + rectInset;
+  const by = LINE_Y; // tapers start at the play-area bottom on both shapes
   const topR = 18, jr = JUNCTION_R;
+  const tL = rayCircle(x0, by, Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, lowerR);
+  const tR = rayCircle(x1, by, -Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, lowerR);
   const pts: { x: number; y: number }[] = [];
   const push = (x: number, y: number) => pts.push({ x, y });
   const quad = (px: number, py: number, cx: number, cy: number, qx: number, qy: number) => {
@@ -57,32 +68,38 @@ export function innerOutline(): { x: number; y: number }[] {
   push(x0 + topR, ty);
   push(x1 - topR, ty);
   quad(x1 - topR, ty, x1, ty, x1, ty + topR);
-  push(x1, LINE_Y - jr);
-  // right junction → right taper start
-  const ru = unit(TAPER_R.x - x1, TAPER_R.y - LINE_Y);
-  quad(x1, LINE_Y - jr, x1, LINE_Y, x1 + ru.x * jr, LINE_Y + ru.y * jr);
-  push(TAPER_R.x, TAPER_R.y);
-  // gauge lower arc: from right endpoint, through the bottom, to left endpoint
-  const aR = Math.atan2(TAPER_R.y - GAUGE.cy, TAPER_R.x - GAUGE.cx);
-  let aL = Math.atan2(TAPER_L.y - GAUGE.cy, TAPER_L.x - GAUGE.cx);
+  push(x1, by - jr);
+  const ru = unit(tR.x - x1, tR.y - by);
+  quad(x1, by - jr, x1, by, x1 + ru.x * jr, by + ru.y * jr); // right junction → right taper
+  push(tR.x, tR.y);
+  // lower arc around the launcher: right taper endpoint → bottom → left taper endpoint
+  const aR = Math.atan2(tR.y - LAUNCHER.y, tR.x - LAUNCHER.x);
+  let aL = Math.atan2(tL.y - LAUNCHER.y, tL.x - LAUNCHER.x);
   if (aL < aR) aL += Math.PI * 2;
-  const segs = 22;
+  const segs = 24;
   for (let i = 1; i <= segs; i++) {
     const ang = aR + ((aL - aR) * i) / segs;
-    push(GAUGE.cx + Math.cos(ang) * GAUGE.r, GAUGE.cy + Math.sin(ang) * GAUGE.r);
+    push(LAUNCHER.x + Math.cos(ang) * lowerR, LAUNCHER.y + Math.sin(ang) * lowerR);
   }
-  // left taper end → left junction
-  const lu = unit(TAPER_L.x - x0, TAPER_L.y - LINE_Y);
-  push(x0 + lu.x * jr, LINE_Y + lu.y * jr);
-  quad(x0 + lu.x * jr, LINE_Y + lu.y * jr, x0, LINE_Y, x0, LINE_Y - jr);
+  const lu = unit(tL.x - x0, tL.y - by);
+  push(x0 + lu.x * jr, by + lu.y * jr);
+  quad(x0 + lu.x * jr, by + lu.y * jr, x0, by, x0, by - jr); // left taper → left junction
   push(x0, ty + topR);
   quad(x0, ty + topR, x0, ty, x0 + topR, ty);
   return pts;
 }
-function unit(dx: number, dy: number) {
-  const l = Math.hypot(dx, dy) || 1;
-  return { x: dx / l, y: dy / l };
+
+// Gold visual frame (outer) and brown collision line (inner) — two distinct outlines with a gap.
+export function boardOutline(): { x: number; y: number }[] {
+  return shieldPath(0, OUTER_LOWER_R);
 }
+export function innerOutline(): { x: number; y: number }[] {
+  return shieldPath(INNER_INSET, LAUNCHER.r);
+}
+
+// inner-line taper endpoints on the launcher circle — give the power gauge its angular span.
+export const TAPER_L = rayCircle(PLAY.x + INNER_INSET, LINE_Y, Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, LAUNCHER.r);
+export const TAPER_R = rayCircle(PLAY.x + PLAY.w - INNER_INSET, LINE_Y, -Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, LAUNCHER.r);
 
 // collision categories for the one-way line (docs/30-systems/play-area-boundary)
 export const CAT = { DEFAULT: 0x0001, LAUNCHER: 0x0002 };

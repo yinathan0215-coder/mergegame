@@ -12,6 +12,19 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | inner line 갈색·outline 간격 분리, 발사대/게이지 확대, 발사 생성점=원 밖
+why: 레퍼런스(화면 캡처) 대조로 보드 하단 6건 정정. (1) **inner line 갈색**(#6e4a28). (2) inner line이
+**발사대 원형 공간에 연결**(테이퍼 하단 호 = 발사대 원 반지름). (3) **outline ↔ inner line 간격**:
+inner line을 outline에서 `innerInset`(16px) 안쪽으로 들여 그려 그 사이를 background color가 채우게 함
+(이전엔 둘이 같은 path라 간격 0). (4) **힘 게이지를 outline 위(최상위)에 렌더 + 링 확대**(gauge.r 42→58).
+(5) **발사대 원 반지름 확대**(27→38). (6) **발사 생성점 = 발사대 원 바깥 끝**(중심에서 발사 방향으로
+`발사대반경+행성반경`) — 발사대 원 안에서 생성돼 빙글빙글 도는 현상 원천 차단. config: `boardOutline`(골드
+프레임, OUTER_LOWER_R)·`innerOutline`(갈색/충돌, innerInset+발사대 원 하단 호) 두 윤곽 분리, `shieldPath`
+파라미터화. BoardRenderer: 레이어 outline→배경색 띠→inner line→배경 이미지→발사대 seat, drawPolygon으로
+닫힌 스트로크(좌상단 seam 스파이크 제거). GameScene.fire: 생성점 원 밖. docs: [[50-art-ux/screen-structure]]
+[[30-systems/play-area-boundary]] [[30-systems/launcher]] 정본화. 검증: typecheck·vite build OK ·
+Playwright **18/18** · headed(실 GPU) idle/drag/after 스크린샷으로 6건 + 발사대 무회전 시각 확인.
+
 ## [2026-06-28] manual | 충돌 경계=inner line+발사대 원, 140° 테이퍼, 120° 부채꼴 발사
 why: 레퍼런스 대조 후 보드/발사 지오메트리 7건 정정. (1) 레이어 순서 **outline→배경색→inner line→배경
 이미지**. (2) **inner line ↔ 힘 게이지 연결** — 미리 그려진 빈 트랙(dots)을 드래그 파워에 따라 왼쪽부터
