@@ -12,7 +12,13 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
-## [2026-06-28] manual | Title 태양계 공전: 8행성 전부·원형 궤도·태양 y-깊이 정렬
+## [2026-06-28] manual | Title 태양계: 실제 거리 순서(수성=moon)·살짝 눕힘·세로 꽉 채움(모바일)
+why: 사용자 지시 — Title 태양계 배경을 (1) **실제 태양계 거리 순서**로 배치(안쪽→바깥: 수성·금성·
+지구·화성·목성·토성·천왕성·해왕성 → 게임 tier [1,3,4,2,8,7,6,5]), **수성 자리에는 moon 스프라이트**(1단계).
+(2) 궤도를 **살짝 눕힌 타원**으로(ECC 0.82→0.7). (3) 태양계를 **모바일 세로 화면 상하를 꽉 채우도록 확대**
+— 중앙 cy=화면 중앙(DESIGN.h/2), 바깥 궤도 ryMax=DESIGN.h×0.56(넘쳐도 됨), 태양/행성 스케일 확대(0.7→1.2,
+0.6→0.9). [[50-art-ux/title-screen]] §1 정본화. 구현: `game/src/TitleScreen.ts`(buildOrbitBackground order/
+ryMax 비례·update cy=DESIGN.h/2). typecheck OK. (코드는 동시 진행 세션 untracked 파일이라 본 커밋은 docs만.)
 why: 사용자 지시 — Title(홈) 배경 태양계를 (1) **행성 8종(수성~목성, 1~8단계) 전부** 공전하도록
 (기존 4종에서 확장), (2) 궤도를 **원형에 가까운 낮은 이심률**(ry=rx×0.82)로, (3) **태양도 행성과
 같은 y-깊이 정렬**에 포함(orbitLayer.sortableChildren + zIndex=y, 태양 zIndex=cy)해 앞/뒤 가림이
