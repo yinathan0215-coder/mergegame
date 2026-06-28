@@ -12,6 +12,20 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 충돌 경계=inner line+발사대 원, 140° 테이퍼, 120° 부채꼴 발사
+why: 레퍼런스 대조 후 보드/발사 지오메트리 7건 정정. (1) 레이어 순서 **outline→배경색→inner line→배경
+이미지**. (2) **inner line ↔ 힘 게이지 연결** — 미리 그려진 빈 트랙(dots)을 드래그 파워에 따라 왼쪽부터
+시계방향으로 색 채움. (3) 삼각 **테이퍼 기준각 140°**(꼭지각 → tA=20° 벽). (4) **충돌 외곽=inner line**
+(outline 아님)이며 **발사대 원형 공간도 충돌 범위**. (5) **충돌 분리 선 제거** → 하단 콜리전 예외는
+발사대 원에만 적용(발사된 공이 원을 한 번 빠져나가면 원이 단단해져 재진입 불가). (6) **발사대 부채꼴
+120°**(직상방 ±60°) — 범위 밖 방향은 ±60°로 클램프. (7) **무드래그(데드존)→직상방 최소힘** 발사.
+balance.json layout(taperAngleDeg:140, fanDeg:120, launcher/gauge 추가, funnel/bulge 제거), config 파생
+(innerOutline·TAPER_L/R via rayCircle·CAT.LAUNCHER·FAN_HALF), PhysicsWorld(inner-line 벽 + 발사대 원 1방향),
+GameScene(발사대 원 이탈 후 차단·floorY clamp·`launcher()` 디버그 훅), Launcher(부채꼴 클램프·무드래그
+직상방·게이지 좌→우 충전). docs: [[50-art-ux/screen-structure]] [[30-systems/play-area-boundary]]
+[[30-systems/launcher]] 정본화. 검증: typecheck·vite build OK · Playwright **18/18**(일방향 테스트를 발사대
+원 재진입 불가 기준으로 정정) · headed(실 GPU) idle/drag/fan 스크린샷으로 7건 시각 대조 완료.
+
 ## [2026-06-28] manual | 천왕성 리소스 고리 포함 정정
 why: "우라노스도 띠가 있어야 한다"는 사용자 지시에 따라 [[50-art-ux/planet-art]]의 Tier 6 패턴을 얇은 청록 고리 + 넓은 청록 곡선 줄무늬로 정정했다. 토성은 더 두껍고 큰 황금 고리, 천왕성은 얇고 기울어진 청록/얼음색 고리로 구분한다. 최종 프롬프트와 생성 원본/후처리/런타임 스케일 기준은 `game/public/assets/prompts/planet-sprite-canonical.md`에 기록했다.
 
