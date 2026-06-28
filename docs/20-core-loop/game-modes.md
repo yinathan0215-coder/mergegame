@@ -3,7 +3,7 @@ id: core-loop-game-modes
 note_type: section
 status: design
 domain: core-loop
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [core-loop, game-mode, infinite, stage, state-machine]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -21,16 +21,18 @@ sources:
 
 ## Summary
 
-기본 모드는 **Infinite**다. 두 모드 모두 같은 보드·발사·합성·점수를 쓰되, **남은 카운트
+기본 모드는 **Stage**다. 두 모드 모두 같은 보드·발사·합성·점수를 쓰되, **남은 카운트
 (발사 가능 횟수)** 라는 공통 자원과 **종료 조건**이 다르다. Infinite는 점수 누적이 목표이고,
 Stage는 **지정한 목표 행성을 카운트 안에 합성**하면 클리어다.
 
 ## 모드 선택 (Title 하단)
 
-- Title(로비) 하단 중앙의 **알약(pill) 토글**이 모드를 고른다. 두 세그먼트는 `Infinite`·`Stage`이며
+- Title(로비) 하단 중앙의 **알약(pill) 토글**이 모드를 고른다. 두 세그먼트는 좌 `Stage`·우 `Infinite`이며
   활성 세그먼트 위에 **하이라이트 캡슐**이 놓이고 탭하면 반대 세그먼트로 좌우 슬라이드한다(토글
   시각/애니메이션 규칙은 [[../50-art-ux/title-screen]] §2-4).
-- **기본 활성 = Infinite.**
+- **기본 활성 = Stage**(왼쪽 세그먼트).
+- **게임 최초 실행(저장 정보 없음) 시에는 Title을 건너뛰고 바로 Stage 1 플레이로 진입한다**
+  ([[screen-flow]] §최초 실행). 이후(저장이 생긴 뒤)에는 Loading → Title 순으로 진입한다.
 - **시작(Play) 버튼 라벨은 두 모드 공통 `Game Start`** 다. **Stage를 고르면** Title의 최고·현재
   점수 UI가 숨겨지고, 최고 점수 영역에 **`Stage N`(스테이지 정보)** 가 대신 표시된다
   ([[../50-art-ux/title-screen]] §2-2).

@@ -3,7 +3,7 @@ id: core-loop-screen-flow
 note_type: section
 status: design
 domain: core-loop
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [core-loop, scene, screen-flow, state-machine, title, loading, galaxy-pinball]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -32,7 +32,8 @@ sources:
 
 | From | Event | To | 조건 | 부가 처리 |
 |---|---|---|---|---|
-| `Loading` | `ASSETS_READY` | `Title` | 리소스 로드 완료 **AND 경과 ≥ 2초**(최소 로딩 floor) | 태양계 배경 공전 시작 |
+| `Loading` | `ASSETS_READY` & **저장 있음** | `Title` | 리소스 로드 완료 **AND 경과 ≥ 2초**(최소 로딩 floor) | 태양계 배경 공전 시작 |
+| `Loading` | `ASSETS_READY` & **저장 없음(최초 실행)** | `PoolInGame(Stage 1)` | 위와 동일 + `localStorage` 세이브 부재 | **Title 건너뜀** — 곧장 Stage 1 세션 시작 |
 | `Title` | `PLAY_CLICKED` | `PoolInGame` | Play 버튼(**선택 모드** 동반: Infinite/Stage) | 해당 모드로 세션 시작 또는 **이어하기**(진행 중 점수 유지) |
 | `PoolInGame` | `EXIT_CLICKED` | `Title` | 인게임 HUD 나가기(←) 버튼 | Pool 세션 상태·점수 보존(파기하지 않음) |
 | `PoolInGame` | **모드 종료** | `Result`/`StageClear`/`StageFail` | 모드별 종료 조건([[game-modes]]) | 결과창(전환). 종료 전이 정본 [[game-modes]] §상태 전이 |
@@ -72,10 +73,18 @@ Title의 공전은 순수 렌더 연출(시뮬레이션 아님), Pool In-Game만
 
 ## 게임 모드 선택 (Infinite | Stage)
 
-Title 하단 토글 `Infinite | Stage`가 진입할 **게임 모드**를 고른다([[game-modes]]). 기본 활성은
-**Infinite**다. Play 버튼 라벨은 두 모드 공통 `Game Start`이고, **Stage를 고르면** Title의
-최고·현재 점수 영역이 `Stage N` 정보로 대체된다([[../50-art-ux/title-screen]] §2-2·§2-4).
-Play를 누르면 선택 모드로 Pool In-Game에 진입하고, 모드는 한 세션 동안 고정된다.
+Title 하단 토글 `Stage | Infinite`(좌:Stage, 우:Infinite)가 진입할 **게임 모드**를 고른다
+([[game-modes]]). 기본 활성은 **Stage**다. Play 버튼 라벨은 두 모드 공통 `Game Start`이고,
+**Stage를 고르면** Title의 최고·현재 점수 영역이 `Stage N` 정보로 대체된다
+([[../50-art-ux/title-screen]] §2-2·§2-4). Play를 누르면 선택 모드로 Pool In-Game에 진입하고,
+모드는 한 세션 동안 고정된다.
+
+## 최초 실행 (저장 없음 → Stage 1 직행)
+
+`localStorage` 세이브가 없는 **게임 최초 실행**에서는 Loading floor가 끝나면 **Title을 건너뛰고
+바로 Stage 1 플레이로 진입**한다(첫 플레이어를 즉시 코어 루프에 노출). 한 번이라도 플레이해
+세이브가 생기면 이후 부팅은 Loading → Title 순으로 진입한다. 이때 진입 모드는 Stage,
+스테이지는 1번이다([[game-modes]] §Stage 모드).
 
 ## 관련
 - [[index]] — 섹션 카탈로그

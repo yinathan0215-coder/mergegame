@@ -84,7 +84,7 @@
   "economy": { "startCoins": 0 },
 
   "modes": {
-    "startMode": "Infinite",
+    "startMode": "Stage",
     "infinite": {
       "startCount": 50,
       "blackHoleBonusCount": 20,

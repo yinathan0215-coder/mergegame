@@ -62,12 +62,22 @@ declare global {
   }
 }
 
+// Seed a (non-fresh) save before boot so the app lands on Title — a truly empty localStorage is
+// treated as first-run and skips Title straight into Stage 1 (docs/20-core-loop/screen-flow §최초 실행).
+// Only seeds when absent so a test that writes its own save and reloads (persistence tests) isn't clobbered.
+async function seedSave(page: Page) {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('ppm.meta.v1')) localStorage.setItem('ppm.meta.v1', JSON.stringify({ coins: 0 }));
+  });
+}
+
 async function ready(page: Page) {
+  await seedSave(page);
   await page.goto('/');
   await page.waitForFunction(() => !!window.__game && window.__game.scene() === 'Title', null, {
     timeout: 15000,
   });
-  await page.evaluate(() => window.__game.startGame());
+  await page.evaluate(() => window.__game.startGame('Infinite'));
   await page.waitForFunction(() => window.__game.scene() === 'PoolInGame' && window.__game.planetCount() > 0, null, {
     timeout: 15000,
   });
@@ -437,6 +447,7 @@ test('절대 영역: 최대 파워 발사·강한 충돌에도 행성이 플레�
 // ── 게임 모드 (docs/20-core-loop/game-modes) ──────────────────────────────────────────────────
 
 async function readyStage(page: Page) {
+  await seedSave(page);
   await page.goto('/');
   await page.waitForFunction(() => !!window.__game && window.__game.scene() === 'Title', null, { timeout: 15000 });
   await page.evaluate(() => window.__game.startGame('Stage'));
@@ -444,10 +455,27 @@ async function readyStage(page: Page) {
   await page.waitForFunction(() => !window.__game.transitioning(), null, { timeout: 5000 });
 }
 
-test('게임 모드: 기본 Infinite, 카운트 50으로 시작', async ({ page }) => {
-  await ready(page); // startGame() → Infinite
+test('Infinite 모드: 카운트 50으로 시작', async ({ page }) => {
+  await ready(page); // startGame('Infinite')
   expect(await page.evaluate(() => window.__game.mode())).toBe('Infinite');
   expect(await page.evaluate(() => window.__game.count())).toBe(50);
+});
+
+test('기본 모드 = Stage: Title 토글 기본 선택', async ({ page }) => {
+  await seedSave(page); // 세이브 있음 → Title 경유
+  await page.goto('/');
+  await page.waitForFunction(() => !!window.__game && window.__game.scene() === 'Title', null, { timeout: 15000 });
+  expect(await page.evaluate(() => window.__game.mode())).toBe('Stage'); // startMode 기본 = Stage
+});
+
+test('최초 실행(저장 없음): Title 건너뛰고 Stage 1 직행', async ({ page }) => {
+  // 세이브를 심지 않은 fresh 컨텍스트 = 게임 최초 실행 (docs/20-core-loop/screen-flow §최초 실행)
+  await page.goto('/');
+  await page.waitForFunction(() => !!window.__game && window.__game.scene() === 'PoolInGame' && window.__game.planetCount() > 0, null, { timeout: 15000 });
+  expect(await page.evaluate(() => window.__game.scene())).toBe('PoolInGame');
+  expect(await page.evaluate(() => window.__game.mode())).toBe('Stage');
+  expect(await page.evaluate(() => window.__game.count())).toBeGreaterThan(0);
+  expect(await page.evaluate(() => window.__game.targetTier())).toBeGreaterThan(0);
 });
 
 test('카운트: 발사마다 1 감소, 0이면 발사 불가', async ({ page }) => {

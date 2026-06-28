@@ -3,7 +3,7 @@ id: balancing-game-modes
 note_type: section
 status: design
 domain: balancing
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [balancing, game-mode, infinite, stage, count, charge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -19,7 +19,7 @@ sources:
 ## 모드 (`modes`)
 | 키 | 값 | 의미 |
 |---|---|---|
-| `startMode` | `"Infinite"` | Title 진입 시 기본 선택 모드 |
+| `startMode` | `"Stage"` | Title 진입 시 기본 선택 모드(토글 좌측·하이라이트) |
 
 ## Infinite (`modes.infinite`)
 | 키 | 값 | 의미 |
