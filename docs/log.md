@@ -12,6 +12,17 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 콤보 카운터(머지 체인) 추가 — 절대 4s 타이머·2~4s 페이드, 행성 뒤 중앙
+why: 사용자 지시 — 연속 머지를 세는 **시각 콤보 카운터**(점수 배율 아님; 배율 콤보는 ADR로 제거됨).
+**유지 타이머 = 절대 4초**(`juice.combo.holdMs`), 머지마다 0으로 **리셋**; 타이머가 살아 있는 동안 머지 시
+콤보 **+1**, 지나면 다음 머지부터 **1**로 재시작(첫 머지=1). 표시: **행성 뒤(배경 위)** 레이어에 `Combo`
+라벨 + 숫자, **중앙 정렬**, 숫자는 점수처럼 **1단위 오도미터** 상승. 사라짐: 마지막 머지 후 **2초까지 풀
+불투명 → 2~4초 선형 페이드아웃**(`fadeStartMs`). 구현: 신규 `game/src/Combo.ts`(타이머·카운트·오도미터·
+페이드), `GameScene`에 `comboLayer`(boardLayer↔planetLayer 사이) + 머지 콜백 `combo.onMerge` + tick
+`combo.update` + 디버그 `comboValue`. SSoT `balance.json` `juice.combo`. docs: [[50-art-ux/feedback-effects]]
+§8 정본화. 검증: typecheck·vite build OK · Playwright **20/20**(신규 콤보 1→2 증가 테스트 포함) · headed
+머지 연쇄로 "Combo 7" 워터마크가 행성 뒤 중앙에 표시됨 확인.
+
 ## [2026-06-28] manual | Title 태양 게임시작 위로 노출 + 검은 반투명 박스; 배경 fill 롤백 진단=untracked
 why: 사용자 지시 3건. (1) 태양계 중점(태양)을 **게임 시작 버튼보다 위**로 올려 노출 — `ORBIT_CY=DESIGN.h×0.3`
 (궤도 중심 상단). (2) **최고 점수 + 게임 시작 버튼을 검은색 반투명 사각 박스**로 묶음(`centerPanel` alpha 0.4).

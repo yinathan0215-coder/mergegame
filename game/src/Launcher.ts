@@ -38,7 +38,7 @@ export interface LauncherHost {
 }
 
 // Press-drag-release slingshot at the launcher circle (docs/30-systems/launcher):
-// • fire direction is clamped to a 120° fan around straight-up (±60°);
+// • fire direction is clamped to a 90° fan around straight-up (±45°, layout.fanDeg);
 // • no drag (within the dead-zone) fires straight up at minimum power;
 // • the dotted arc under the launcher is a POWER GAUGE — a pre-drawn empty track that fills
 //   CLOCKWISE from the left (red) with drag power (docs/50-art-ux/screen-structure).

@@ -33,6 +33,7 @@ sources:
 - [[30-systems/scoring-combo]] — §7 점수: 충돌 +1 + 머지 등급 점수.
 - [[30-systems/play-area-boundary]] — 플레이 영역 ↔ 발사대 **일방향 경계**(발사는 위로 통과, 진입 후 복귀 불가).
 - [[30-systems/collision-shape]] — 행성 충돌 형태: 반지름 **원형 디스크**(이미지가 더 커도 충돌은 원).
+- [[30-systems/tier-unlock]] — 단계 **해금**: 새 단계 첫 합성 시 딤드 모달(회전 행성+OK), OK해야 다음 단계 해금.
 
 ## 관련
 - [[20-core-loop/index]] — 이 시스템들이 엮이는 코어 루프.
