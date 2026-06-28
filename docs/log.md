@@ -12,6 +12,15 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 해금 소개 팝업 첫 등장 = 해왕성(Neptune) 명시·검증
+why: 사용자 점검 지시 — 행성 사다리(11종)·기본 큐 변경 후 해금 소개 팝업이 **해왕성부터** 떠야 함을
+확인. `progression.unlockStart=5`(지구) → 지구끼리 합성해 6단계 해왕성이 처음 생성될 때
+`MergeSystem`은 소스 단계만 게이트(`pa.tier > unlockedTier` 차단)하므로 첫 결과 단계 = 6(해왕성),
+`GameScene`이 `6 > 5`로 첫 모달을 띄움 → 첫 팝업 = 해왕성 확정. [[30-systems/tier-unlock]]에
+"첫 모달 = 해왕성(Neptune)" 정본 명시(소개 팝업 등장 순서 단일 출처 = `unlockStart` + 등급 사다리).
+구 사다리 잔재인 해금 테스트 라벨 "천왕성"→"해왕성"(`game/tests/play.spec.ts` 테스트명·주석) 정정.
+검증: 해금 테스트 desktop·mobile 2/2 통과(첫 팝업 tier 6 = 해왕성).
+
 ## [2026-06-28] manual | 인게임 팝업 딤 뷰포트 전체로 — cover 팝업 레이어(popupRoot), 검증 완료
 why: 사용자 지시 — 인게임 딤 팝업(해금 모달 등)이 2-레이어 fit 후 상하 여백을 못 덮음. 원인: 모달이
 contain `fgRoot`에 있어 Pixi 딤이 9:16만 덮고, 기존 레터박스용 DOM 딤(`letterboxDim`)은 뷰포트를 꽉 채운
