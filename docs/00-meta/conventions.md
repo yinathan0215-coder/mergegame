@@ -67,8 +67,12 @@ The whole document exists to be handed to a coding agent. So:
 
 - **No undefined hand-waving.** A number, rule, or asset the agent can't infer must be
   stated explicitly (that's what `40-balancing/` and `50-art-ux/` are for).
-- **Decisions, not options.** Where the design is settled, state the choice. Where it's
-  genuinely open, mark it `draft` with an explicit open question — don't bury ambiguity.
+- **Decisions, not options.** Where the design is settled, state the choice. Where something is
+  undecided, **don't park an open question in the page — ask the user (`AskUserQuestion`) and
+  record their decision** as positive spec. A finished page holds no unresolved `## Open
+  questions`; if the user defers, record the decided behavior/scope now (a settled statement,
+  not a dangling question). Don't bury ambiguity, and don't fabricate a decision the user
+  hasn't made.
 - **Positive canonical spec — destination, not journey.** State what the design IS and what to
   build. A section page is not a changelog: no bug-fix narratives, no change history, no
   negation/contrast (`~가 아닌`, `이전엔 X`, `제거됨`, `오류였다`, `A에서 B로`, `(X 없음)`).

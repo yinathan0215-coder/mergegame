@@ -26,7 +26,8 @@ File if ANY of these happened **and was decided/added** (not merely discussed):
 - Pure code edits / refactor / rename / lint with no design component.
 - Build, CI, tooling, dependency, or hook/skill plumbing changes (this file's own kind).
 - Work already fully covered by an existing page (no new facts).
-- Anything still genuinely undecided — don't fabricate; leave `status: draft` + open question.
+- Anything genuinely undecided — don't fabricate; **ask the user (`AskUserQuestion`) and record
+  the decision** rather than parking an open question (see [[docs-write]] "ask & resolve").
 - Meta-discussion about the pipeline/ontology itself — **never reflect about reflect** (no
   self-loops).
 
@@ -67,7 +68,8 @@ Reuse the routing table in `docs/00-meta/conventions.md`. Quick map:
 - **Never interrupt.** No "should I file this?" mid-flow.
 - **Judgment, not obedience.** If nothing substantive was decided, skip even after a long turn.
 - **One reflect per turn max, ≤3 pages.** Don't burst.
-- **Don't fabricate undecided design.** Genre detail & stack are open → `draft` + open question.
+- **Don't fabricate undecided design.** Undecided → **ask the user (`AskUserQuestion`) and record
+  the decision**; never leave a dangling open question parked in a page.
 - **Positive canonical, not a changelog.** File the *final* design into the page as positive spec
   — what it IS and what to build, not what changed/was removed/was fixed. No `~가 아닌`·`이전 X`·
   `제거됨`·`오류`·`(X 없음)` in section pages. Bug-fix rationale → **code comments**; dated change

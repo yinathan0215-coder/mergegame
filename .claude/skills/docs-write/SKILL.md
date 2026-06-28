@@ -50,8 +50,15 @@ routing: `.claude/rules/docs-auto-reflect.md`). The housekeeping set for every w
 
 - Frontmatter + body per `docs/00-meta/conventions.md`. `id`/slug = lowercase kebab-case.
 - **Agent-executability is the bar**: state numbers/rules an agent can't infer; decisions,
-  not options. Genuinely undecided → `status: draft` + an explicit open question (don't
-  fabricate).
+  not options.
+- **No lingering open questions — ask & resolve.** A finished page holds decisions, not open
+  questions. When reconciling/reflecting hits something undecided (an ambiguous or **truncated**
+  instruction, or a fork with no obvious default), **ask the user with `AskUserQuestion` in the
+  same turn**, then write the resolved decision into the page as positive spec and **delete the
+  matching `## Open questions` item**. Never end a turn with an unresolved open question parked
+  in a page. If the user explicitly defers, record the *decided behavior/scope* now (e.g. "설정
+  버튼은 설정 창을 연다; 내부 항목은 차후 스펙") — a settled statement, not a dangling question.
+  Don't fabricate a decision the user hasn't made — ask.
 - **Positive canonical spec — record the destination, not the journey.** Write each page as the
   FINAL design: state what it IS and what an agent must build. Do NOT write bug-fix narratives,
   change history, or negation/contrast framing (`~가 아닌`, `이전엔 X`, `제거됨`, `오류였다`,

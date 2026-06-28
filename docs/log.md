@@ -12,6 +12,16 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | Title 미정 3건 확정 + docs-write "open question 금지(ask & resolve)" 정책
+why: 사용자 지시 — GDD 페이지에 **미해결 open question을 남기지 않는다**. 발생 시 `AskUserQuestion`으로
+물어 **확정 결과를 본문에 반영**한다. (1) 직전 턴이 남긴 open question 3건을 사용자 확정으로 닫음:
+설정(⚙) 버튼 = **설정 창을 연다**(내부 항목은 차후 별도 스펙), 최고·현재 점수 = **둘 다 localStorage
+저장**(새로고침 후 이어하기), Loading 화면 = **와인 배경 + 게임 로고 + 프로그레스 바**.
+[[20-core-loop/screen-flow]]·[[50-art-ux/title-screen]] 본문에 반영하고 두 페이지의 `## Open questions`
+섹션 제거. (2) 정책을 도구에 일원화: `.claude/skills/docs-write` + `docs/00-meta/conventions`·
+`templates/section-template` + `.claude/rules/docs-auto-reflect`·`docs-pipeline`에 "undecided → ask &
+resolve, 완성 페이지엔 미해결 질문 0" 규칙 명문화.
+
 ## [2026-06-28] auto | 조준 충돌각 UX 구현 + input-ux 정본화
 why: 조준선을 드래그 길이 비례 직선에서 **충돌 궤적 예측**으로. `Launcher.predict`가 발사 방향으로
 다른 행성(원, shot 반지름 팽창)+사각 벽을 레이캐스트해 **첫 충돌 지점까지 조준선 + 충돌점 마커 +

@@ -29,12 +29,13 @@ sources:
 - [[planet-stats]] — 행성 단계별 반지름·기본 점수 표(수성=점수 없음 명시) + 점수 부여 규칙 + 반지름 스케일링.
 - [[combo-scoring]] — 점수 수치(충돌 +1 · 머지 등급 점수).
 - [[spawn-rack]] — 발사 행성 랜덤 확률(낮은 5종 20%) + 초기 랙 구성(수성4·화성3·금성2·지구1).
-- [[launch-physics]] — 발사 튜닝(드래그/파워/V_max/쿨다운) + 물리·밸런싱 휴리스틱(증상→조치) + 달성 목표 + Open questions.
+- [[launch-physics]] — 발사 튜닝(드래그/파워/V_max/쿨다운) + 물리·밸런싱 휴리스틱(증상→조치) + 달성 목표 + 물리 계수(현재 구현값).
 
 ## 상태
 
-`status: design` — 수치 사양은 확정, `game/` 미구현. 권장 초기값(`V_max`·발사 쿨다운·마찰·반발
-계수)은 [[launch-physics]]의 Open questions에서 추적하며 구현 실측 후 확정한다.
+`status: design` — 수치 사양 확정. 발사·물리 계수(`V_max`·발사 쿨다운·마찰·반발)의 현재 구현값은
+[[launch-physics]] "물리 계수(현재 구현값)" 표와 `game/src/data/balance.json`이 단일 출처이며,
+손맛 튜닝은 [[balance-tune]] 스킬로 수행한다.
 
 ## 관련
 

@@ -89,7 +89,8 @@ top-level sections without asking.
   rule, a UX call) gets stated explicitly — that's what `40-balancing/` and `50-art-ux/`
   exist for.
 - **Verbatim log is sacred.** Never edit `docs/00-meta/input-log/`.
-- **Don't fabricate undecided design.** Genre detail and stack are open → keep affected
-  pages `status: draft` with explicit open questions; don't assert.
+- **Don't fabricate undecided design — ask & resolve.** When something is undecided, **ask the
+  user (`AskUserQuestion`) and record the decision** in the page; don't assert, and don't park a
+  dangling open question. A finished page holds decisions, not open questions.
 - **Silent load.** Surface docs only by citing them or naming a doc you updated.
 - **One reflect per turn, ≤3 pages.**
