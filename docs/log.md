@@ -12,7 +12,12 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
-## [2026-06-28] manual | 게이지 inset 이동·밝은 빈 트랙, 모서리/연결부 더 둥글게
+## [2026-06-28] manual | Title 태양계 공전: 8행성 전부·원형 궤도·태양 y-깊이 정렬
+why: 사용자 지시 — Title(홈) 배경 태양계를 (1) **행성 8종(수성~목성, 1~8단계) 전부** 공전하도록
+(기존 4종에서 확장), (2) 궤도를 **원형에 가까운 낮은 이심률**(ry=rx×0.82)로, (3) **태양도 행성과
+같은 y-깊이 정렬**에 포함(orbitLayer.sortableChildren + zIndex=y, 태양 zIndex=cy)해 앞/뒤 가림이
+적용되도록 정정. [[50-art-ux/title-screen]] §1 정본화. 구현: `game/src/TitleScreen.ts`
+(buildOrbitBackground 8궤도 생성·sortableChildren, update에서 zIndex=y). typecheck OK.
 why: 발사대 디테일 3건 정정. (1) **힘 게이지를 발사대 원과 outline 사이 inset(띠) 안으로 이동**
 (gauge.r 58→46, 발사대 원 r38·골드 호 r54 사이) — 발사 행성(중심, 최대 r32)이 가리지 않는 위치. (2)
 **게이지 빈 트랙 색을 밝게**(gaugeEmpty #221d29→#efe4cf), 채움은 빨강 유지. (3) **모서리·테이퍼 연결부를
