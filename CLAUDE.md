@@ -47,6 +47,15 @@ ECS-lite · State Machine · Game Loop/Fixed Step · Data-driven · Event-driven
 Layered Rendering · Acceptance-test. 방법론 = 제네릭 표준(단일 출처), 각 GDD 섹션은 그것을
 merge 게임 전용으로 인스턴스화하고 해당 모듈을 링크한다.
 
+## 개발 규약 / 코드 건강 (dev discipline)
+
+코드 작업엔 글로벌 **karpathy-guidelines**(Think-first · Simplicity · Surgical · Goal-driven)를
+적용한다 — 단, **단일책임/과집중(갓오브젝트) 금지**는 karpathy가 아니라 방법론
+`docs/90-methodology/ecs-lite.md` 소관이다(karpathy엔 SRP 항목 없음). 이 원칙들이 지켜지는지는
+**`methodology-audit`** 스킬로 점검한다: `game/src`를 방법론 7기둥 + 단일책임 + karpathy로 점수화하고
+`docs/70-verification/audits/<YYYY-MM-DD-HHmm>.md`에 보고서 + 우선순위 수정 워크리스트를 남긴다(감사
+전용; 실제 수정은 그 문서를 읽는 **별도 단계**). 구조 감사·수정 워크리스트의 단일 출처 = 그 폴더.
+
 ## Vault map (assignment-aligned)
 
 | Folder | Holds | 과제 요구 |

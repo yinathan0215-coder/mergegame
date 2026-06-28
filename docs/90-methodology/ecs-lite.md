@@ -3,7 +3,7 @@ id: method-ecs-lite
 note_type: methodology
 status: active
 domain: methodology
-updated: 2026-06-27
+updated: 2026-06-28
 tags: [methodology, ecs, architecture]
 sources:
   - "raw: ai_agent_friendly_prototype_methodology.md §2"
@@ -95,3 +95,6 @@ sources:
 - System 실행 순서가 문서에 정의됨
 - Component=상태 데이터, System=규칙으로 위치함
 - 새 아이템·적·보상·효과 추가 시 기존 대형 클래스를 수정하지 않아도 되는 구조
+- **검증(enforcement):** 위 기준은 선언으로 끝내지 않고 *검사*한다 — 한 모듈이 단일 책임을 넘기면
+  (대형 오케스트레이터·한 파일 ≥3 책임) 감사에서 드러나야 한다. 프로젝트 적용: `methodology-audit`
+  스킬이 `game/src`를 이 기준으로 점수화하고 `docs/70-verification/audits/`에 보고서를 남긴다.

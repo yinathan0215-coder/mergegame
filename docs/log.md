@@ -12,6 +12,16 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 방법론 감사 스킬 신설 + 첫 코드 준수 감사(73/100) + SRP enforcement·karpathy 규약 보강
+why: 사용자 지시 — (1) karpathy 개발철학이 방법론·CLAUDE.md에 빠졌는지 점검: **단일책임(SRP)은
+[[90-methodology/ecs-lite]]에 명시**돼 있으나 *검증(enforcement)*이 없어 GameScene 갓오브젝트(380줄·5책임)가
+무경보 통과, **karpathy는 글로벌 CLAUDE.md에만** 있고 프로젝트 CLAUDE.md엔 없음. (2) 신규
+`.claude/skills/methodology-audit` — `game/src`를 7기둥+단일책임+karpathy로 점수화(0–100)하고
+`docs/70-verification/audits/<날짜-시각>.md`에 보고서+우선순위 수정 워크리스트를 기록(감사 전용, 수정은
+별도 단계). (3) 첫 감사 [[70-verification/audits/2026-06-28-1932-methodology-srp-audit]] = **73/100**
+(약점: 단일책임 2·State 3·Event 3). (4) 보강: [[90-methodology/ecs-lite]] 완료기준에 "검증" 항목,
+프로젝트 `CLAUDE.md`에 karpathy+감사 스킬 규약 추가. **코드(game/) 무수정** — 진단·도구·문서만.
+
 ## [2026-06-28] auto | 검증 결과 갱신 — Playwright 22/22(해금 게이트·콤보 카운터 포함)
 why: tier-unlock 해금 게이트 e2e(잠긴 등급 머지 → 일시정지 → OK 해금) + 콤보 카운터 테스트가 더해져
 실플레이 스위트가 16→22 전부 통과. [[70-verification/kpi]]·[[70-verification/index]]의 통과 수와 시나리오

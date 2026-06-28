@@ -27,6 +27,16 @@ sources:
 - [[70-verification/checklist]] — §15 완료 체크리스트 16개(부정 항목 포함) + 평가자 관점 매핑.
 - [[70-verification/audit-methodology-numbers]] — 방법론·수치 정합 감사(2026-06-28): 수치 SSoT 전부 일치, 방법론 부분 준수, 불일치 3건.
 
+## 감사 로그 (audits/)
+
+코드 ↔ 방법론 **구조** 준수를 날짜·시각 단위로 점수화해 기록한다([[methodology-audit]] 스킬 생성).
+위 수치 정합 감사와 별 축 — 이쪽은 단일책임·과집중·상태머신 등 *구조/책임* 준수를 본다. 각 보고서는
+우선순위 수정 워크리스트를 담고, 그 워크리스트가 추후 수정 프로세스의 입력이 된다.
+
+- [[70-verification/audits/2026-06-28-1932-methodology-srp-audit]] — 종합 **73/100**. 강점:
+  data-driven·Fixed Step·Layered·Acceptance. 약점: 단일책임(GameScene 갓오브젝트 2/5)·State(paused
+  불리언 3/5)·Event(카탈로그 부재 3/5). P1: containPlanets 분리, 모달 일시정지 상태화.
+
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.
 - [[../30-systems/merge-rules]] — 합성 규칙 검증의 설계 근거.
