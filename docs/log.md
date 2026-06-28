@@ -12,6 +12,12 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | HTML 페이지/레터박스 배경을 outerBg로(잔존 와인 제거)
+why: 사용자 지시 — 캔버스 바깥(레터박스)에 보이던 와인색을 기본 배경색과 동일하게. `game/index.html`의
+`html,body { background }`가 아직 와인 `#3a0d1a`이라 캔버스 둘레에 와인 띠가 보였음 → `outerBg` #15203d
+(딥 블루)로 맞춤. [[50-art-ux/art-direction]] 전체 톤에 "캔버스 바깥/HTML 페이지 배경도 outerBg" 명문화.
+검증: vite build OK · wide 뷰포트 headed 스크린샷으로 좌우 레터박스 = 캔버스 동색 확인.
+
 ## [2026-06-28] manual | Title 태양계: 실제 거리 순서(수성=moon)·살짝 눕힘·세로 꽉 채움(모바일)
 why: 사용자 지시 — Title 태양계 배경을 (1) **실제 태양계 거리 순서**로 배치(안쪽→바깥: 수성·금성·
 지구·화성·목성·토성·천왕성·해왕성 → 게임 tier [1,3,4,2,8,7,6,5]), **수성 자리에는 moon 스프라이트**(1단계).
