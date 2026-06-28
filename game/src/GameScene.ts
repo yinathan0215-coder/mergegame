@@ -17,10 +17,13 @@ import { UnlockModal } from './UnlockModal';
 import { Combo } from './Combo';
 import { sound } from './SoundManager';
 import { makePlanetSprite } from './PlanetFactory';
+import { LoadingScreen } from './LoadingScreen';
 import { ASSETS } from './assets';
 import type { Planet } from './Planet';
 
-type SceneState = 'Title' | 'PoolInGame';
+type SceneState = 'Loading' | 'Title' | 'PoolInGame';
+
+const LOAD_MIN_MS = 2000; // 최소 로딩 시간 floor (docs/20-core-loop/screen-flow §Loading)
 
 // merge spawn pop curve: startScale → peakScale (0–40%) → settle to 1.0 (40–100%).
 function popScale(k: number): number {
@@ -58,7 +61,9 @@ export class GameScene {
   private title: TitleScreen;
   private meta: MetaStore; // coin wallet + daily mission/attendance state (docs/30-systems/meta-economy)
   private metaUI: MetaUI; // Title-lobby popups (missions/attendance/wheel/shop)
-  private scene: SceneState = 'Title';
+  private scene: SceneState = 'Loading';
+  private loadingScreen = new LoadingScreen(LOAD_MIN_MS); // 부팅 스플래시(GALAXY PINBALL 스트림)
+  private loadT0 = 0; // 부팅 시각 — 최소 로딩 floor 계산용
   private unlockModal!: UnlockModal;
   private unlockedTier = PROGRESSION.unlockStart; // highest tier merges may create (docs/30-systems/tier-unlock)
   private pendingUnlockTier = 0;
@@ -171,12 +176,16 @@ export class GameScene {
     this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
     this.fgRoot.addChild(this.title.container); // 태양계 공전 + 로비 UI는 contain
     this.fgRoot.addChild(this.metaUI.layer);    // 메타 팝업(딤은 oversized로 뷰포트 전체를 덮음) — title 위
+    this.fgRoot.addChild(this.loadingScreen.container); // 부팅 스플래시 — 전경(contain) 최상위, 로딩 한정 표시
     this.fade.alpha = 0;
     this.fade.eventMode = 'none';
     this.unlockModal = new UnlockModal(() => this.onUnlockOk());
     this.popupRoot.addChild(this.unlockModal.container); // 모달 딤은 cover 팝업 레이어(뷰포트 전체)
     this.app.stage.addChild(this.fade); // 씬 전이 페이드(최상위, 뷰포트 전체) — 크기는 layout()
-    this.setScene('Title');
+    // 부팅: Loading 씬으로 즉시 진입(페이드 없음) → 최소 LOAD_MIN_MS 후 Title로 전이(tick에서 판정)
+    this.loadT0 = performance.now();
+    this.loadingScreen.start(this.loadT0);
+    this.applyScene('Loading');
     this.app.ticker.add(() => this.tick());
 
     this.layout();
@@ -196,6 +205,7 @@ export class GameScene {
 
   private applyScene(scene: SceneState) {
     this.scene = scene;
+    this.loadingScreen.container.visible = scene === 'Loading'; // 부팅 스플래시는 Loading 한정
     this.gameLayer.visible = scene === 'PoolInGame';
     this.title.container.visible = scene === 'Title';
     this.title.galaxy.visible = scene === 'Title'; // 은하수 배경은 Title 한정
@@ -350,6 +360,12 @@ export class GameScene {
     this.metaUI.update(nowMs); // meta popups (transition + wheel spin + attendance countdown) run on Title too
     this.updateTransition(nowMs);
     this.unlockModal.update();
+    if (this.scene === 'Loading') {
+      this.loadingScreen.update(nowMs);
+      // 최소 로딩 floor 경과 후 Title로 자동 페이드(에셋은 동기 로드라 floor가 곧 전이 조건)
+      if (!this.trans && nowMs - this.loadT0 >= LOAD_MIN_MS) this.setScene('Title');
+      return;
+    }
     if (this.scene !== 'PoolInGame' || this.paused) return;
 
     this.acc += this.app.ticker.deltaMS;
@@ -416,6 +432,8 @@ export class GameScene {
       },
       startGame: () => this.setScene('PoolInGame'),
       showTitle: () => this.setScene('Title'),
+      skipLoad: () => { if (this.scene === 'Loading' && !this.trans) this.setScene('Title'); }, // 테스트용 로딩 floor 건너뛰기
+      loadingActive: () => this.scene === 'Loading',
       unlockedTier: () => this.unlockedTier,
       unlockPending: () => this.paused,
       okUnlock: () => this.onUnlockOk(),
