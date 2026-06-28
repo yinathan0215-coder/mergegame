@@ -12,6 +12,23 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] manual | 게이지 inset 이동·밝은 빈 트랙, 모서리/연결부 더 둥글게
+why: 발사대 디테일 3건 정정. (1) **힘 게이지를 발사대 원과 outline 사이 inset(띠) 안으로 이동**
+(gauge.r 58→46, 발사대 원 r38·골드 호 r54 사이) — 발사 행성(중심, 최대 r32)이 가리지 않는 위치. (2)
+**게이지 빈 트랙 색을 밝게**(gaugeEmpty #221d29→#efe4cf), 채움은 빨강 유지. (3) **모서리·테이퍼 연결부를
+더 둥글게** — inner line은 outline의 내향 오프셋이라, outline 반경을 inset(16)보다 충분히 키워야 inner
+line이 둥글게 남는다: `cornerR`(위 모서리) 신설 **48**, `junctionR`(테이퍼 연결) 20→36(오프셋 후 상단
+모서리 inner≈32). config: `shieldPath` topR=`L.cornerR`. docs: [[50-art-ux/screen-structure]] 정본화
+(게이지 inset·밝은 빈 트랙·둥근 연결부). 검증: typecheck·vite build OK · Playwright **18/18** · headed 확인.
+
+## [2026-06-28] manual | 배경 와인→딥 블루(우주 톤)
+why: 사용자 지시 — 바깥 배경의 와인색을 우주 게임에 어울리는 짙은 푸른 톤으로. `outerBg` #46101f→#15203d
+(딥 네이비), `pgBand` #16060d→#0b1124(더 어두운 블루, 띠+발사대 채움색). 골드 프레임 대비 유지.
+[[50-art-ux/art-direction]] 전체 톤 정본화(바깥 배경=딥 블루). 검증: vite build OK · headed 스크린샷 확인.
+
+## [2026-06-28] manual | Galaxy background 정적 이미지/런타임 반짝임 분리
+why: 사용자 지시 — 배경 이미지는 행성 스프라이트와 맞는 **캐주얼 게임풍 우주/은하 물결 배경**만 담당하고, 십자 별표·점·반짝임은 배경 효과로 넣어 루핑해야 한다. 신규 [[50-art-ux/galaxy-background]]에 정적 이미지 레이어와 deterministic 런타임 반짝임 레이어의 책임을 분리해 정본화하고, Pool In-Game 보드 내부([[50-art-ux/screen-structure]])와 Title([[50-art-ux/title-screen]])이 같은 Galaxy background 시스템을 쓰도록 연결했다. 생성/편집 프롬프트와 원본/후처리/최종 경로는 `game/public/assets/prompts/` 아래에 기록한다.
+
 ## [2026-06-28] manual | 발사대=inner line 바깥(띠 위), 균일 간격, 게이지 하단 반원
 why: 레퍼런스 대조로 보드 하단 6건 추가 정정. (1) **outline↔inner line 간격 균일화** — 테이퍼 구간 간격이
 사각형보다 좁던 문제를, inner line을 outline의 **균일 내향 오프셋**(`offsetInward`, 와인딩 기반 법선)으로

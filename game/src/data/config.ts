@@ -54,7 +54,7 @@ type Pt = { x: number; y: number };
 // inner line can offset the whole shape and swap that block for an upper arc.
 function shieldPath(): { pts: Pt[]; ai: number; bi: number } {
   const x0 = PLAY.x, x1 = PLAY.x + PLAY.w, ty = PLAY.y, by = LINE_Y;
-  const topR = 18, jr = JUNCTION_R;
+  const topR = L.cornerR, jr = JUNCTION_R;
   const tL = rayCircle(x0, by, Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, OUTER_LOWER_R);
   const tR = rayCircle(x1, by, -Math.cos(tA), Math.sin(tA), LAUNCHER.x, LAUNCHER.y, OUTER_LOWER_R);
   const pts: Pt[] = [];

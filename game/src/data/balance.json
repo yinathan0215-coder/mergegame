@@ -12,16 +12,17 @@
     "innerInset": 16,
     "play": { "x": 46, "y": 108, "w": 358, "h": 470 },
     "wallT": 20,
-    "junctionR": 20,
+    "cornerR": 48,
+    "junctionR": 36,
     "taperAngleDeg": 140,
     "launcher": { "x": 225, "offsetY": 64, "r": 38 },
-    "gauge": { "r": 58, "dots": 22, "dotR": 3.8 },
+    "gauge": { "r": 46, "dots": 20, "dotR": 3.6 },
     "fanDeg": 120
   },
 
   "colors": {
-    "outerBg": "#46101f",
-    "pgBand": "#16060d",
+    "outerBg": "#15203d",
+    "pgBand": "#0b1124",
     "outline": "#c8923a",
     "outlineLight": "#e7b65d",
     "outlineDark": "#6f3f17",
@@ -34,7 +35,7 @@
     "pocketArc": "#07070e",
     "launcherRim": "#e7b65d",
     "gaugeFill": "#e6352a",
-    "gaugeEmpty": "#221d29",
+    "gaugeEmpty": "#efe4cf",
     "hudText": "#ffffff",
     "crown": "#f2c34a",
     "coin": "#f4c542",
@@ -56,11 +57,12 @@
     "remergeDelayMs": 80
   },
 
-  "scoring": { "wallPoint": 1, "ballPoint": 3 },
+  "scoring": { "wallPoint": 1, "ballPoint": 3, "minImpact": 3.5 },
 
   "juice": {
     "mergePop": { "ms": 260, "startScale": 0.35, "peakScale": 1.18 },
     "burst": { "ms": 380, "scale": 2.6, "alpha": 0.5 },
+    "hitBurst": { "ms": 260, "len": 26, "streaks": 5, "spreadDeg": 34, "alpha": 0.7 },
     "scorePopup": { "ms": 950, "rise": 46, "spreadX": 70, "spreadY": 28, "color": "#ffe28a", "fontSize": 22 },
     "scoreRoll": { "lerp": 0.18 }
   },
