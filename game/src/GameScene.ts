@@ -35,6 +35,8 @@ import { containPlanets } from './Containment';
 import type { Planet } from './Planet';
 
 type SceneState = 'Loading' | 'Title' | 'PoolInGame';
+// In-session phase — the end phase itself carries the kind (result / stageClear / stageFail).
+type Phase = 'playing' | 'paused' | 'pendingFail' | 'clearing' | 'result' | 'stageClear' | 'stageFail';
 
 const LOAD_MIN_MS = 2000; // 최소 로딩 시간 floor (docs/20-core-loop/screen-flow §Loading)
 
@@ -98,13 +100,13 @@ export class GameScene {
   private result!: ResultPopup; // Infinite 결과창
   private stageClear!: StageClearPopup;
   private stageFail!: StageFailPopup;
-  // In-session phase state machine (docs/20-core-loop/screen-flow §PoolInGame 내부 상태); endKind/endAt are
-  // this state's payload, the 'clearing' animation lives in clearFx. Transitions: playing→paused→playing
-  // (unlock modal); playing→pendingEnd→ended (armed Stage end); playing→clearing→ended (clear fly);
-  // playing→ended (immediate); *→playing on startSession.
-  private phase: 'playing' | 'paused' | 'pendingEnd' | 'clearing' | 'ended' = 'playing';
-  private endKind: 'result' | 'clear' | 'fail' | null = null; // 종료 예약(2초 지연 후 창 표시)
-  private endAt = 0; // 종료창 등장 예정 시각(performance.now 기준)
+  // In-session phase state machine (docs/20-core-loop/screen-flow §PoolInGame 내부 상태); the end phase
+  // encodes its own kind (result/stageClear/stageFail), the 'clearing' animation lives in clearFx.
+  // Transitions: playing→paused→playing (unlock modal); playing→pendingFail→stageFail (armed Stage end);
+  // playing→clearing→stageClear (clear fly); playing→result (Infinite settle); *→playing on startSession.
+  // Every transition routes through setPhase() — the single guarded transition point (audit D4).
+  private phase: Phase = 'playing';
+  private endAt = 0; // pendingFail 종료창 등장 예정 시각(performance.now 기준)
   // Stage 클리어 연출(docs/30-systems/stage-mode §클리어): 목표 행성이 우하단 목표 UI로 포물선 비행 →
   // 도달 시 머지 버스트(burst) 잠깐 hold → 클리어창. 연출 모듈이 스프라이트 수명을 소유; 연출 중 물리·발사
   // 정지는 GameScene phase('clearing')가 담당.
@@ -131,7 +133,7 @@ export class GameScene {
     this.endSkip.drawRect(0, 0, DESIGN.w, DESIGN.h);
     this.endSkip.endFill();
     this.endSkip.eventMode = 'none';
-    this.endSkip.on('pointerdown', (e) => { e.stopPropagation(); if (this.phase === 'pendingEnd') this.showEnd(this.endKind!); });
+    this.endSkip.on('pointerdown', (e) => { e.stopPropagation(); if (this.phase === 'pendingFail') this.showEnd('fail'); });
     this.fgRoot.addChild(this.endSkip);
     this.app.stage.eventMode = 'static';
 
@@ -198,12 +200,12 @@ export class GameScene {
         },
         trackCombo: (cv) => { this.maxCombo = Math.max(this.maxCombo, cv); }, // session combo peak (Infinite result)
         setComboBonus: (b) => { this.lastComboBonus = b; },
-        canStageClear: () => (this.phase === 'playing' || this.phase === 'pendingEnd') && !this.meta.isStageCleared(this.modeC.stageIndex),
-        triggerStageClear: (tier, x, y, planet) => { this.clearFx.start(tier, x, y, planet, performance.now()); this.phase = 'clearing'; },
+        canStageClear: () => (this.phase === 'playing' || this.phase === 'pendingFail') && !this.meta.isStageCleared(this.modeC.stageIndex),
+        triggerStageClear: (tier, x, y, planet) => { this.clearFx.start(tier, x, y, planet, performance.now()); this.setPhase('clearing'); },
         canUnlock: () => this.phase === 'playing',
         triggerUnlock: (tier) => {
           this.pendingUnlockTier = tier;
-          this.phase = 'paused';
+          this.setPhase('paused');
           const bonus = this.modeC.mode === 'Infinite' ? MODES.infinite.unlockBonusCount : 0;
           if (bonus > 0) {
             this.modeC.addCount(bonus);
@@ -295,7 +297,7 @@ export class GameScene {
   private onUnlockOk() {
     eventLog.emit('UNLOCK_OK', {});
     this.unlockedTier = Math.max(this.unlockedTier, this.pendingUnlockTier);
-    this.phase = 'playing';
+    this.setPhase('playing');
     this.unlockModal.hide();
   }
 
@@ -425,8 +427,7 @@ export class GameScene {
     if (this.modeC.isStage) this.modeC.stageIndex = this.meta.stageProgress; // 영속 진행도 = 현재 스테이지
     this.unlockedTier = this.modeC.isStage ? MAX_TIER : PROGRESSION.unlockStart;
     this.clearFx.clear();
-    this.phase = 'playing';
-    this.endKind = null;
+    this.setPhase('playing');
     this.unlockModal.hide();
     this.charge.container.visible = false; // 새 세션: 떠 있던 충전/종료 팝업 정리(닫기 콜백 없이)
     this.result.container.visible = false;
@@ -453,7 +454,7 @@ export class GameScene {
 
   // Open the Infinite charge popup (no-op in Stage / when the session has ended).
   private openCharge() {
-    if (this.modeC.isStage || this.phase === 'ended') return;
+    if (this.modeC.isStage || this.isEnded) return;
     this.charge.open();
   }
 
@@ -491,32 +492,43 @@ export class GameScene {
     this.showEnd('result');
   }
 
-  // Arm the end window after RESULT.endDelayMs (docs/50-art-ux/result-window). 'clear' overrides a
-  // pending 'fail' (a target made during the fail delay still wins); 'result'/'fail' don't re-arm.
-  private scheduleEnd(kind: 'result' | 'clear' | 'fail') {
-    if (this.phase === 'ended') return;
-    if (kind !== 'clear' && this.endKind) return;
-    this.endKind = kind;
+  // Arm the Stage fail window after RESULT.endDelayMs (docs/50-art-ux/result-window); a screen tap skips
+  // the delay (endSkip → showEnd). A target merged during the delay still wins via its own
+  // clearing→stageClear path. Already armed (pendingFail) → don't re-arm.
+  private scheduleEnd(_kind: 'fail') {
+    if (this.isEnded) return;
+    if (this.phase === 'pendingFail') return;
     this.endAt = performance.now() + RESULT.endDelayMs;
-    this.phase = 'pendingEnd';
     this.endSkip.eventMode = 'static'; // 지연 중 화면 탭 → 즉시 종료창(showEnd)
+    this.setPhase('pendingFail');
   }
 
-  // Show an end window — Stage after the armed delay (tick), Infinite immediately on settle.
+  // Show an end window — Stage after the armed delay (tick), Infinite immediately on settle. The kind
+  // ('result'|'clear'|'fail') maps to the first-class end phase (result|stageClear|stageFail).
   private showEnd(kind: 'result' | 'clear' | 'fail') {
-    if (this.phase === 'ended') return;
-    this.phase = 'ended';
-    this.endKind = null;
+    if (this.isEnded) return;
     this.endSkip.eventMode = 'none';
     if (kind === 'result') {
+      this.setPhase('result');
       const finalScore = this.score.score;
       this.result.show(finalScore, this.maxCombo, finalScore > this.sessionPrevBest);
     } else if (kind === 'clear') {
+      this.setPhase('stageClear');
       this.economy.awardStageClear(); // 클리어 기록 + 코인 + 다음 스테이지 전진·영속 (economy rules)
       this.stageClear.open();
     } else if (kind === 'fail') {
+      this.setPhase('stageFail');
       this.stageFail.open();
     }
+  }
+
+  // Single guarded transition point for the in-session phase machine (audit D4) — every `this.phase`
+  // change routes through here.
+  private setPhase(to: Phase) { this.phase = to; }
+
+  // The three first-class end phases (window shown). Used by the tick freeze + openCharge + re-entry guards.
+  private get isEnded(): boolean {
+    return this.phase === 'result' || this.phase === 'stageClear' || this.phase === 'stageFail';
   }
 
   // phase === 'clearing', read via getter so tick()'s earlier early-returns don't narrow this.phase
@@ -551,7 +563,7 @@ export class GameScene {
     }
     // 인게임 메타/충전 팝업이 떠 있으면 물리·발사를 정지(해금 모달과 동일한 시간정책 — docs/20-core-loop/screen-flow §씬별 입력·시간)
     const popupOpen = this.metaUI.openKind() !== null || this.charge.container.visible;
-    if (this.scene !== 'PoolInGame' || this.phase === 'paused' || this.phase === 'ended' || popupOpen) return;
+    if (this.scene !== 'PoolInGame' || this.phase === 'paused' || this.isEnded || popupOpen) return;
 
     // Stage 클리어 연출 중: 보드 물리·발사를 멈추고 비행+버스트 연출만 갱신(완료 시 클리어창).
     if (this.isClearing) {
@@ -571,7 +583,7 @@ export class GameScene {
     }
     if (this.acc > STEP_MS * 5) this.acc = 0;
     if (!this.isClearing) this.checkSessionEnd(); // 카운트 소진 → 종료 판정 (docs/30-systems/launch-count)
-    if (this.phase === 'pendingEnd' && nowMs >= this.endAt) this.showEnd(this.endKind!); // Stage 종료창 지연 등장
+    if (this.phase === 'pendingFail' && nowMs >= this.endAt) this.showEnd('fail'); // Stage 종료창 지연 등장
 
     for (const p of this.planets) {
       p.sprite.x = p.body.position.x;

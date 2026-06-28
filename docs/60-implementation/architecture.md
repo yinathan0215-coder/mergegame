@@ -28,7 +28,7 @@ sources:
 ### 시뮬레이션 · 코어 루프
 | 모듈 | 단일 책임 | 방법론 매핑 |
 |---|---|---|
-| `GameScene` | Pixi 앱·렌더 루프·씬 상태(`Loading`→`Title`→`PoolInGame`) + **세션 내부 phase**(`playing`/`paused`/`pendingEnd`/`clearing`/`ended`, [[../20-core-loop/screen-flow]])·시스템 오케스트레이션·세션 종료 판정. 검증 훅(`debug`)·경계 물리(`Containment`)는 별 모듈로 분리 | [[../90-methodology/state-machine]] · [[../90-methodology/game-loop]] |
+| `GameScene` | Pixi 앱·렌더 루프·씬 상태(`Loading`→`Title`→`PoolInGame`) + **세션 내부 phase**(`playing`/`paused`/`pendingFail`/`clearing`/`result`/`stageClear`/`stageFail`, 가드된 `setPhase`, [[../20-core-loop/screen-flow]])·시스템 오케스트레이션·세션 종료 판정. 검증 훅(`debug`)·경계 물리(`Containment`)는 별 모듈로 분리 | [[../90-methodology/state-machine]] · [[../90-methodology/game-loop]] |
 | `Containment` | 절대 플레이 영역 경계 — 매 substep clamp+반사로 터널링 방지 + 발사대 원 재진입 차단(물리 규칙, 오케스트레이터에서 분리) | [[../90-methodology/game-loop]] · [[../90-methodology/ecs-lite]] |
 | `StageClearFx` | Stage 클리어 비행 연출(목표 행성 제거→우하단 목표 UI로 포물선 비행→버스트→완료 콜백). 일시 애니메이션을 오케스트레이터에서 분리 | [[../90-methodology/layered-rendering]] · [[../90-methodology/ecs-lite]] |
 | `MergeOutcome` | 머지 보상 fan-out(점수·콤보·이펙트·사운드·미션) + 충돌 점수(벽/행성) 조율 — 합성/충돌의 "보상 규칙"을 오케스트레이터에서 분리. 흐름(해금·클리어 트리거)은 host 콜백으로 GameScene이 보유 | [[../90-methodology/ecs-lite]] · [[../90-methodology/event-driven]] |
