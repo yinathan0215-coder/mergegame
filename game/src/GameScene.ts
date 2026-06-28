@@ -1,7 +1,12 @@
 import { Application, Container, Graphics, Rectangle } from 'pixi.js';
 import { Body } from 'matter-js';
-import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS, SCORING, PROGRESSION } from './data/config';
+import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH, COLORS, STEP_MS, JUICE, PHYSICS, SCORING, PROGRESSION, MODES } from './data/config';
 import { tierData, MAX_TIER, INITIAL_RACK, SUN_TIER } from './data/planets';
+import { ModeController, type GameMode } from './modes/ModeController';
+import { GameInfoPanel } from './GameInfoPanel';
+import { ChargePopup } from './popups/ChargePopup';
+import { ResultPopup } from './popups/ResultPopup';
+import { StageClearPopup, StageFailPopup } from './popups/StageEndPopup';
 import { MetaStore } from './MetaStore';
 import { MetaUI } from './MetaUI';
 import { PhysicsWorld } from './PhysicsWorld';
@@ -73,6 +78,15 @@ export class GameScene {
   private trans: { to: SceneState; t0: number; phase: 'out' | 'in' } | null = null;
   private bgRoot = new Container(); // 은하수 배경 — cover로 뷰포트 가득(Title 한정)
   private fgRoot = new Container(); // 태양계·로비 UI·보드·HUD·모든 팝업 — contain(9:16, 잘림 없음)
+  private modeC = new ModeController(); // 게임 모드 + 남은 카운트 (docs/20-core-loop/game-modes)
+  private info!: GameInfoPanel; // 좌하단 Count/Next + 모드별 위젯
+  private charge!: ChargePopup; // Infinite 충전 팝업
+  private result!: ResultPopup; // Infinite 결과창
+  private stageClear!: StageClearPopup;
+  private stageFail!: StageFailPopup;
+  private ended = false; // 세션 종료(결과/클리어/실패 창이 떠 있음)
+  private maxCombo = 0; // 세션 최대 콤보(Infinite 결과창)
+  private sessionPrevBest = 0; // 세션 시작 시점의 최고 점수(NEW RECORD 판정용)
 
   stats = { shots: 0, merges: 0, maxTier: 1, sunReached: false };
 
@@ -101,9 +115,10 @@ export class GameScene {
     ]); // back button → Title
     this.effects = new Effects(this.effectLayer);
     this.combo = new Combo(this.comboLayer);
+    this.info = new GameInfoPanel(this.uiLayer, () => this.openCharge()); // 좌하단 Count/Next + 모드별 위젯
     this.score = new ScoreSystem((s) => { this.hud.setScore(s); this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드
     this.queue = new QueueSystem(
-      () => {}, // launcher shows the current planet; next is random-refilled
+      (slots) => this.info.setNext(slots[1] ?? slots[0]), // Next 미리보기 갱신(좌하단 HUD)
       () => Math.max(1, Math.min(this.unlockedTier - PROGRESSION.queueBelow, PROGRESSION.queueCap))
     );
     this.merge = new MergeSystem(
@@ -112,6 +127,7 @@ export class GameScene {
         removePlanet: (p) => this.removePlanet(p),
         spawnPlanet: (tier, x, y, vx, vy, now) => this.spawnPlanet(tier, x, y, vx, vy, now, true, true),
         unlockedTier: () => this.unlockedTier,
+        terminalMerge: (pa, pb) => this.onTerminalMerge(pa, pb), // 블랙홀끼리 합성 → Infinite 카운트 +20
       },
       (tier, x, y) => {
         this.stats.merges++;
@@ -130,6 +146,12 @@ export class GameScene {
           sound.play('comboMilestone');
         }
         this.meta.onMerge(this.combo.value, tier === SUN_TIER); // daily missions: merge count / combo peak / sun
+        this.maxCombo = Math.max(this.maxCombo, this.combo.value); // session combo peak (Infinite result)
+        // Stage clear: created the target tier (docs/30-systems/stage-mode) — preempts the unlock modal
+        if (this.modeC.isStage && !this.ended && tier >= this.modeC.targetTier) {
+          this.endStageClear();
+          return;
+        }
         // first time a NEW tier is created → unlock modal + pause (docs/30-systems/tier-unlock)
         if (tier > this.unlockedTier && !this.paused) {
           this.pendingUnlockTier = tier;
@@ -166,11 +188,18 @@ export class GameScene {
 
     this.meta = new MetaStore();
     this.metaUI = new MetaUI(this.meta);
-    this.buildInitialRack();
+    this.charge = new ChargePopup(() => this.meta.coins, (n) => this.buyCharge(n)); // Infinite 충전 팝업
+    this.result = new ResultPopup(() => this.setScene('Title')); // Infinite 결과창 → 탭 → Title
+    this.stageClear = new StageClearPopup(
+      () => { this.modeC.nextStage(); this.setScene('PoolInGame'); }, // 다음 스테이지
+      () => this.setScene('Title') // 돌아가기 → Title
+    );
+    this.stageFail = new StageFailPopup(() => this.setScene('PoolInGame')); // 실패 → 같은 스테이지 재시작
     this.title = new TitleScreen(
-      () => { sound.play('play'); this.setScene('PoolInGame'); },
+      (mode) => { this.modeC.setMode(mode); sound.play('play'); this.setScene('PoolInGame'); },
       () => ({ current: this.meta.currentScore, best: this.meta.bestScore, maxTier: this.stats.maxTier }), // Title 현재/최고(영속) + 최대 머지 아이콘
-      { coins: () => this.meta.coins, subscribe: (fn) => this.meta.subscribe(fn), open: (k) => this.metaUI.open(k) } // 코인·팝업 훅
+      { coins: () => this.meta.coins, subscribe: (fn) => this.meta.subscribe(fn), open: (k) => this.metaUI.open(k) }, // 코인·팝업 훅
+      () => this.modeC.stageIndex + 1 // Play 라벨 "Stage N"
     );
     this.bgRoot.addChild(this.title.galaxy);    // 은하수만 cover 배경 레이어(여백까지 채움)
     this.fgRoot.addChild(this.title.container); // 태양계 공전 + 로비 UI는 contain
@@ -180,6 +209,8 @@ export class GameScene {
     this.fade.eventMode = 'none';
     this.unlockModal = new UnlockModal(() => this.onUnlockOk());
     this.fgRoot.addChild(this.unlockModal.container); // 해금 모달 = contain 레이어 + 오버사이즈 딤(메타 팝업과 동일, docs/50-art-ux/popup-system)
+    // 게임 모드 팝업(충전·결과·스테이지) = 같은 contain 레이어, 보드/HUD 위 (docs/50-art-ux/result-window)
+    this.fgRoot.addChild(this.charge.container, this.result.container, this.stageClear.container, this.stageFail.container);
     this.app.stage.addChild(this.fade); // 씬 전이 페이드(최상위, 뷰포트 전체) — 크기는 layout()
     // 부팅: Loading 씬으로 즉시 진입(페이드 없음) → 최소 LOAD_MIN_MS 후 Title로 전이(tick에서 판정)
     this.loadT0 = performance.now();
@@ -209,12 +240,7 @@ export class GameScene {
     this.title.container.visible = scene === 'Title';
     this.title.galaxy.visible = scene === 'Title'; // 은하수 배경은 Title 한정
     if (scene === 'Title') this.title.refresh(); // 최대 머지 아이콘 + 현재 점수 갱신
-    if (scene === 'PoolInGame') {
-      this.acc = 0;
-      this.unlockedTier = PROGRESSION.unlockStart; // new game: reset unlock progression
-      this.paused = false;
-      this.unlockModal.hide();
-    }
+    if (scene === 'PoolInGame') this.startSession(); // fresh session: count, board, queue (docs/20-core-loop/game-modes)
   }
 
   // OK on the unlock modal: raise the unlock cap to the new tier and resume.
@@ -245,7 +271,8 @@ export class GameScene {
   }
 
   private fire(tier: number, vx: number, vy: number): boolean {
-    if (this.scene !== 'PoolInGame' || this.paused) return false;
+    if (this.scene !== 'PoolInGame' || this.paused || this.ended) return false;
+    if (!this.modeC.canFire()) return false; // 카운트 소진 → 발사 불가 (docs/30-systems/launch-count)
     const now = performance.now();
     if (now < this.cooldownUntil) return false;
     this.cooldownUntil = now + LAUNCH.cooldownMs;
@@ -261,6 +288,8 @@ export class GameScene {
     this.spawnPlanet(tier, sx, sy, vx, vy, now - 1000, false);
     this.queue.shift();
     this.stats.shots++;
+    this.modeC.consume(); // 카운트 -1 (docs/30-systems/launch-count)
+    this.info.setCount(this.modeC.count);
     sound.play('launch', { pitch: 0.85 + Math.min(1, Math.hypot(vx, vy) / LAUNCH.vMax) * 0.5 }); // 파워↑ → 피치↑
     return true;
   }
@@ -316,6 +345,92 @@ export class GameScene {
     });
   }
 
+  // Stage rack: planets placed at the stage's authored positions/tiers (docs/30-systems/stage-mode).
+  private buildStageRack(rack: { tier: number; x: number; y: number }[]) {
+    const born = performance.now() - 1000;
+    for (const r of rack) this.spawnPlanet(r.tier, r.x, r.y, 0, 0, born, true);
+  }
+
+  // Start a fresh session of the current mode: clear the board, reset score/combo/count, build the
+  // mode's rack + queue, and configure the HUD (docs/20-core-loop/game-modes).
+  private startSession() {
+    for (const p of [...this.planets]) this.removePlanet(p);
+    this.unlockedTier = PROGRESSION.unlockStart;
+    this.paused = false;
+    this.ended = false;
+    this.unlockModal.hide();
+    this.score.reset();
+    this.combo.reset();
+    this.maxCombo = 0;
+    this.modeC.startSession();
+    this.sessionPrevBest = this.meta.bestScore; // snapshot before this run → NEW RECORD compare at end
+    this.queue.reset(this.modeC.isStage ? this.modeC.stageDef.queue : null);
+    if (this.modeC.isStage) this.buildStageRack(this.modeC.stageDef.rack);
+    else this.buildInitialRack();
+    this.info.setMode(this.modeC.mode, this.modeC.targetTier);
+    this.info.setCount(this.modeC.count);
+    this.info.setNext(this.queue.next());
+    this.acc = 0;
+  }
+
+  // Open the Infinite charge popup (no-op in Stage / when the session has ended).
+  private openCharge() {
+    if (this.modeC.isStage || this.ended) return;
+    this.charge.open();
+  }
+
+  // Spend coins to add launch count (docs/30-systems/planet-charge). Returns false if unaffordable.
+  private buyCharge(n: number): boolean {
+    const c = MODES.infinite.charge;
+    const cost = (n / c.stepPlanets) * c.coinPer10;
+    if (!this.meta.spendCoins(cost)) return false;
+    this.modeC.addCount(n);
+    this.info.setCount(this.modeC.count);
+    return true;
+  }
+
+  // Black hole + black hole (Infinite only): consume both for +blackHoleBonusCount count, no spawn
+  // (ADR docs/30-systems/decisions/2026-06-28-blackhole-infinite-count). Other modes: no merge.
+  private onTerminalMerge(pa: Planet, pb: Planet): boolean {
+    if (this.modeC.mode !== 'Infinite') return false;
+    const x = (pa.body.position.x + pb.body.position.x) / 2;
+    const y = (pa.body.position.y + pb.body.position.y) / 2;
+    this.removePlanet(pa);
+    this.removePlanet(pb);
+    this.modeC.addCount(MODES.infinite.blackHoleBonusCount);
+    this.info.setCount(this.modeC.count);
+    const d = tierData(MAX_TIER);
+    this.effects.mergeBurst(x, y, d.colors[0], d.radius);
+    sound.play('merge', { pitch: 0.55 });
+    return true;
+  }
+
+  // End-of-session check (docs/30-systems/launch-count): count exhausted AND the board has settled.
+  private checkSessionEnd() {
+    if (this.ended || this.paused) return;
+    if (this.modeC.count > 0) return;
+    if (this.planets.some((p) => Math.hypot(p.body.velocity.x, p.body.velocity.y) > 0.6)) return;
+    if (this.modeC.isStage) this.endStageFail();
+    else this.endInfinite();
+  }
+
+  private endInfinite() {
+    this.ended = true;
+    const finalScore = this.score.score;
+    this.result.show(finalScore, this.maxCombo, finalScore > this.sessionPrevBest);
+  }
+
+  private endStageClear() {
+    this.ended = true;
+    this.meta.addCoins(MODES.stage.clearReward); // +300 코인 (docs/30-systems/stage-mode)
+    this.stageClear.open();
+  }
+
+  private endStageFail() {
+    this.ended = true;
+    this.stageFail.open();
+  }
+
   // Absolute play-area containment (docs/30-systems/play-area-boundary). Matter has no continuous
   // collision detection, so a fast ball (strong launch / hard collision) can tunnel through the
   // thin walls and escape the playground. We enforce the rectangular boundary ANALYTICALLY every
@@ -357,6 +472,10 @@ export class GameScene {
     const nowMs = performance.now();
     this.title.update(nowMs);
     this.metaUI.update(nowMs); // meta popups (transition + wheel spin + attendance countdown) run on Title too
+    this.charge.update(nowMs); // 모드 팝업 전환·행성 회전(항상 — 종료 상태에서도)
+    this.result.update(nowMs);
+    this.stageClear.update(nowMs);
+    this.stageFail.update(nowMs);
     this.updateTransition(nowMs);
     this.unlockModal.update();
     if (this.scene === 'Loading') {
@@ -365,7 +484,7 @@ export class GameScene {
       if (!this.trans && nowMs - this.loadT0 >= LOAD_MIN_MS) this.setScene('Title');
       return;
     }
-    if (this.scene !== 'PoolInGame' || this.paused) return;
+    if (this.scene !== 'PoolInGame' || this.paused || this.ended) return;
 
     this.acc += this.app.ticker.deltaMS;
     let steps = 0;
@@ -377,6 +496,7 @@ export class GameScene {
       steps++;
     }
     if (this.acc > STEP_MS * 5) this.acc = 0;
+    this.checkSessionEnd(); // 카운트 소진 + 정지 → 결과/클리어/실패 (docs/30-systems/launch-count)
 
     for (const p of this.planets) {
       p.sprite.x = p.body.position.x;
@@ -396,6 +516,7 @@ export class GameScene {
     this.launcher.update();
     this.board.update(nowMs);
     this.hud.update(); // score odometer roll
+    this.info.update(nowMs); // 좌하단 위젯/충전 버튼·목표 행성 회전
     this.combo.update(nowMs); // merge chain counter (window expiry + odometer + fade)
     this.effects.update(nowMs); // bursts + floating popups
   }
@@ -427,7 +548,7 @@ export class GameScene {
         const s = Math.min(this.app.screen.width / DESIGN.w, this.app.screen.height / DESIGN.h);
         return { w: DESIGN.w * s, h: DESIGN.h * s }; // 전경(9:16) 화면 크기
       },
-      startGame: () => this.setScene('PoolInGame'),
+      startGame: (mode?: GameMode) => { if (mode) this.modeC.setMode(mode); this.setScene('PoolInGame'); },
       showTitle: () => this.setScene('Title'),
       skipLoad: () => { if (this.scene === 'Loading' && !this.trans) this.setScene('Title'); }, // 테스트용 로딩 floor 건너뛰기
       loadingActive: () => this.scene === 'Loading',
@@ -440,6 +561,18 @@ export class GameScene {
       },
       stats: () => ({ ...this.stats }),
       score: () => this.score.score,
+      // game modes (docs/20-core-loop/game-modes)
+      mode: () => this.modeC.mode,
+      count: () => this.modeC.count,
+      setCount: (n: number) => { this.modeC.count = n; this.info.setCount(n); },
+      targetTier: () => this.modeC.targetTier,
+      nextTier: () => this.queue.next(),
+      maxCombo: () => this.maxCombo,
+      bestScore: () => this.meta.bestScore,
+      chargeBuy: (n: number) => this.buyCharge(n),
+      resultShown: () => this.result.isOpen,
+      stageCleared: () => this.stageClear.isOpen,
+      stageFailed: () => this.stageFail.isOpen,
       comboValue: () => this.combo.value,
       comboBonusAwarded: () => this.lastComboBonus,
       planetCount: () => this.planets.length,

@@ -183,6 +183,11 @@ export const QUEUE_SIZE = balance.queue.size;
 export const PROGRESSION = balance.progression; // { unlockStart, queueBelow, queueCap }
 export const STEP_MS = 1000 / balance.engine.fixedFps;
 
+// ── Game modes (Infinite / Stage): count + charge + black-hole bonus + stage levels ─────────
+// Rules: docs/20-core-loop/game-modes · docs/30-systems/{launch-count,planet-charge,stage-mode}.
+export const MODES = balance.modes;
+export const RESULT = balance.juice.result; // Infinite result count-up tween (countUpMs)
+
 // ── Meta layer (Title lobby): coin economy + daily missions + attendance + lucky wheel ───────
 // Rules: docs/30-systems/{meta-economy,daily-missions,attendance,lucky-wheel,shop}. Numbers SSoT
 // = balance.json (mirrored in docs/40-balancing/meta-economy).

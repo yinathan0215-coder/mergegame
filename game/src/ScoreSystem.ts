@@ -8,6 +8,12 @@ export class ScoreSystem {
 
   constructor(private onChange: (score: number) => void) {}
 
+  // Reset to 0 at the start of a fresh session (docs/20-core-loop/game-modes).
+  reset() {
+    this.score = 0;
+    this.onChange(this.score);
+  }
+
   // +wallPoint when a planet hits a boundary wall (inner line / launcher circle).
   onWallHit() {
     this.score += SCORING.wallPoint;

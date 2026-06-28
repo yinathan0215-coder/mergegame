@@ -8,6 +8,7 @@ import { attachButtonFeedback } from './ui/button';
 import { coinSprite } from './ui/coin';
 import { sound } from './SoundManager';
 import type { PopupKind } from './MetaUI';
+import type { GameMode } from './modes/ModeController';
 
 // Title이 GameScene으로부터 받는 진행 상태(현재/최고 점수 + 최대 머지 등급). 점수는 영속 레코드(docs/30-systems/meta-economy).
 export interface TitleProgress {
@@ -51,7 +52,8 @@ export class TitleScreen {
   private orbits: Orbit[] = [];
   private sun!: Container;
   private toggleKnob = new Graphics();
-  private toggleGalaxy = true;
+  private gameMode: GameMode = 'Infinite'; // 하단 토글이 고르는 진입 모드 (docs/20-core-loop/game-modes)
+  private playLabel!: Text; // Play 버튼 라벨(모드별)
   private knobTargetX = -48; // 토글 하이라이트 슬라이드 목표 x
   private currentIcon?: Container; // 현재 점수 옆 최대 머지 행성 아이콘
   private currentScore!: Text;
@@ -63,9 +65,10 @@ export class TitleScreen {
   private bestRowY = 0;
 
   constructor(
-    private onPlay: () => void,
+    private onPlay: (mode: GameMode) => void,
     private getProgress: () => TitleProgress = () => ({ current: 0, best: 0, maxTier: 1 }),
-    private meta?: TitleMeta
+    private meta?: TitleMeta,
+    private getStageNo: () => number = () => 1
   ) {
     this.container.eventMode = 'static';
     this.container.addChild(this.orbitLayer, this.uiLayer); // galaxy는 GameScene이 cover 배경 레이어에 둔다
@@ -133,7 +136,8 @@ export class TitleScreen {
     this.sideButton(DESIGN.w - 58, 374, ASSETS.ui.checkIn, '출석 체크', () => this.meta?.open('attendance'));
     this.sideButton(DESIGN.w - 58, 480, ASSETS.ui.luckyWheel, '행운의 돌림판', () => this.meta?.open('wheel'));
 
-    this.themeToggle(cx, 632);
+    this.modeToggle(cx, 632);
+    this.updatePlayLabel();
   }
 
   // 최고 점수 + 게임 시작 버튼을 감싸는 검은 반투명 사각 박스 (docs §2-2)
@@ -216,7 +220,7 @@ export class TitleScreen {
 
   private playButton(cx: number, cy: number) {
     const { w, h } = ASSET_SIZES.playButton;
-    const c = this.buttonContainer(cx, cy, w, h, this.onPlay);
+    const c = this.buttonContainer(cx, cy, w, h, () => this.onPlay(this.gameMode));
     this.addNineSliceBody(c, ASSETS.ui.playButton, w, h);
     const tri = new Graphics();
     tri.beginFill(0xffffff);
@@ -227,11 +231,16 @@ export class TitleScreen {
     tri.endFill();
     tri.y = -18;
     c.addChild(tri);
-    const play = makeText('게임 시작', 22, 0xffffff, '800');
-    play.anchor.set(0.5);
-    play.y = 14;
-    c.addChild(play);
+    this.playLabel = makeText('Game Start', 22, 0xffffff, '800');
+    this.playLabel.anchor.set(0.5);
+    this.playLabel.y = 14;
+    c.addChild(this.playLabel);
     this.uiLayer.addChild(c);
+  }
+
+  // Play 라벨 = 선택 모드 (docs/20-core-loop/game-modes): Infinite="Game Start", Stage="Stage N".
+  private updatePlayLabel() {
+    this.playLabel.text = this.gameMode === 'Infinite' ? 'Game Start' : `Stage ${this.getStageNo()}`;
   }
 
   private addNineSliceBody(c: Container, asset: string, w: number, h: number) {
@@ -331,11 +340,13 @@ export class TitleScreen {
     });
   }
 
-  private themeToggle(cx: number, cy: number) {
+  // 하단 모드 토글 — Infinite | Stage (docs/50-art-ux/title-screen §2-4). 선택 모드는 Play로 진입.
+  private modeToggle(cx: number, cy: number) {
     const c = this.buttonContainer(cx, cy, 204, 42, () => {
-      this.toggleGalaxy = !this.toggleGalaxy;
-      this.knobTargetX = this.toggleGalaxy ? -48 : 48; // 슬라이드 목표 (기능 없음, 시각 전환만)
-      sound.play('toggle'); // Galaxy/Fantasy 전환 효과음 (docs/50-art-ux/sound-design)
+      this.gameMode = this.gameMode === 'Infinite' ? 'Stage' : 'Infinite';
+      this.knobTargetX = this.gameMode === 'Infinite' ? -48 : 48; // 하이라이트 슬라이드 목표
+      this.updatePlayLabel();
+      sound.play('toggle'); // 모드 전환 효과음 (docs/50-art-ux/sound-design)
     });
     const bg = new Graphics();
     bg.beginFill(0x10182e, 0.92);
@@ -349,7 +360,7 @@ export class TitleScreen {
     this.toggleKnob.endFill();
     this.toggleKnob.x = -48;
     c.addChild(bg, this.toggleKnob);
-    for (const [label, x] of [['Galaxy', -51], ['Fantasy', 51]] as const) {
+    for (const [label, x] of [['Infinite', -51], ['Stage', 51]] as const) {
       const t = makeText(label, 15, 0xffffff, '800');
       t.anchor.set(0.5);
       t.x = x;

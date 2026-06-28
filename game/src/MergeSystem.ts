@@ -8,6 +8,10 @@ export interface MergeHost {
   removePlanet(p: Planet): void;
   spawnPlanet(tier: number, x: number, y: number, vx: number, vy: number, now: number): Planet;
   unlockedTier(): number; // highest tier merges may create (docs/30-systems/tier-unlock)
+  // Two MAX_TIER planets (black holes) collide. Infinite mode consumes both for a count bonus
+  // (docs/30-systems/launch-count · ADR 2026-06-28-blackhole-infinite-count); other modes return
+  // false (no merge — black hole is terminal). Returns true if the host consumed the pair.
+  terminalMerge(pa: Planet, pb: Planet): boolean;
 }
 
 // Collision-driven merge. Pairs collected during the physics step are processed after it,
@@ -30,9 +34,16 @@ export class MergeSystem {
       if (!pa || !pb || pa === pb) continue;
       if (pa.merging || pb.merging) continue;
       if (pa.tier !== pb.tier) continue;
-      if (pa.tier >= MAX_TIER) continue; // 태양 terminal → normal collision only
-      if (pa.tier > this.host.unlockedTier()) continue; // locked tier: not mergeable until unlocked
       if (now - pa.bornAt < PHYSICS.remergeDelayMs || now - pb.bornAt < PHYSICS.remergeDelayMs) continue;
+      if (pa.tier >= MAX_TIER) {
+        // black hole + black hole: Infinite consumes both for a count bonus; else terminal (no merge)
+        if (this.host.terminalMerge(pa, pb)) {
+          pa.merging = true;
+          pb.merging = true;
+        }
+        continue;
+      }
+      if (pa.tier > this.host.unlockedTier()) continue; // locked tier: not mergeable until unlocked
       pa.merging = true;
       pb.merging = true;
       this.doMerge(pa, pb, now);
