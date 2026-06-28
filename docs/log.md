@@ -12,6 +12,15 @@ Append-only. `## [YYYY-MM-DD] <auto|manual> | <change>` + `why:` line.
 
 ---
 
+## [2026-06-28] auto | docs↔code 정합 재감사 (32건) — docs-code-sync 스킬
+why: 사용자 지시("MVP·pool 관련 내용이 현재 정본하고 안 맞는 것 같으니 스킬 돌려 체크"). [[docs-code-sync]]
+스킬로 9도메인 2-pass(분류→반증검증, 43에이전트) 재감사 → 확정 32건 보고서
+[[70-verification/audits/2026-06-28-2314-docs-code-sync-audit]] 신설, [[70-verification/index]] 감사
+로그 링크. 핵심: **MVP·범위 펜스가 stale**(core-loop MVP 표·agent-runbook·verification/index가 사운드·
+저장·세션종료·게임모드를 "비범위"로 두나 전부 구현됨), 정체성 페이지가 공개명 **GALAXY PINBALL** 미표기
+(내부명 Planet Pool Merge만), Title 토글 "Galaxy/Fantasy"→실제 Infinite|Stage, 아키텍처 모듈맵 8개 누락,
+"이어하기" 문서 과대. 점수·콤보 도메인 0건(직전 reconcile 유지). **수정은 별도 단계**(이번 턴 정본 미수정).
+
 ## [2026-06-28] manual | Stage 밸런싱 기조 정본화 — 밸류(2^단계) 기반 스테이지 설계 기준
 why: 사용자 지시(밸런싱 기준을 문서로 먼저). 신규 정본 [[40-balancing/stage-balance]]: 행성 **밸류=2^단계**
 (소행성2…지구32…블랙홀2048, 인게임 점수와 별개·합성은 밸류 보존), **렉/큐/최대/목표 밸류**로 균형 —

@@ -38,6 +38,9 @@ sources:
   불리언 3/5)·Event(카탈로그 부재 3/5). P1: containPlanets 분리, 모달 일시정지 상태화.
 - [[70-verification/audits/2026-06-28-2050-docs-code-sync-audit]] — 코드↔문서 정합 감사. 확정 불일치
   53건(orphan-doc 13·doc-ne-code 33·undocumented 6·misclassified 1) + P0~P2 수정 워크리스트.
+- [[70-verification/audits/2026-06-28-2314-docs-code-sync-audit]] — 코드↔문서 정합 재감사(게임모드
+  레이어 구현 후). 확정 32건(doc-ne-code 21·undocumented 8·misclassified 2·orphan-doc 1). 핵심:
+  MVP·범위 펜스 stale(사운드·저장·세션종료·모드 구현됨), 공개명 GALAXY PINBALL 미표기, 모듈맵 8개 누락.
 
 ## 관련
 - [[../20-core-loop/index]] — KPI가 검증하는 코어 루프.
