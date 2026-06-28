@@ -17,6 +17,13 @@ const R = 150; // wheel radius (DESIGN space)
 
 type Phase = 'idle' | 'spinning' | 'decel';
 
+// GameScene wires these so a payout pours coins into the shared coin pill and the pill rides above the dim.
+export interface WheelCoinHooks {
+  raise(): void;
+  restore(): void;
+  pour(count: number, fromX: number, fromY: number): void;
+}
+
 export class LuckyWheelPopup extends Popup {
   private static readonly BW = 210;
   private static readonly BH = 60;
@@ -29,11 +36,15 @@ export class LuckyWheelPopup extends Popup {
   private decelTo = 0;
   private resultIndex = -1;
   private winText!: Text;
+  private cx = 0; // wheel centre (DESIGN space) — pour origin
+  private cy = 0;
+  coinHooks?: WheelCoinHooks;
 
   constructor(private store: MetaStore) {
     super({ title: '행운의 돌림판', hasBg: false });
     const cx = DESIGN.w / 2;
     const cy = this.panel.y + 250;
+    this.cx = cx; this.cy = cy;
     this.wheel.x = cx;
     this.wheel.y = cy;
     this.drawWheel();
@@ -128,6 +139,17 @@ export class LuckyWheelPopup extends Popup {
     this.renderButton();
   }
 
+  open() {
+    super.open();
+    this.coinHooks?.raise(); // lift the coin pill above the dim so the spend/payout is visible (docs/30-systems/lucky-wheel)
+  }
+
+  close() {
+    const wasOpen = this.isOpen;
+    super.close();
+    if (wasOpen) this.coinHooks?.restore();
+  }
+
   private onButton() {
     if (this.phase === 'idle') this.startSpin();
     else if (this.phase === 'spinning') this.stopOn(Math.floor(Math.random() * N)); // uniform random result, fixed now
@@ -177,6 +199,8 @@ export class LuckyWheelPopup extends Popup {
         this._lastWin = win;
         this.store.addCoins(win);
         this.winText.text = `+${win}`;
+        const count = Math.max(1, Math.ceil(win / WHEEL.coinsPerPourSprite));
+        this.coinHooks?.pour(count, this.cx, this.cy); // 코인 쏟아짐 → 코인 표시로 (docs/30-systems/lucky-wheel 보상 연출)
         this.renderButton();
       }
     }

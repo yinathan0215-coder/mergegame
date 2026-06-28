@@ -194,5 +194,5 @@ export const RESULT = balance.juice.result; // Infinite result count-up tween (c
 export const ECONOMY = balance.economy; // { startCoins }
 export const MISSIONS = balance.dailyMissions; // { perMission, milestones, list[] }
 export const ATTENDANCE = balance.attendance; // { rewards[7] }
-export const WHEEL = balance.wheel; // { segments[8], cost, decelMs, spinSpeed }
+export const WHEEL = balance.wheel; // { segments[8], cost, coinsPerPourSprite, decelMs, spinSpeed }
 export const POPUP = balance.juice.popup; // { enterMs, dimAlpha, startScale } — shared open transition
