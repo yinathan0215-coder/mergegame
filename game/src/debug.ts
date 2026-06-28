@@ -2,6 +2,7 @@ import type { GameScene } from './GameScene';
 import { DESIGN, PLAY, LINE_Y, LAUNCHER, GAUGE, LAUNCH } from './data/config';
 import { tierData, MAX_TIER } from './data/planets';
 import type { GameMode } from './modes/ModeController';
+import { eventLog } from './EventLog';
 
 // Verification hooks (Playwright). Not part of the player-facing game.
 export function exposeDebug(g: GameScene): void {
@@ -9,6 +10,7 @@ export function exposeDebug(g: GameScene): void {
   (window as any).__game = {
     scene: () => a.scene,
     transitioning: () => a.trans !== null, // true while the scene-fade overlay still captures input
+    events: () => eventLog.recent(), // recent-event ring buffer (docs/30-systems/event-catalog §디버그)
 
     fgRect: () => {
       const s = Math.min(a.app.screen.width / DESIGN.w, a.app.screen.height / DESIGN.h);

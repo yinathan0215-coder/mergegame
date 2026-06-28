@@ -27,6 +27,7 @@ import { LoadingScreen } from './LoadingScreen';
 import { CoinPill } from './ui/CoinPill';
 import { ASSETS } from './assets';
 import { exposeDebug } from './debug';
+import { eventLog } from './EventLog';
 import { containPlanets } from './Containment';
 import type { Planet } from './Planet';
 
@@ -139,9 +140,9 @@ export class GameScene {
     this.info = new GameInfoPanel(this.uiLayer, () => this.openCharge()); // 좌하단 Count/Next + 모드별 위젯
     this.gestureHint = new FirstGestureHint(this.uiLayer); // 첫 발사 전 손가락 코치(발사대 위)
     this.uiLayer.setChildIndex(this.gestureHint.container, 0); // 코치 딤은 보드만 어둡게 — HUD/Count 수치는 그 위에 또렷이(docs/50-art-ux/input-ux)
-    this.score = new ScoreSystem((s) => { this.hud.setScore(s); if (!this.modeC.isStage) this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드(Stage는 집계 안 함)
+    this.score = new ScoreSystem((s) => { eventLog.emit('SCORE_CHANGED', { score: s }); this.hud.setScore(s); if (!this.modeC.isStage) this.meta.setScore(s); }); // 점수 → HUD + 영속 레코드(Stage는 집계 안 함)
     this.queue = new QueueSystem(
-      (slots) => this.info.setNext(slots[1] ?? slots[0]), // Next 미리보기 갱신(좌하단 HUD)
+      (slots) => { eventLog.emit('QUEUE_CHANGED', {}); this.info.setNext(slots[1] ?? slots[0]); }, // Next 미리보기 갱신(좌하단 HUD)
       () => Math.max(1, Math.min(this.unlockedTier - PROGRESSION.queueBelow, PROGRESSION.queueCap))
     );
     this.merge = new MergeSystem(
@@ -153,6 +154,7 @@ export class GameScene {
         terminalMerge: (pa, pb) => this.onTerminalMerge(pa, pb), // 블랙홀끼리 합성 → Infinite 카운트 +20
       },
       (tier, x, y, planet) => {
+        eventLog.emit('ITEM_MERGED', { tier });
         this.stats.merges++;
         this.stats.maxTier = Math.max(this.stats.maxTier, tier);
         if (tier >= MAX_TIER) this.stats.sunReached = true;
@@ -165,6 +167,7 @@ export class GameScene {
           this.effects.scorePopup(pts, x, y); // +N at the merge location
           const comboBonus = this.combo.onMerge(performance.now()); // chain counter; returns milestone bonus
           if (comboBonus > 0) {
+            eventLog.emit('COMBO_MILESTONE', { bonus: comboBonus });
             this.score.addBonus(comboBonus); // combo 5/10/15… milestone → large bonus score
             this.effects.comboBonus(comboBonus, this.combo.value); // "+N(combo M)" at screen centre
             this.lastComboBonus = comboBonus;
@@ -201,12 +204,14 @@ export class GameScene {
       if (aP && bP) {
         this.merge.queuePair(a, b); // 머지 큐잉은 impact와 무관(동급 접촉 시)
         if (impact >= SCORING.minImpact) {
+          eventLog.emit('COLLISION', { impact });
           if (!this.modeC.isStage) this.score.onBallHit(); // 행성–행성 충돌 +3 (Stage 미집계)
           this.effects.hitBurst(cx, cy, bx, by);
           sound.play('ballHit'); // 다발 충돌은 throttle로 솎임 (docs/50-art-ux/sound-design)
         }
       } else if (aP || bP) {
         if (impact >= SCORING.minImpact) {
+          eventLog.emit('COLLISION', { impact });
           if (!this.modeC.isStage) this.score.onWallHit(); // 벽(inner line)·발사대 원 충돌 +1 (Stage 미집계)
           this.effects.hitBurst(cx, cy, bx, by);
           sound.play('wall');
@@ -303,6 +308,7 @@ export class GameScene {
 
   // OK on the unlock modal: raise the unlock cap to the new tier and resume.
   private onUnlockOk() {
+    eventLog.emit('UNLOCK_OK', {});
     this.unlockedTier = Math.max(this.unlockedTier, this.pendingUnlockTier);
     this.paused = false;
     this.unlockModal.hide();
@@ -350,6 +356,7 @@ export class GameScene {
     this.info.setCount(this.modeC.count);
     this.gestureDone = true; // 첫 발사 → 손가락 코치 종료(docs/50-art-ux/input-ux)
     sound.play('launch', { pitch: 0.85 + Math.min(1, Math.hypot(vx, vy) / LAUNCH.vMax) * 0.5 }); // 파워↑ → 피치↑
+    eventLog.emit('FIRE', { tier });
     return true;
   }
 
@@ -490,6 +497,7 @@ export class GameScene {
     const d = tierData(MAX_TIER);
     this.effects.mergeBurst(x, y, d.colors[0], d.radius);
     sound.play('merge', { pitch: 0.55 });
+    eventLog.emit('TERMINAL_MERGE', {});
     return true;
   }
 

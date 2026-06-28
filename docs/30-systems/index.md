@@ -34,6 +34,7 @@ sources:
 - [[30-systems/play-area-boundary]] — 플레이 영역 ↔ 발사대 **일방향 경계**(발사는 위로 통과, 진입 후 복귀 불가).
 - [[30-systems/collision-shape]] — 행성 충돌 형태: 반지름 **원형 디스크**(이미지가 더 커도 충돌은 원).
 - [[30-systems/tier-unlock]] — 단계 **해금**: 새 단계 첫 합성 시 딤드 모달(회전 행성+OK), OK해야 다음 단계 해금.
+- [[30-systems/event-catalog]] — **이벤트 카탈로그**: 시스템 간 통신(충돌·합성·점수·콤보·큐·발사·해금·메타)의 이름·payload·구독자 + 디버그 이벤트 로그.
 
 ### 게임 모드 ([[20-core-loop/game-modes]])
 - [[30-systems/launch-count]] — **남은 카운트**(발사 예산): 모드별 시작값·소비·획득·종료 판정.
