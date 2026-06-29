@@ -3,7 +3,7 @@ id: method-checklists
 note_type: methodology
 status: active
 domain: methodology
-updated: 2026-06-27
+updated: 2026-06-29
 tags: [methodology, checklist, toc]
 sources:
   - "raw: ai_agent_friendly_prototype_methodology.md §10,§11,§12"
@@ -11,7 +11,7 @@ sources:
 
 # 권장 목차 · 최종 점검 체크리스트 · 요약
 
-> 적용: [[../README|README]] / [[../index|MOC]] / 제출 전 점검. 출처: [[index|방법론 인덱스]].
+> 적용: [[../README|README]] / [[../index|MOC]] / 릴리스 전 점검. 출처: [[index|방법론 인덱스]].
 
 ## 기획문서 권장 목차 (§10)
 
@@ -33,7 +33,7 @@ sources:
 > [[index|방법론 인덱스]]의 "모듈 ↔ 적용 GDD 섹션" 표 참조. (특히 03·04·05·07은
 > 30-systems 하위 페이지로, 11 Scope Fence는 별도 페이지로 분화 권장.)
 
-## 최종 점검 체크리스트 (§11) — 제출 전 확인
+## 최종 점검 체크리스트 (§11) — 릴리스 전 확인
 
 ### 구조 기준
 - [ ] Core Loop가 3~5단계로 명확히 정의됨

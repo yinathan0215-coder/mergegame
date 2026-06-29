@@ -3,7 +3,7 @@ id: verification-checklist
 note_type: checklist
 status: design
 domain: verification
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [checklist, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -68,7 +68,7 @@ Title 로비·해금 모달·콤보·메타 경제 검증 항목([[../20-core-lo
 
 ## 평가자 관점 매핑
 
-각 항목은 과제 요구(①~⑤)와 산출물(`game/`)을 잇는다. Phase별 완료 판정은
+각 항목은 프로젝트 문서 범위(①~⑤)와 산출물(`game/`)을 잇는다. Phase별 완료 판정은
 [[../60-implementation/task-breakdown]]과 동기화한다. 부정 항목(진행 트랙·실루엣·포켓·Shake·
 Change Ball 없음)은 범위 판단의 검증선이며, 해당 범위 결정은 [[../50-art-ux/index|아트·UX]]와
 [[../10-concept/index|컨셉]]에 둔다.

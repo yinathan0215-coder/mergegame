@@ -3,7 +3,7 @@ id: daily-missions
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [meta, mission, daily, reward, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 일일 미션
 
-> 과제 요구 ③(시스템). Title 로비 `일일 미션` 버튼으로 여는 창. 코인은 [[meta-economy]],
+> 문서 범위 ③(시스템). Title 로비 `일일 미션` 버튼으로 여는 창. 코인은 [[meta-economy]],
 > 팝업 틀은 [[../50-art-ux/popup-system]], 수치 SSoT는 [[../40-balancing/meta-economy]].
 
 ## Summary

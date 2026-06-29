@@ -12,7 +12,7 @@ sources:
 
 # 게임 모드 수치 (카운트·충전·보너스·보상)
 
-> 과제 요구 ④-a. [[../20-core-loop/game-modes]] · [[../30-systems/launch-count]] ·
+> 문서 범위 ④-a. [[../20-core-loop/game-modes]] · [[../30-systems/launch-count]] ·
 > [[../30-systems/planet-charge]] · [[../30-systems/stage-mode]]가 참조하는 모든 구체 수치.
 > **코드 SSoT = `game/src/data/balance.json`**(`modes`, `juice.result`).
 

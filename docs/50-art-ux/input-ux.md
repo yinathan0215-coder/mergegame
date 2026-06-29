@@ -3,7 +3,7 @@ id: art-ux-input
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [ux, input, aiming, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 입력 & UX — press-drag-release 조준 (§8.2)
 
-> 과제 요구 ④-b — UX 판단(조준선·플레이 영역·직관성)을 못 박는다.
+> 문서 범위 ④-b — UX 판단(조준선·플레이 영역·직관성)을 못 박는다.
 >
 > **준수 기준(방법론):** [[../90-methodology/layered-rendering]] (입력 우선순위·가독성).
 

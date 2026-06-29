@@ -11,7 +11,7 @@ sources:
 
 # 결과창 — Infinite Result · Stage Clear · Stage Fail
 
-> 과제 요구 ④-b(UX 판단). 게임 모드([[../20-core-loop/game-modes]])가 끝날 때 뜨는 세 결과창의
+> 문서 범위 ④-b(UX 판단). 게임 모드([[../20-core-loop/game-modes]])가 끝날 때 뜨는 세 결과창의
 > 연출을 정본화한다. 모두 **공통 팝업 틀**([[popup-system]])의 오픈 전환을 쓴다.
 
 ## Summary

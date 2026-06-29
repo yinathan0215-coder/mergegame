@@ -3,7 +3,7 @@ id: methodology-index
 note_type: methodology
 status: active
 domain: methodology
-updated: 2026-06-27
+updated: 2026-06-29
 tags: [methodology, appendix]
 sources:
   - "raw: (imported) ai_agent_friendly_prototype_methodology.md"
@@ -47,7 +47,7 @@ ECS-lite + State Machine + Game Loop/Fixed Step + Data-driven Balance
 | [[layered-rendering]] | 화면 레이어·입력 우선순위 | [[../50-art-ux/index\|50-art-ux]] |
 | [[acceptance-test]] | 완료 기준·KPI·검증 시나리오 | [[../70-verification/index\|70-verification]] |
 | [[agent-friendly-spec]] | 스펙 작성 원칙(모호성 제거·Scope Fence·Must/Should/May) | 전 섹션 |
-| [[checklists]] | 권장 목차 + 최종 점검 체크리스트 | [[../README\|README]], 제출 전 점검 |
+| [[checklists]] | 권장 목차 + 최종 점검 체크리스트 | [[../README\|README]], 릴리스 전 점검 |
 
 ## 적용 방식
 

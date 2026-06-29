@@ -3,7 +3,7 @@ id: index
 note_type: moc
 status: active
 domain: meta
-updated: 2026-06-28
+updated: 2026-06-29
 ---
 
 # mergegame 기획문서 — 목차 (MOC)
@@ -12,9 +12,9 @@ updated: 2026-06-28
 글로벌 캐주얼 게임의 HTML5 프로토타입 기획문서이자, 게임 제작 과정에서 훅으로 갱신되는 **정본**.
 진입 안내는 [[README]].
 
-## 섹션 (과제 요구사항 정렬)
+## 섹션 (프로젝트 문서 구조)
 
-| # | 섹션 | 과제 요구 |
+| # | 섹션 | 문서 범위 |
 |---|---|---|
 | 00 | [[00-meta/index\|meta]] | 파이프라인·스키마·템플릿·input-log (운영) |
 | 10 | [[10-concept/index\|concept]] | ① 컨셉 & 핵심 재미 가설 |
@@ -25,7 +25,7 @@ updated: 2026-06-28
 | 60 | [[60-implementation/index\|implementation]] | ③ 구현 지시 (스택·구조·태스크) |
 | 70 | [[70-verification/index\|verification]] | ⑤ KPI / 체크리스트 |
 | 80 | [[80-research/index\|research]] | (근거) 레퍼런스·시장 |
-| 90 | [[90-methodology/index\|methodology]] | 부록 A · 구조/방법론 기준 (제출 부록) |
+| 90 | [[90-methodology/index\|methodology]] | 부록 A · 구조/방법론 기준 (프로젝트 부록) |
 
 산출물(게임): `game/` (HTML5 프로토타입, 스택 미정 → 예약).
 

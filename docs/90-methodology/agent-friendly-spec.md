@@ -3,7 +3,7 @@ id: method-agent-friendly-spec
 note_type: methodology
 status: active
 domain: methodology
-updated: 2026-06-27
+updated: 2026-06-29
 tags: [methodology, spec, principles]
 sources:
   - "raw: ai_agent_friendly_prototype_methodology.md §9"
@@ -34,7 +34,7 @@ sources:
 ## 원칙 3 — Scope Fence를 둔다 (포함/제외 명시)
 기본 제외 예: 로그인·계정·서버 저장 / 결제·광고·IAP / 복잡한 메타 성장 / 온라인 랭킹 /
 고품질 아트 제작 / 사운드 에셋 필수 의존 / 다국어 / 장기 저장 / 튜토리얼 모든 예외 처리 /
-모바일 앱 패키징. (과제 목적상 일부는 포함으로 조정 가능.)
+모바일 앱 패키징. (프로토타입 목적상 일부는 포함으로 조정 가능.)
 
 ## 원칙 4 — Must / Should / May 구분
 | 키워드 | 의미 |

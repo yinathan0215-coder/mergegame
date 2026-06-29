@@ -3,7 +3,7 @@ id: art-ux-galaxy-background
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, background, galaxy, title, board, loop]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -11,7 +11,7 @@ sources:
 
 # Galaxy Background — 정적 캐주얼 우주 배경 & 루핑 반짝임
 
-> 과제 요구 ④-b — 보드와 Title이 공유하는 우주 배경의 책임 분리를 못 박는다. 보드 내부 레이어는
+> 문서 범위 ④-b — 보드와 Title이 공유하는 우주 배경의 책임 분리를 못 박는다. 보드 내부 레이어는
 > [[screen-structure]], Title 배경은 [[title-screen]]이 정본이다.
 
 ## 1. 책임 분리

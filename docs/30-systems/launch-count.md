@@ -3,7 +3,7 @@ id: systems-launch-count
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, count, game-mode, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -11,7 +11,7 @@ sources:
 
 # 남은 카운트 (발사 예산) — 모드 공통 자원
 
-> 과제 요구 ③ — 구현 지시의 입력. 두 게임 모드([[20-core-loop/game-modes]])가 공유하는
+> 문서 범위 ③ — 구현 지시의 입력. 두 게임 모드([[20-core-loop/game-modes]])가 공유하는
 > **발사 가능 횟수(카운트)** 자원과 그 소비·획득·종료 판정을 정본화한다.
 >
 > **준수 기준(방법론):** [[90-methodology/event-driven]] (발사·머지 이벤트 → 카운트 변동) ·

@@ -3,7 +3,7 @@ id: systems-planet-charge
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, charge, coin, infinite, popup, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -11,7 +11,7 @@ sources:
 
 # 행성 충전 — 코인으로 카운트 구매 (Infinite)
 
-> 과제 요구 ③. **Infinite 모드 한정**으로 코인을 써서 남은 카운트를 사는 충전 버튼과 팝업을
+> 문서 범위 ③. **Infinite 모드 한정**으로 코인을 써서 남은 카운트를 사는 충전 버튼과 팝업을
 > 정본화한다. 카운트 [[30-systems/launch-count]] · 코인 경제 [[30-systems/meta-economy]] ·
 > 공통 팝업 틀 [[50-art-ux/popup-system]].
 >

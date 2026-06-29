@@ -3,7 +3,7 @@ id: meta-conventions
 note_type: blueprint
 status: active
 domain: meta
-updated: 2026-06-27
+updated: 2026-06-29
 ---
 
 # Conventions
@@ -47,7 +47,7 @@ sources:                       # optional — what this page derives from
 
 ### Section structure — index(카탈로그) + 정밀 자식 페이지
 
-각 번호 섹션 폴더는 **`index.md`(note_type: `index`) = 카탈로그**(과제 요구 프레이밍 ·
+각 번호 섹션 폴더는 **`index.md`(note_type: `index`) = 카탈로그**(프로젝트 문서 프레이밍 ·
 방법론 바인딩 · 자식 페이지 링크 · SSoT 포인터 · status)이고, **상세 내용은 한 주제당
 하나의 자식 페이지**(note_type: `section`/`system`/`spec`/`checklist`)에 둔다. 한 `index.md`에
 모든 내용을 뭉쳐 쓰지 않는다(30-systems·60-implementation 패턴을 모든 섹션에 적용).

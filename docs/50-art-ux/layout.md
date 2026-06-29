@@ -3,7 +3,7 @@ id: art-ux-layout
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, ux, layout, hud, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 레이아웃 & HUD — 9:16 세로 보드
 
-> 과제 요구 ④-b — 에이전트가 추론하기 어려운 화면 구조/HUD/범위 판단을 못 박는다.
+> 문서 범위 ④-b — 에이전트가 추론하기 어려운 화면 구조/HUD/범위 판단을 못 박는다.
 >
 > **준수 기준(방법론):** [[../90-methodology/layered-rendering]] (레이어·가독성).
 >

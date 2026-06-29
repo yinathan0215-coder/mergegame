@@ -3,7 +3,7 @@ id: systems-initial-rack
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, merge, initial-state, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 시작 상태 — 중앙 초기 랙 (§5.1)
 
-> 과제 요구 ③ — 구현 지시의 입력(시작 상태 규칙).
+> 문서 범위 ③ — 구현 지시의 입력(시작 상태 규칙).
 >
 > **준수 기준(방법론):** [[90-methodology/data-driven]] (초기 배치 = 데이터 테이블).
 

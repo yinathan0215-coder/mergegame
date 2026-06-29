@@ -3,7 +3,7 @@ id: concept-statement
 note_type: section
 status: design
 domain: concept
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [concept, target, genre]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 컨셉 · 목적 · 타겟
 
-> 과제 요구 ① — *게임 컨셉*. 섹션 카탈로그: [[index]].
+> 문서 범위 ① — *게임 컨셉*. 섹션 카탈로그: [[index]].
 
 ## 목적
 

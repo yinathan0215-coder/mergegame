@@ -2,7 +2,7 @@
 name: docs-write
 description: >
   WRITE/update/reconcile/reflect the mergegame 기획문서(docs/) — the agent-executable GDD
-  for the HTML5 Merge prototype (Bagelcode assignment). Use whenever a decision is made or
+  for the HTML5 Merge game prototype. Use whenever a decision is made or
   an instruction changes/contradicts/adds to the docs, and to file turn-end design changes
   so the final GDD stays the living source of truth. This is the write half; to look up
   existing pages first use [[docs-find]]. Triggers on "문서 갱신", "기획 결정", "반영",

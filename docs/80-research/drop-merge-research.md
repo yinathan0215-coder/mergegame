@@ -3,7 +3,7 @@ id: research-drop-merge
 note_type: research
 status: design
 domain: research
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [research, benchmark, drop-merge, fruit-drop, suika]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -95,7 +95,7 @@ sources:
 
 - Matter.js는 **물리만** 담당, 렌더와 디커플. 표준 패턴: 매 프레임 `Engine.update()` 후 각 바디의
   `position/rotation`을 스프라이트(Pixi 등)에 복사.
-- 관측된 선택지(과제가 허용하는 pixi/three/Canvas와 정합):
+- 관측된 선택지(프로토타입 후보 스택과 정합되는 pixi/three/Canvas와 정합):
   1. **Matter.js 내장 Render → Canvas** — 가장 단순/빠름, 디버그풍 비주얼(moonfloof/TomboFry).
   2. **Pixi.js + Matter.js** — "게임다운" 비주얼에 1급, 디커플 복사 패턴(andrewn9/tsuika, 공식 RenderPixi).
   3. **Phaser 3 올인원** — 렌더+입력+씬+Matter 내장, 모바일 스케일 편의(sgbj/Coteh).
@@ -111,7 +111,7 @@ sources:
 - 가장 강한 모바일 증거(Coteh: 460×800 포트레이트·FIT·멀티터치·PWA)는 **1표 검증**에 그쳐 "미확정 단서".
 - **시사점(보고용):** 모바일 대응은 레퍼런스에 의존하지 말고 **GDD가 직접 명시**해야 함 — `touchstart/touchmove`
   전용 핸들러, `viewport`(device-width, user-scalable=no), 포트레이트 고정 + FIT/aspect 스케일 정책.
-  → 이건 다음 스펙 단계의 과제(여기선 결정하지 않음).
+  → 이건 다음 스펙 단계의 작업(여기선 결정하지 않음).
 
 ## 8. 밸런싱 레퍼런스 데이터 (원작 Suika, 참고용)
 

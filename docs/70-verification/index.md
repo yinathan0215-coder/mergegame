@@ -3,7 +3,7 @@ id: verification-index
 note_type: index
 status: design
 domain: verification
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [kpi, checklist, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 70 · 검증 기준 (KPI / 완료 체크리스트)
 
-> 과제 요구 ⑤ — *검증 기준: 프로토타입 완성 여부를 판단할 KPI 또는 체크리스트*.
+> 문서 범위 ⑤ — *검증 기준: 프로토타입 완성 여부를 판단할 KPI 또는 체크리스트*.
 >
 > **준수 기준(방법론):** [[../90-methodology/acceptance-test]] (DoD·검증 시나리오·KPI 수치).
 >

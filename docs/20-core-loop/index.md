@@ -3,7 +3,7 @@ id: core-loop-index
 note_type: index
 status: design
 domain: core-loop
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [core-loop, merge, launcher]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 20 · Core Loop & 플레이 흐름
 
-> 과제 요구 ② — *Core Loop 정의 및 플레이 흐름*. 프로토타입이 **플레이 가능**해야 하는
+> 문서 범위 ② — *Core Loop 정의 및 플레이 흐름*. 프로토타입이 **플레이 가능**해야 하는
 > 최소 단위가 여기서 정의된다.
 >
 > **준수 기준(방법론):** [[../90-methodology/state-machine]] (흐름·UX·입력/시간) · [[../90-methodology/acceptance-test]] (Core Loop 검증 시나리오).

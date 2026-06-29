@@ -3,7 +3,7 @@ id: meta-index
 note_type: index
 status: active
 domain: meta
-updated: 2026-06-27
+updated: 2026-06-29
 ---
 
 # 00-meta
@@ -14,7 +14,7 @@ the submitted document body.)
 
 ## Pages
 
-- [[knowledge-system-blueprint]] — what this vault is (assignment context + topology + rules)
+- [[knowledge-system-blueprint]] — what this vault is (project context + topology + rules)
 - [[conventions]] — frontmatter schema + agent-executability bar
 - [[input-log/README]] — verbatim instruction log (hook-written, append-only)
 

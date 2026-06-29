@@ -3,7 +3,7 @@ id: concept-planet-ladder
 note_type: section
 status: design
 domain: concept
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [concept, planet-ladder, ssot]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 행성 사다리 (정본 — 11단계 ORDER)
 
-> 과제 요구 ① — *컨셉(행성 등급 순서)*. 섹션 카탈로그: [[index]].
+> 문서 범위 ① — *컨셉(행성 등급 순서)*. 섹션 카탈로그: [[index]].
 
 > **이 목록이 행성 등급 순서의 SSoT다.** 다른 섹션은 단계 식별에 이 목록을 참조한다.
 > 단계별 **반지름·점수 수치**는 [[../40-balancing/planet-stats]]가 정본,

@@ -3,7 +3,7 @@ id: art-ux-art-direction
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, tone, planet-icon, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 아트 방향 — 전체 톤 & 행성 아이콘 규칙 (§9)
 
-> 과제 요구 ④-b — 에이전트가 추론하기 어려운 아트 방향을 못 박는다.
+> 문서 범위 ④-b — 에이전트가 추론하기 어려운 아트 방향을 못 박는다.
 >
 > **준수 기준(방법론):** [[../90-methodology/layered-rendering]] (가독성·식별성).
 

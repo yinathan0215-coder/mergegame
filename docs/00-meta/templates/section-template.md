@@ -3,14 +3,14 @@ id: TODO-slug
 note_type: section
 status: draft
 domain: TODO
-updated: 2026-06-27
+updated: 2026-06-29
 tags: []
 sources: []
 ---
 
 # {{Section title}}
 
-> Which assignment requirement this satisfies: **TODO**.
+> Which project scope this satisfies: **TODO**.
 
 ## Summary
 1–2 plain-language paragraphs. What this section decides.

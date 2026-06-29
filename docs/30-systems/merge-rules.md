@@ -3,7 +3,7 @@ id: systems-merge-rules
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, merge, physics, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 합성 규칙 — 동급 충돌 → 다음 등급 (§6)
 
-> 과제 요구 ③ — 구현 지시의 입력(핵심 합성 메카닉).
+> 문서 범위 ③ — 구현 지시의 입력(핵심 합성 메카닉).
 >
 > **준수 기준(방법론):** [[90-methodology/event-driven]] (충돌 이벤트 → 합성) ·
 > [[90-methodology/state-machine]] (merge lock / 재합성 지연 상태) ·

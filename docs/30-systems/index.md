@@ -3,7 +3,7 @@ id: systems-index
 note_type: index
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, merge, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -13,7 +13,7 @@ sources:
 # 30 · 시스템 & 메카닉
 
 `Planet Pool Merge`의 코어 루프를 구성하는 상세 시스템 카탈로그. 한 시스템 = 한 페이지.
-과제 요구 ③(구현 지시)의 입력이 된다.
+문서 범위 ③(구현 지시)의 입력이 된다.
 
 > **준수 기준(방법론):** [[90-methodology/ecs-lite]] (오브젝트 분해) · [[90-methodology/game-loop]]
 > (실행 순서/Fixed Step) · [[90-methodology/event-driven]] (충돌→합성→점수 통신) ·

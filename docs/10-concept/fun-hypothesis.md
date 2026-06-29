@@ -3,7 +3,7 @@ id: concept-fun-hypothesis
 note_type: section
 status: design
 domain: concept
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [concept, fun-hypothesis, verification]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 핵심 재미 가설 (검증 가능한 형태)
 
-> 과제 요구 ① — *핵심 재미 가설*. 섹션 카탈로그: [[index]].
+> 문서 범위 ① — *핵심 재미 가설*. 섹션 카탈로그: [[index]].
 
 프로토타입으로 참/거짓을 가릴 수 있는 4개 가설. 측정 신호는 [[../70-verification/index|검증 기준]]과 연결한다.
 

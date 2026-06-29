@@ -3,7 +3,7 @@ id: art-ux-sound-design
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, ux, sound, audio, sfx, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -11,7 +11,7 @@ sources:
 
 # 사운드 디자인 — 컨셉 & 효과음/UI 사운드 가이드
 
-> 과제 요구 ④-b(에이전트가 추론하기 어려운 영역). **아트 방향([[art-direction]])의 청각 짝**:
+> 문서 범위 ④-b(에이전트가 추론하기 어려운 영역). **아트 방향([[art-direction]])의 청각 짝**:
 > 어떤 사건에 어떤 소리가 나는지, 톤은 어떤지, **동시에 너무 많은 소리가 겹치지 않게** 하는 UX
 > 규칙을 못 박는다. 구현(사운드 매니저·합성)은 [[../60-implementation/sound-manager]], 수치 SSoT는
 > `game/src/data/balance.json`(`sound`)이다.

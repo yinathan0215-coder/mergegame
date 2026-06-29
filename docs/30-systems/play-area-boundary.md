@@ -3,7 +3,7 @@ id: systems-play-area-boundary
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, boundary, launcher, physics, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 충돌 경계 & 발사 일방향 (§화면 구조)
 
-> 과제 요구 ③ — 구현 지시의 입력(충돌 경계 + 발사대 일방향).
+> 문서 범위 ③ — 구현 지시의 입력(충돌 경계 + 발사대 일방향).
 >
 > **준수 기준(방법론):** [[90-methodology/event-driven]] · [[90-methodology/state-machine]]
 > (행성별 `launched` 상태).

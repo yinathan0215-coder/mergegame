@@ -3,7 +3,7 @@ id: systems-launch-queue
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [systems, random, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 발사 행성 선택 — 해금 연동 랜덤 (§5.3)
 
-> 과제 요구 ③ — 구현 지시의 입력(발사 행성 선택/랜덤 생성).
+> 문서 범위 ③ — 구현 지시의 입력(발사 행성 선택/랜덤 생성).
 >
 > **준수 기준(방법론):** [[90-methodology/data-driven]] (보충 확률 = 데이터 테이블) ·
 > [[90-methodology/event-driven]] (발사 이벤트 → 다음 행성 로드).

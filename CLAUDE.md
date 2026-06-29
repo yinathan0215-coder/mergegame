@@ -1,7 +1,7 @@
 # mergegame
 
-Global casual **Merge** game — an HTML5 playable prototype. This repo is built for the
-Bagelcode game-design-PD assignment: `docs/` is an **agent-executable 기획문서 (GDD)** that
+Global casual **Merge** game — an HTML5 playable prototype. This repo is a game
+repository: `docs/` is an **agent-executable 기획문서 (GDD)** that
 makes a coding agent build a playable Core Loop prototype, and stays the living source of
 truth while `game/` is built.
 
@@ -56,9 +56,9 @@ merge 게임 전용으로 인스턴스화하고 해당 모듈을 링크한다.
 `docs/70-verification/audits/<YYYY-MM-DD-HHmm>.md`에 보고서 + 우선순위 수정 워크리스트를 남긴다(감사
 전용; 실제 수정은 그 문서를 읽는 **별도 단계**). 구조 감사·수정 워크리스트의 단일 출처 = 그 폴더.
 
-## Vault map (assignment-aligned)
+## Vault map (game-doc aligned)
 
-| Folder | Holds | 과제 요구 |
+| Folder | Holds | Project scope |
 |---|---|---|
 | `docs/00-meta/` | Pipeline rules, schema, templates, **input-log** | — |
 | `docs/10-concept/` | Concept + core fun hypothesis | ① |

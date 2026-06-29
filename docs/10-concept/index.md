@@ -3,7 +3,7 @@ id: concept-index
 note_type: index
 status: design
 domain: concept
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [concept, planet-merge, suika, physics]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 10 · 게임 컨셉 & 핵심 재미 가설
 
-> 과제 요구 ① — *게임 컨셉 및 핵심 재미 가설*.
+> 문서 범위 ① — *게임 컨셉 및 핵심 재미 가설*.
 >
 > **준수 기준(방법론):** [[../90-methodology/00-core-principles]] · [[../90-methodology/agent-friendly-spec]] (원칙1: 문서가 제품 결정을 소유).
 

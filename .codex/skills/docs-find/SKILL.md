@@ -2,7 +2,7 @@
 name: docs-find
 description: >
   READ/navigate/search the mergegame 기획문서(docs/) — the agent-executable GDD for the
-  HTML5 Merge prototype (Bagelcode assignment). Use whenever you need to LOOK UP what the
+  HTML5 Merge game prototype. Use whenever you need to LOOK UP what the
   docs already say before answering or building: game concept, core loop, merge systems,
   balancing numbers, art/UX, implementation/build plan, verification/KPI, or methodology.
   This is the find half; to record/update a decision use [[docs-write]]. Triggers on
@@ -28,7 +28,7 @@ Every page carries frontmatter you can filter by (schema: `docs/00-meta/conventi
 methodology/log/input-log/template) · `status` (draft/design/active/archived) ·
 `domain` · `updated` · `sources`.
 
-Folders = assignment sections:
+Folders = project documentation sections:
 `00-meta` · `10-concept` ① · `20-core-loop` ② · `30-systems` (③ input) ·
 `40-balancing` ④ · `50-art-ux` ④ · `60-implementation` ③ · `70-verification` ⑤ ·
 `80-research` · `90-methodology`.

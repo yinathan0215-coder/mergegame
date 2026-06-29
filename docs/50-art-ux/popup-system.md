@@ -3,7 +3,7 @@ id: popup-system
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, ux, popup, modal, meta, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 공통 팝업 틀 (Popup)
 
-> 과제 요구 ④-b(UX 판단). Title 로비의 모든 메타 창([[../30-systems/daily-missions]] ·
+> 문서 범위 ④-b(UX 판단). Title 로비의 모든 메타 창([[../30-systems/daily-missions]] ·
 > [[../30-systems/attendance]] · [[../30-systems/lucky-wheel]] · [[../30-systems/shop]])이
 > 공유하는 **단일 팝업 컴포넌트**. 한 곳에서 오픈 연출·구성요소·입력 차단을 못 박는다.
 

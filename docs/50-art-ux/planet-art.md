@@ -3,7 +3,7 @@ id: art-ux-planet-art
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, planet, color, pattern, ssot, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 행성별 ART 표 — 색·패턴 SSoT (§9)
 
-> 과제 요구 ④-b — 행성별 아트(색+패턴)의 단일 정본.
+> 문서 범위 ④-b — 행성별 아트(색+패턴)의 단일 정본.
 >
 > **준수 기준(방법론):** [[../90-methodology/layered-rendering]] (식별성).
 

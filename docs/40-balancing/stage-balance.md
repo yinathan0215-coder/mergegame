@@ -3,7 +3,7 @@ id: balancing-stage-balance
 note_type: section
 status: design
 domain: balancing
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [balancing, stage, value, difficulty, level-design, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -11,7 +11,7 @@ sources:
 
 # Stage 밸런싱 기조 — 밸류 기반 스테이지 설계
 
-> 과제 요구 ④-a. [[../30-systems/stage-mode]]가 "실제 난이도 수치는 레벨 디자인 단계"로 미룬
+> 문서 범위 ④-a. [[../30-systems/stage-mode]]가 "실제 난이도 수치는 레벨 디자인 단계"로 미룬
 > 부분의 **설계 기준**을 정본화한다. 스테이지 한 개 = `{ count, target, rack, queue }`
 > (스키마 [[game-modes]] · [[../30-systems/stage-mode]])를 **행성 밸류(value) 산수**로 잡는다.
 >

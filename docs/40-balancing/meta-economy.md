@@ -3,7 +3,7 @@ id: balancing-meta-economy
 note_type: section
 status: design
 domain: balancing
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [balancing, meta, economy, coin, mission, attendance, wheel]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 메타 경제 수치 (코인·미션·출석·돌림판)
 
-> 과제 요구 ④. [[../30-systems/meta-economy]] · [[../30-systems/daily-missions]] ·
+> 문서 범위 ④. [[../30-systems/meta-economy]] · [[../30-systems/daily-missions]] ·
 > [[../30-systems/attendance]] · [[../30-systems/lucky-wheel]]가 참조하는 모든 구체 수치.
 > **코드 SSoT = `game/src/data/balance.json`** (`economy`/`dailyMissions`/`attendance`/`wheel`/`juice.popup`).
 

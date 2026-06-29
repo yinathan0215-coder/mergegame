@@ -5,10 +5,9 @@ description: The mandatory log → reconcile → work pipeline for the mergegame
 
 # Docs pipeline (mergegame)
 
-`docs/` is the **agent-executable 기획문서** for an HTML5 Merge prototype (Bagelcode
-game-design-PD assignment) **and** the living source of truth that stays current while
-the prototype is built. The rule: **the documented design leads, and the work follows
-it.**
+`docs/` is the **agent-executable 기획문서** for the HTML5 Merge prototype and the
+living source of truth that stays current while the prototype is built. The rule: **the
+documented design leads, and the work follows it.**
 
 Three stages run every turn. Stage 1 and part of stage 3 are enforced by hooks
 (`.claude/hooks/docs-input-log.mjs`, `.claude/hooks/docs-reconcile-check.mjs`); the
@@ -63,7 +62,7 @@ Two halves keep the final GDD organized as the game is built:
 
 ## Routing — where things go
 
-| Kind of knowledge | Location | Assignment req. |
+| Kind of knowledge | Location | Project scope |
 |---|---|---|
 | Pipeline rules, schema, templates, **input log** | `docs/00-meta/` | — |
 | Concept, target, core fun hypothesis | `docs/10-concept/` | ① |

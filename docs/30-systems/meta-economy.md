@@ -3,7 +3,7 @@ id: meta-economy
 note_type: system
 status: design
 domain: systems
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [meta, economy, coin, persistence, kst, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 메타 경제 — 코인 지갑 · 일일 영속
 
-> 과제 요구 ③(시스템). Title 로비의 메타 기능([[daily-missions]] · [[attendance]] ·
+> 문서 범위 ③(시스템). Title 로비의 메타 기능([[daily-missions]] · [[attendance]] ·
 > [[lucky-wheel]] · [[shop]])이 공유하는 **소프트 화폐(코인) 지갑**과 **한국시간(KST) 기준
 > 일일 리셋·영속 저장**의 단일 출처. 수치 SSoT는 [[../40-balancing/meta-economy]].
 

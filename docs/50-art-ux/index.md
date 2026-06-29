@@ -3,7 +3,7 @@ id: art-ux-index
 note_type: index
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, ux, layout, input]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 50 · 아트 방향 & UX 가이드
 
-> 과제 요구 ④-b — *에이전트가 스스로 판단하기 어려운 영역: 아트 방향, UX 판단*을 못 박는다.
+> 문서 범위 ④-b — *에이전트가 스스로 판단하기 어려운 영역: 아트 방향, UX 판단*을 못 박는다.
 >
 > **준수 기준(방법론):** [[../90-methodology/layered-rendering]] (레이어·입력 우선순위·가독성).
 >

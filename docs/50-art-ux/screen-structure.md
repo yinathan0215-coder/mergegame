@@ -3,7 +3,7 @@ id: art-ux-screen-structure
 note_type: section
 status: design
 domain: art-ux
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [art, ux, layout, board, layers, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 화면 레이어 & 보드 형태
 
-> 과제 요구 ④-b — 보드(playground)의 **형태 + 레이어 + 발사대**를 못 박는다.
+> 문서 범위 ④-b — 보드(playground)의 **형태 + 레이어 + 발사대**를 못 박는다.
 > HUD/화면 비율은 [[layout]], 색·톤은 [[art-direction]], 행성 색·패턴은 [[planet-art]],
 > 충돌/발사 일방향은 [[../30-systems/play-area-boundary]].
 

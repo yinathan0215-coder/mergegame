@@ -63,7 +63,7 @@ tags: [audit, methodology, srp, health]
 ### 🟡 차원별 누수 (점수 5를 막은 사소한 항목)
 - **1 SSoT** — UI/팝업층이 balance.json 팔레트를 무시한 **두 번째 색 island**: `SettingsPopup.ts:11-13`(GREY/ORANGE/RED 자체 팔레트)·`LuckyWheelPopup.ts:15`(SEG_FILL)·`TitleScreen.ts:46-47`; **중복 숫자** `#49a8e6`가 `COLORS.btnBlue/pillBlue`로 존재하는데 `0x49a8e6`로 ~6곳 하드코딩(StageEndPopup·ChargePopup·DailyMissionPopup·AttendancePopup·LuckyWheelPopup·GameInfoPanel); **un-tabled 폰트 크기** 41개/12파일. [[../../90-methodology/data-driven]]
 - **2 단일책임** — 디버그 API 95줄 상주(`GameScene.ts:622-716`)·TitleScreen 408줄 3책임(공전 애니+로비 UI+nine-slice `:85-308`)·`architecture.md:30`이 GameScene 책임을 5개로 문서화해 과집중을 문서 차원에서 승인. (MetaStore 278줄 6하위도메인은 응집된 영속 권위라 god-object 경계 yellow.)
-- **3 Acceptance** — 콘솔에러=0 KPI·"3분 무에러" DoD가 테스트 0커버(`page.on('pageerror')` 없음); 시간 KPI(≤10/30/60/90s, 5loops/3min) 미단언; suite가 DEV 빌드만 구동(`__game`은 `import.meta.env.DEV` 게이트, webServer=`npm run dev`) → 제출물 build:single 미검증. [[../../90-methodology/acceptance-test]]
+- **3 Acceptance** — 콘솔에러=0 KPI·"3분 무에러" DoD가 테스트 0커버(`page.on('pageerror')` 없음); 시간 KPI(≤10/30/60/90s, 5loops/3min) 미단언; suite가 DEV 빌드만 구동(`__game`은 `import.meta.env.DEV` 게이트, webServer=`npm run dev`) → 배포 산출물 build:single 미검증. [[../../90-methodology/acceptance-test]]
 - **4 State** — sub-state in-code 전이표 부재; `fire()`/`tick()`이 단일 상태 아닌 3플래그 AND로 입력 가능 여부 재계산(`:313,:566`).
 - **5 ECS** — Combo가 규칙(마일스톤 보너스 점수)과 렌더(Text/alpha)를 한 클래스 혼재(`Combo.ts:48-76`).
 - **6 Game Loop** — 점수/콤보/코인 오도미터가 deltaTime 없이 per-frame 롤(`Hud.ts:198`·`Combo.ts:72`·`CoinPill.ts:97`, cosmetic); ≡ 메뉴 메타 팝업(settings/wheel/daily/attendance)은 `paused`를 안 세워 뒤에서 물리 계속 시뮬(`GameScene.ts:566` vs `:124-127`). [[../../90-methodology/game-loop]]
@@ -75,7 +75,7 @@ tags: [audit, methodology, srp, health]
 - [ ] **P1** `GameScene` god-object 분할 — exposeDebug(622-716)→`debug/` 모듈, containPlanets(518-547)→`PhysicsWorld`, 머지 클로저(137-184)→`MergeOutcome` 코디네이터, 세션/종료(409-510)→`SessionController`, spawn/remove/fire(312-369)→`PlanetSpawner`, tick 스프라이트 동기(581-595)→`PlanetRenderSystem`. 근거 §🔴1·2·3. **선행: [[../../60-implementation/architecture]] 모듈맵(GameScene 5책임) 재조정.** 검증: GameScene 비데이터 로직 <250줄, 각 신모듈 한 문장 책임, `npm run typecheck` + Playwright 그린.
 - [ ] **P1** 세션 내 흐름을 상태로 모델링 — `Playing/Paused/RewardPopup/Result/StageClear/StageFail` 상태 + 전이표로 `paused/ended/endKind` 불리언 대체(`:172` 공존 버그 해소). 근거 §🔴4. **선행: [[../../20-core-loop/screen-flow]]·[[../../20-core-loop/game-modes]] 상태표 반영.** 검증: 어떤 두 상태도 동시 true 불가, 전이표 단일 출처.
 - [ ] **P2** ≡ 메뉴 메타 팝업 표시 중 게임플레이 물리 정지 — 팝업 오픈 시 상태/일시정지 적용. 근거 §🟡6. 검증: settings/wheel/daily/attendance 뒤에서 공 시뮬 멈춤.
-- [ ] **P2** Acceptance suite 보강 — `page.on('pageerror')`/console 에러=0 단언 + KPI 시간 임계 단언 추가, **prod/single-file 빌드 대상 코어루프 테스트** 추가. 근거 §🟡3. 검증: 콘솔 에러 시 테스트 실패, 제출 산출물 통과.
+- [ ] **P2** Acceptance suite 보강 — `page.on('pageerror')`/console 에러=0 단언 + KPI 시간 임계 단언 추가, **prod/single-file 빌드 대상 코어루프 테스트** 추가. 근거 §🟡3. 검증: 콘솔 에러 시 테스트 실패, 배포 산출물 통과.
 - [ ] **P2** Event Catalog 도입 — 이벤트명·발생조건·payload·구독자 표 작성(또는 DI 콜백 payload 문서화) + 선택적 이벤트 흐름 디버그 로그. 근거 §🟡7. **선행: [[../../90-methodology/event-driven]] 인스턴스화 페이지.** 검증: payload 표 존재.
 - [ ] **P3** dead/unused 정리 — `WALL_T`·`QUEUE_CANDIDATES` 제거, unused import `DESIGN`·`COLORS` 제거, 내부 전용 심볼 de-export. 근거 §🔴5·🟡9. 검증: `tsc --noEmit` clean, grep 외부 참조 0.
 - [ ] **P3** UI/팝업 색·폰트 SSoT 흡수 — 141개 하드코딩 색·중복 `0x49a8e6`·41개 폰트 크기를 balance.json `COLORS`/타이포 토큰으로. 근거 §🟡1. **선행: [[../../40-balancing/index]]/balance.json 토큰.** 검증: 팝업층 `0x` hex grep → 토큰 참조.

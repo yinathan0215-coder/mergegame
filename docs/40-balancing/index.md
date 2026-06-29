@@ -3,7 +3,7 @@ id: balancing-index
 note_type: index
 status: design
 domain: balancing
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [balancing, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -12,7 +12,7 @@ sources:
 
 # 40 · 밸런싱 수치
 
-> 과제 요구 ④-a — *에이전트가 스스로 판단하기 어려운 영역: 밸런싱 수치*. 에이전트가
+> 문서 범위 ④-a — *에이전트가 스스로 판단하기 어려운 영역: 밸런싱 수치*. 에이전트가
 > 추측하면 안 되는 모든 구체 수치를 **명시적으로** 못 박는 곳.
 >
 > **준수 기준(방법론):** [[../90-methodology/data-driven]] (단일 출처·값+단위+의도·공식).

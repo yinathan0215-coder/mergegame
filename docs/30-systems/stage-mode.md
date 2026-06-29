@@ -11,7 +11,7 @@ sources:
 
 # Stage 모드 — 정의 데이터 & 클리어/실패
 
-> 과제 요구 ③. **Stage 모드**의 데이터 구조(스테이지를 무엇으로 정의하는가)와 클리어/실패
+> 문서 범위 ③. **Stage 모드**의 데이터 구조(스테이지를 무엇으로 정의하는가)와 클리어/실패
 > 규칙을 정본화한다. 모드 개요 [[20-core-loop/game-modes]] · 카운트 [[30-systems/launch-count]] ·
 > 결과창 [[50-art-ux/result-window]].
 >

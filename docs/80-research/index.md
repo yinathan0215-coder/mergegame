@@ -3,7 +3,7 @@ id: research-index
 note_type: index
 status: design
 domain: research
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [research, planet-pool-merge]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
@@ -16,7 +16,7 @@ sources:
 조준·발사하고, 같은 등급 행성끼리 충돌하면 다음 행성으로 합성한다(11단계 사다리:
 소행성→수성→화성→금성→지구→해왕성→천왕성→토성→목성→태양→블랙홀, 블랙홀이 최종) — [[../10-concept/index]].
 
-이 섹션은 그 컨셉·메카닉·밸런싱 결정의 **근거**를 모은다. 베이글코드가 강조하는 "시장
+이 섹션은 그 컨셉·메카닉·밸런싱 결정의 **근거**를 모은다. 이 프로젝트가 중시하는 "시장
 데이터 기반 의사결정"을 문서로 보이는 자리. 한 레퍼런스 = 한 페이지.
 
 Planet Pool Merge는 두 장르 계보가 교차한다 — (1) **Suika식 코어 물리 머지**, (2) **하단
