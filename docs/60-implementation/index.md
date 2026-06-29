@@ -3,10 +3,11 @@ id: implementation-index
 note_type: index
 status: design
 domain: implementation
-updated: 2026-06-28
+updated: 2026-06-29
 tags: [implementation]
 sources:
   - "[[00-meta/input-log/2026-06-28]]"
+  - "[[00-meta/input-log/2026-06-29]]"
   - "raw: 2026-06-28-planet-pool-merge-design.md"
 ---
 
@@ -30,6 +31,7 @@ sources:
 - [[agent-runbook]] — 읽는 순서 · 만드는 순서 · 범위 판단(Scope Fence)
 - [[plan/index|plan]] — **Phase별 빌드 실행 트래커**(만들 파일·수치·수용 기준·진행 체크박스)
 - [[sound-manager]] — **`SoundManager`** 스펙: Web Audio 절차 합성 + 동시 보이스 상한·사운드별 스로틀·뮤트·자동재생 해제.
+- [[android-capacitor-webview]] — Android 설치 가능 앱 방법론: `game/dist`를 Capacitor shell로 감싸고, APK 검증, WebView 품질 게이트, Godot fallback 경계를 기록.
 
 ## 읽는 순서 (에이전트 관점)
 
