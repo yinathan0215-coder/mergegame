@@ -19,9 +19,12 @@ node_modules/
 *.pid
 .tmp/
 .tmp-*/
+tmp/
+.baglecode
 
 # Claude — keep shared .claude/ tracked, drop per-machine local settings
 .claude/settings.local.json
+.claude/worktrees/
 
 # Codex — keep shared .codex/ tracked, drop per-machine local settings
 .codex/settings.local.json
@@ -33,3 +36,9 @@ game/build/
 game/.vite/
 game/.parcel-cache/
 *.tsbuildinfo
+
+# Test / tooling artifacts
+test-results/
+game/test-results/
+game/playwright-report/
+.playwright-mcp/

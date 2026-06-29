@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "50-art-ux/index.md",
+                "file": "AGENTS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "index"
+              "title": "AGENTS"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "50-art-ux/index.md",
+                "file": "AGENTS.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "index 의 백링크"
+              "title": "AGENTS 의 백링크"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "50-art-ux/index.md",
+                "file": "AGENTS.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "index 의 나가는 링크"
+              "title": "AGENTS 의 나가는 링크"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "50-art-ux/index.md",
+                "file": "AGENTS.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "index 의 개요"
+              "title": "AGENTS 의 개요"
             }
           }
         ]
@@ -185,41 +185,41 @@
   },
   "active": "61516ab81416d07a",
   "lastOpenFiles": [
-    "log.md.tmp.27448.01bc9792e9ac",
-    "50-art-ux/layout.md.tmp.27448.d54a40f571cf",
-    "50-art-ux/button-system.md.tmp.27448.8cf535d94537",
-    "log.md.tmp.27448.ea4d1de8c673",
-    "log.md.tmp.41836.6150cbfc9ba0",
-    "60-implementation/tech-stack.md.tmp.5748.9cfe34eb16ee",
-    "30-systems/meta-economy.md.tmp.73464.6ec9faff34dc",
-    "30-systems/tier-unlock.md.tmp.27448.23bbe9deafea",
-    "50-art-ux/popup-system.md.tmp.27448.ddc6ace40fb9",
-    "60-implementation/sound-manager.md.tmp.41836.2a9208eddff0",
-    "60-implementation/sound-manager.md.tmp.41836.8a8cc07c5f1b",
-    "30-systems/settings.md",
-    "50-art-ux/art-direction.md",
-    "index.md",
-    "10-concept/planet-ladder.md",
-    "50-art-ux/button-system.md",
-    "70-verification/audits/2026-06-28-2050-docs-code-sync-audit.md",
-    "30-systems/decisions/2026-06-28-blackhole-infinite-count.md",
+    "70-verification/index.md.tmp.51864.38bf57d99f61",
+    "70-verification/audits/2026-06-29-0706-methodology-structure-final-100.md",
+    "log.md.tmp.51864.cc835b147ead",
+    "70-verification/audits/2026-06-29-0536-methodology-structure-reaudit5.md",
+    "70-verification/audits/2026-06-29-0536-methodology-structure-reaudit5.md.tmp.51864.3e3d7d53b358",
+    "log.md.tmp.51864.33189135d694",
+    "70-verification/audits/2026-06-29-0520-methodology-structure-reaudit4.md",
+    "log.md.tmp.51864.0bf2152d1100",
+    "70-verification/audits/2026-06-29-0459-methodology-structure-reaudit3.md",
+    "log.md.tmp.51864.fcde5831046c",
+    "70-verification/index.md.tmp.51864.1db3f948accf",
+    "70-verification/audits/2026-06-29-0436-methodology-structure-reaudit2.md",
+    "60-implementation/architecture.md.tmp.51864.881129d09020",
+    "60-implementation/architecture.md.tmp.51864.f0d7e5761abc",
+    "60-implementation/architecture.md.tmp.51864.b113328402bb",
+    "log.md.tmp.51864.62f9b43addae",
+    "70-verification/audits/2026-06-29-0353-methodology-structure-reaudit.md",
+    "30-systems/event-catalog.md",
+    "70-verification/audits/2026-06-29-0130-methodology-structure-audit.md",
+    "00-meta/input-log/2026-06-29.md",
+    "70-verification/audits/2026-06-28-2347-methodology-structure-audit.md",
+    "90-methodology/agent-friendly-spec.md",
+    "90-methodology/acceptance-test.md",
+    "90-methodology/00-core-principles.md",
+    "80-research/reverse-merge-genre.md",
+    "80-research/drop-merge-research.md",
+    "60-implementation/agent-runbook.md",
+    "60-implementation/decisions/2026-06-28-data-driven-balance-json.md",
+    "60-implementation/decisions/2026-06-28-stack-pixijs-matter.md",
+    "40-balancing/launch-physics.md",
     "40-balancing/game-modes.md",
-    "50-art-ux/result-window.md",
-    "30-systems/stage-mode.md",
-    "30-systems/planet-charge.md",
-    "30-systems/launch-count.md",
-    "20-core-loop/game-modes.md",
-    "60-implementation/sound-manager.md",
-    "50-art-ux/sound-design.md",
-    "40-balancing/meta-economy.md",
-    "30-systems/shop.md",
-    "30-systems/lucky-wheel.md",
-    "30-systems/attendance.md",
-    "30-systems/daily-missions.md",
-    "50-art-ux/popup-system.md",
-    "30-systems/meta-economy.md",
-    "10-concept/index.md",
-    "10-concept/fun-hypothesis.md",
-    "50-art-ux/galaxy-background.md"
+    "40-balancing/combo-scoring.md",
+    "40-balancing/decisions/2026-06-28-remove-combo.md",
+    "30-systems/tier-unlock.md",
+    "30-systems/merge-rules.md",
+    "30-systems/stage-mode.md"
   ]
 }

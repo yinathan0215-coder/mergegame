@@ -163,6 +163,37 @@ Scene/backdrop: perfectly flat solid #00ff00 chroma-key background only, uniform
 Constraints: no text, no letters, no numbers, no play icon, no watermark, no emoji, no extra stars or sparkles, no photorealism, no realistic glass or metal, no detailed material texture, no cast shadow on the green background, do not use #00ff00 or green inside the button.
 ```
 
+## Accepted Stage Play Button Purple Variant - 2026-06-28
+
+Final asset: `game/public/assets/ui/play-button-stage.png`
+
+Generated color-reference source:
+`C:\Users\USER\.codex\generated_images\019f0ca6-00e8-7ce3-903b-468b431305cb\ig_06afaf6043c05d87016a412fdcb458819187175d97792d1386.png`
+
+Post-processing:
+
+1. Use `$imagegen` to request a purple recolor of the existing button.
+2. Preserve the accepted 224x100 alpha canvas and 9-slice geometry from `play-button.png`.
+3. Apply the generated deep-purple color direction to the button face only; keep the gold lower trim, dark outline, shadow, shape, and transparent bounds unchanged.
+4. Validate both `play-button.png` and `play-button-stage.png` as RGBA 224x100 assets.
+
+Runtime usage:
+
+- Infinite Play body: `play-button.png`.
+- Stage Play body: `play-button-stage.png`.
+- Bottom toggle keeps its existing pill design. It only samples the button-face colors for the active highlight: Infinite `#1f8efa`, Stage `#4e1da9`; it does not replace the toggle with button images.
+
+Final prompt:
+
+```text
+Use case: precise-object-edit
+Asset type: Planet Pool Merge Stage mode play button 9-slice body PNG variant.
+Input image: the visible blue play-button.png is the edit target.
+Primary request: recolor the same button body for Stage mode. Keep the exact same silhouette, rounded rectangle shape, alpha/transparent background, bevel structure, dark outline, lower gold trim, underside shadow, padding, and 9-slice-friendly geometry. Change only the main blue button face and cyan highlight into a deep purple/violet palette that harmonizes with a dark navy galaxy background.
+Color direction: rich dark violet face, brighter purple top highlight, subtle blue-purple midtones, retain the gold lower trim and dark brown outline.
+Constraints: no text, no letters, no numbers, no play triangle, no sparkles, no extra decoration, no crop, no resized canvas, no changed shape, no photorealism, no realistic glass/metal. Preserve casual mobile game 2.5D cel-shaded style.
+```
+
 ## Accepted HUD Icons - 2026-06-28
 
 Post-processing for both HUD icons:

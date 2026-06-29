@@ -356,5 +356,21 @@
       1024
     ],
     "normalizedForGame": true
+  },
+  {
+    "asset": "game/public/assets/icons/game-icon.png",
+    "source": "C:\\Users\\USER\\.codex\\generated_images\\019f0ca6-00e8-7ce3-903b-468b431305cb\\ig_0a16cf0e3cc9d819016a417428a54881918f9c501958652634.png",
+    "promptRecord": "game/public/assets/prompts/game-icon.md#game-icon---2026-06-29",
+    "mode": "opaque-square-icon",
+    "size": [
+      1024,
+      1024
+    ],
+    "hasAlpha": false,
+    "originalGeneratedSize": [
+      1254,
+      1254
+    ],
+    "normalizedForGame": true
   }
 ]
